@@ -44,6 +44,9 @@ class Stopwatch:
     """
 
     def __init__(self):
+        self.elapsed = None
+        self.start_time = None
+
         self.reset()
         self.start()
 
@@ -118,8 +121,9 @@ class Timer(Stopwatch):
         self.target = self._accept(target)
         super(Timer, self).__init__()
 
-    def _accept(self, target):
-        "Accept None or ∞ or datetime or numeric for target"
+    @staticmethod
+    def _accept(target):
+        """Accept None or ∞ or datetime or numeric for target"""
         if isinstance(target, datetime.timedelta):
             target = target.total_seconds()
 

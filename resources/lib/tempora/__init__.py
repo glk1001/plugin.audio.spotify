@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-"Objects and routines pertaining to date and time (tempora)"
+"""Objects and routines pertaining to date and time (tempora)"""
 
 from __future__ import division, unicode_literals
 
@@ -49,6 +49,7 @@ class Parser:
     "some common default formats"
 
     def __init__(self, formats=None):
+        self.target = None
         if formats:
             self.formats = formats
 
@@ -64,9 +65,9 @@ class Parser:
             raise ValueError(tmpl.format(**locals()))
         return results[0]
 
-    def _parse(self, format):
+    def _parse(self, fmt):
         try:
-            result = time.strptime(self.target, format)
+            result = time.strptime(self.target, fmt)
         except ValueError:
             result = False
         return result
@@ -117,13 +118,13 @@ def strftime(fmt, t):
             ('%u', '%03d' % (t.microsecond % 1000))
     )
 
-    def doSub(s, sub):
+    def do_sub(s, sub):
         return s.replace(*sub)
 
-    def doSubs(s):
-        return functools.reduce(doSub, subs, s)
+    def do_subs(s):
+        return functools.reduce(do_sub, subs, s)
 
-    fmt = '%%'.join(map(doSubs, fmt.split('%%')))
+    fmt = '%%'.join(map(do_subs, fmt.split('%%')))
     return t.strftime(fmt)
 
 
@@ -172,7 +173,7 @@ class DatetimeConstructor:
         return result
 
     @classmethod
-    def __get_dt_constructor(cls, moduleName, name):
+    def __get_dt_constructor(cls, module_name, name):
         try:
             method_name = '__dt_from_{moduleName}_{name}__'.format(**locals())
             return getattr(cls, method_name)
@@ -194,9 +195,9 @@ class DatetimeConstructor:
 
     @staticmethod
     def __dt_from___builtin___time__(pyt):
-        "Construct a datetime.datetime from a pythonwin time"
-        fmtString = '%Y-%m-%d %H:%M:%S'
-        result = strptime(pyt.Format(fmtString), fmtString)
+        """Construct a datetime.datetime from a pythonwin time"""
+        fmt_string = '%Y-%m-%d %H:%M:%S'
+        result = strptime(pyt.Format(fmt_string), fmt_string)
         # get milliseconds and microseconds.  The only way to do this is
         #  to use the __float__ attribute of the time, which is in days.
         microseconds_per_day = seconds_per_day * 1000000
@@ -370,13 +371,13 @@ def get_date_format_string(period):
         return '%Y-%m'
     file_period_secs = get_period_seconds(period)
     format_pieces = ('%Y', '-%m-%d', ' %H', '-%M', '-%S')
-    seconds_per_second = 1
+    secs_per_second = 1
     intervals = (
             seconds_per_year,
             seconds_per_day,
             seconds_per_hour,
             seconds_per_minute,
-            seconds_per_second,
+            secs_per_second,
     )
     mods = list(map(lambda interval: file_period_secs % interval, intervals))
     format_pieces = format_pieces[: mods.index(0) + 1]
@@ -406,7 +407,7 @@ def calculate_prorated_values():
     unit time), and return that same rate for various time periods.
     """
     rate = six.moves.input("Enter the rate (3/hour, 50/month)> ")
-    res = re.match('(?P<value>[\d.]+)/(?P<period>\w+)$', rate).groupdict()
+    res = re.match(r'(?P<value>[\d.]+)/(?P<period>\w+)$', rate).groupdict()
     value = float(res['value'])
     value_per_second = value / get_period_seconds(res['period'])
     for period in ('minute', 'hour', 'day', 'month', 'year'):
@@ -414,7 +415,7 @@ def calculate_prorated_values():
         print("per {period}: {period_value}".format(**locals()))
 
 
-def parse_timedelta(str):
+def parse_timedelta(time_str):
     """
     Take a string representing a span of time and parse it to a time delta.
     Accepts any string of comma-separated numbers each with a unit indicator.
@@ -444,12 +445,12 @@ def parse_timedelta(str):
     >>> later.replace(year=now.year) - now
     datetime.timedelta(seconds=20940)
     """
-    deltas = (_parse_timedelta_part(part.strip()) for part in str.split(','))
+    deltas = (_parse_timedelta_part(part.strip()) for part in time_str.split(','))
     return sum(deltas, datetime.timedelta())
 
 
 def _parse_timedelta_part(part):
-    match = re.match('(?P<value>[\d.]+) (?P<unit>\w+)', part)
+    match = re.match(r'(?P<value>[\d.]+) (?P<unit>\w+)', part)
     if not match:
         msg = "Unable to parse {part!r} as a time delta".format(**locals())
         raise ValueError(msg)
