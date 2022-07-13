@@ -1,22 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-'''
+"""
     plugin.audio.spotify
     osd.py
     Special window to display an OSD for remote control of Connect player
-'''
+"""
 
 import threading
-import _thread
 import xbmc
 import xbmcgui
 from utils import log_msg, log_exception, get_track_rating
-from metadatautils import MetadataUtils
+from metadatautils.metadatautils import MetadataUtils
 
 
 class SpotifyOSD(xbmcgui.WindowXMLDialog):
-    ''' Special OSD to control Spotify Connect player'''
+    """ Special OSD to control Spotify Connect player"""
     update_thread = None
     sp = None
     is_playing = True
@@ -28,13 +27,13 @@ class SpotifyOSD(xbmcgui.WindowXMLDialog):
         xbmcgui.WindowXMLDialog.__init__(self, *args, **kwargs)
 
     def onInit(self):
-        '''triggers on initialization of the dialog'''
+        """triggers on initialization of the dialog"""
         self.update_thread = SpotifyOSDUpdateThread()
         self.update_thread.set_dialog(self)
         self.update_thread.start()
 
     def onAction(self, action):
-        '''triggers on kodi navigation events'''
+        """triggers on kodi navigation events"""
         action_id = action.getId()
         if action_id in (9, 10, 92, 216, 247, 257, 275, 61467, 61448,):
             self.close_dialog()
@@ -46,7 +45,7 @@ class SpotifyOSD(xbmcgui.WindowXMLDialog):
             self.sp.previous_track()
 
     def close_dialog(self):
-        '''stop background thread and close the dialog'''
+        """stop background thread and close the dialog"""
         self.update_thread.stop_running()
         try:
             self.sp.pause_playback()
@@ -56,7 +55,7 @@ class SpotifyOSD(xbmcgui.WindowXMLDialog):
         self.close()
 
     def onClick(self, control_id):
-        '''Kodi builtin: triggers if window is clicked'''
+        """Kodi builtin: triggers if window is clicked"""
         if control_id == 3201:
             self.sp.previous_track()
         elif control_id == 3203:
@@ -75,7 +74,7 @@ class SpotifyOSD(xbmcgui.WindowXMLDialog):
             self.sp.repeat("off")
 
     def toggle_playback(self):
-        '''toggle play/pause'''
+        """toggle play/pause"""
         if self.is_playing:
             self.is_playing = False
             self.getControl(3202).setEnabled(False)
@@ -90,8 +89,8 @@ class SpotifyOSD(xbmcgui.WindowXMLDialog):
 
 
 class SpotifyOSDUpdateThread(threading.Thread):
-    '''Background thread to complement our OSD dialog,
-    fills the listing while UI keeps responsive'''
+    """Background thread to complement our OSD dialog,
+    fills the listing while UI keeps responsive"""
     active = True
     dialog = None
     search_string = ""
@@ -101,15 +100,15 @@ class SpotifyOSDUpdateThread(threading.Thread):
         threading.Thread.__init__(self, *args)
 
     def stop_running(self):
-        '''stop thread end exit'''
+        """stop thread end exit"""
         self.active = False
 
     def set_dialog(self, dialog):
-        '''set the active dialog to perform actions'''
+        """set the active dialog to perform actions"""
         self.dialog = dialog
 
     def run(self):
-        '''Main run loop for the background thread'''
+        """Main run loop for the background thread"""
         last_title = ""
         monitor = xbmc.Monitor()
         while not monitor.abortRequested() and self.active:
@@ -131,7 +130,7 @@ class SpotifyOSDUpdateThread(threading.Thread):
         del monitor
 
     def get_curplayback(self):
-        '''get current playback details - retry on error'''
+        """get current playback details - retry on error"""
         count = 5
         while count and self.active:
             try:
@@ -149,22 +148,22 @@ class SpotifyOSDUpdateThread(threading.Thread):
         return None
 
     def toggle_playstate(self, value):
-        '''toggle pause/play'''
+        """toggle pause/play"""
         self.dialog.is_playing = value
         self.dialog.getControl(3202).setEnabled(value)
 
     def toggle_shuffle(self, value):
-        '''toggle shuffle'''
+        """toggle shuffle"""
         self.dialog.shuffle_state = value
         self.dialog.getControl(3205).setEnabled(value)
 
     def set_repeat(self, value):
-        '''set repeat state'''
+        """set repeat state"""
         self.dialog.repeat_state = value
         self.dialog.getControl(3207).setLabel(value)
 
     def update_info(self, track=None):
-        '''scrape results for search query'''
+        """scrape results for search query"""
 
         # set cover image
         thumb = ""
