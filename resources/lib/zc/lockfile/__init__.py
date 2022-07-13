@@ -13,7 +13,6 @@
 ##############################################################################
 
 import os
-import errno
 import logging
 
 logger = logging.getLogger("zc.lockfile")
@@ -30,11 +29,11 @@ except ImportError:
     try:
         import msvcrt
     except ImportError:
-        def _lock_file(file):
+        def _lock_file():
             raise TypeError('No file-locking support on this platform')
 
 
-        def _unlock_file(file):
+        def _unlock_file():
             raise TypeError('No file-locking support on this platform')
 
     else:

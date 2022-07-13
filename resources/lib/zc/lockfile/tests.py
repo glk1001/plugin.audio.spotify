@@ -11,10 +11,16 @@
 # FOR A PARTICULAR PURPOSE.
 #
 ##############################################################################
-import os, re, sys, unittest, doctest
-import zc.lockfile, time, threading
-from zope.testing import renormalizing, setupstack
+import doctest
+import os
+import re
 import tempfile
+import unittest
+
+import threading
+import time
+import zc.lockfile
+from zope.testing import renormalizing, setupstack
 
 try:
     from unittest.mock import Mock, patch
@@ -23,7 +29,7 @@ except ImportError:
 
 checker = renormalizing.RENormalizing([
         # Python 3 adds module path to error class name.
-        (re.compile("zc\.lockfile\.LockError:"),
+        (re.compile(r"zc\.lockfile\.LockError:"),
          r"LockError:"),
 ])
 
