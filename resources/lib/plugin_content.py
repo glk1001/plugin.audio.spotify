@@ -1550,7 +1550,7 @@ class PluginContent:
         xbmcplugin.setProperty(self.addon_handle, 'FolderName', xbmc.getLocalizedString(133))
         result = self.sp.search(
                 q="artist:%s" % self.artistid,
-                type='artist',
+                type_str='artist',
                 limit=self.limit,
                 offset=self.offset,
                 market=self.usercountry)
@@ -1567,7 +1567,7 @@ class PluginContent:
         xbmcplugin.setProperty(self.addon_handle, 'FolderName', xbmc.getLocalizedString(134))
         result = self.sp.search(
                 q="track:%s" % self.trackid,
-                type='track',
+                type_str='track',
                 limit=self.limit,
                 offset=self.offset,
                 market=self.usercountry)
@@ -1584,7 +1584,7 @@ class PluginContent:
         xbmcplugin.setProperty(self.addon_handle, 'FolderName', xbmc.getLocalizedString(132))
         result = self.sp.search(
                 q="album:%s" % self.albumid,
-                type='album',
+                type_str='album',
                 limit=self.limit,
                 offset=self.offset,
                 market=self.usercountry)
@@ -1603,7 +1603,7 @@ class PluginContent:
         xbmcplugin.setContent(self.addon_handle, "files")
         result = self.sp.search(
                 q=self.playlistid,
-                type='playlist',
+                type_str='playlist',
                 limit=self.limit,
                 offset=self.offset,
                 market=self.usercountry)
@@ -1626,7 +1626,7 @@ class PluginContent:
             items = []
             result = self.sp.search(
                     q="%s" % value,
-                    type='artist,album,track,playlist',
+                    type_str='artist,album,track,playlist',
                     limit=1,
                     market=self.usercountry)
             items.append(

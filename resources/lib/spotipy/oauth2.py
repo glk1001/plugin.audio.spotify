@@ -77,10 +77,12 @@ class SpotifyClientCredentials(object):
         token_info = response.json()
         return token_info
 
-    def is_token_expired(self, token_info):
+    @staticmethod
+    def is_token_expired(token_info):
         return is_token_expired(token_info)
 
-    def _add_custom_values_to_token_info(self, token_info):
+    @staticmethod
+    def _add_custom_values_to_token_info(token_info):
         """
         Store some values that aren't directly provided by a Web API
         response.
@@ -90,16 +92,16 @@ class SpotifyClientCredentials(object):
 
 
 class SpotifyOAuth(object):
-    '''
+    """
     Implements Authorization Code Flow for Spotify's OAuth implementation.
-    '''
+    """
 
     OAUTH_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize'
     OAUTH_TOKEN_URL = 'https://accounts.spotify.com/api/token'
 
     def __init__(self, client_id, client_secret, redirect_uri,
                  state=None, scope=None, cache_path=None, proxies=None):
-        '''
+        """
             Creates a SpotifyOAuth object
 
             Parameters:
@@ -109,7 +111,7 @@ class SpotifyOAuth(object):
                  - state - security state
                  - scope - the desired scope of the request
                  - cache_path - path to location to save tokens
-        '''
+        """
 
         self.client_id = client_id
         self.client_secret = client_secret
@@ -120,8 +122,8 @@ class SpotifyOAuth(object):
         self.proxies = proxies
 
     def get_cached_token(self):
-        ''' Gets a cached auth token
-        '''
+        """ Gets a cached auth token
+        """
         token_info = None
         if self.cache_path:
             try:
@@ -152,7 +154,8 @@ class SpotifyOAuth(object):
                 self._warn("couldn't write token cache to " + self.cache_path)
                 pass
 
-    def _is_scope_subset(self, needle_scope, haystack_scope):
+    @staticmethod
+    def _is_scope_subset(needle_scope, haystack_scope):
         if needle_scope:
             needle_scope = set(needle_scope.split())
         if haystack_scope:
@@ -160,7 +163,8 @@ class SpotifyOAuth(object):
 
         return needle_scope <= haystack_scope
 
-    def is_token_expired(self, token_info):
+    @staticmethod
+    def is_token_expired(token_info):
         return is_token_expired(token_info)
 
     def get_authorize_url(self, state=None):
@@ -180,7 +184,8 @@ class SpotifyOAuth(object):
 
         return "%s?%s" % (self.OAUTH_AUTHORIZE_URL, urlparams)
 
-    def parse_response_code(self, url):
+    @staticmethod
+    def parse_response_code(url):
         """ Parse the response code in the given response url
 
             Parameters:
@@ -221,7 +226,8 @@ class SpotifyOAuth(object):
         self._save_token_info(token_info)
         return token_info
 
-    def _normalize_scope(self, scope):
+    @staticmethod
+    def _normalize_scope(scope):
         if scope:
             scopes = scope.split()
             scopes.sort()
@@ -241,24 +247,25 @@ class SpotifyOAuth(object):
             if False:  # debugging code
                 print('headers', headers)
                 print('request', response.url)
-            self._warn("couldn't refresh token: code:%d reason:%s" \
+            self._warn("couldn't refresh token: code:%d reason:%s"
                        % (response.status_code, response.reason))
             return None
         token_info = response.json()
         token_info = self._add_custom_values_to_token_info(token_info)
-        if not 'refresh_token' in token_info:
+        if 'refresh_token' not in token_info:
             token_info['refresh_token'] = refresh_token
         self._save_token_info(token_info)
         return token_info
 
     def _add_custom_values_to_token_info(self, token_info):
-        '''
+        """
         Store some values that aren't directly provided by a Web API
         response.
-        '''
+        """
         token_info['expires_at'] = int(time.time()) + token_info['expires_in']
         token_info['scope'] = self.scope
         return token_info
 
-    def _warn(self, msg):
+    @staticmethod
+    def _warn(msg):
         print('warning:' + msg, file=sys.stderr)

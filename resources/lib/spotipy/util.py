@@ -9,8 +9,8 @@ import webbrowser
 
 def prompt_for_user_token(username, scope=None, client_id=None,
                           client_secret=None, redirect_uri=None):
-    ''' prompts the user to login if necessary and returns
-        the user token suitable for use with the spotipy.Spotify 
+    """ prompts the user to login if necessary and returns
+        the user token suitable for use with the spotipy.Spotify
         constructor
 
         Parameters:
@@ -21,7 +21,7 @@ def prompt_for_user_token(username, scope=None, client_id=None,
          - client_secret - the client secret of your app
          - redirect_uri - the redirect URI of your app
 
-    '''
+    """
 
     if not client_id:
         client_id = os.getenv('SPOTIPY_CLIENT_ID')

@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class CacheHandler():
+class CacheHandler:
     """
     An abstraction layer for handling the caching and retrieval of
     authorization tokens.
@@ -29,7 +29,6 @@ class CacheHandler():
         Save a token_info dictionary object to the cache and return None.
         """
         raise NotImplementedError()
-        return None
 
 
 class CacheFileHandler(CacheHandler):
