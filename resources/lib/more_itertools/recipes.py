@@ -211,7 +211,7 @@ def dotproduct(vec1, vec2):
     return sum(map(operator.mul, vec1, vec2))
 
 
-def flatten(listOfLists):
+def flatten(list_of_lists):
     """Return an iterator flattening one level of nesting in a list of lists.
 
         >>> list(flatten([[0, 1], [2, 3]]))
@@ -220,7 +220,7 @@ def flatten(listOfLists):
     See also :func:`collapse`, which can flatten multiple levels of nesting.
 
     """
-    return chain.from_iterable(listOfLists)
+    return chain.from_iterable(list_of_lists)
 
 
 def repeatfunc(func, times=None, *args):
@@ -294,8 +294,8 @@ def roundrobin(*iterables):
     nexts = cycle(iter(it).__next__ for it in iterables)
     while pending:
         try:
-            for next in nexts:
-                yield next()
+            for nxt in nexts:
+                yield nxt()
         except StopIteration:
             pending -= 1
             nexts = cycle(islice(nexts, pending))

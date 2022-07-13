@@ -29,7 +29,7 @@ __all__ = [
         'adjacent',
         'always_iterable',
         'always_reversible',
-        'bucket',
+        'Bucket',
         'chunked',
         'circular_shifts',
         'collapse',
@@ -60,20 +60,20 @@ __all__ = [
         'map_except',
         'map_reduce',
         'nth_or_last',
-        'numeric_range',
+        'NumericRange',
         'one',
         'only',
         'padded',
         'partitions',
         'set_partitions',
-        'peekable',
+        'Peekable',
         'repeat_last',
         'replace',
         'rlocate',
         'rstrip',
-        'run_length',
+        'RunLength',
         'sample',
-        'seekable',
+        'Seekable',
         'SequenceView',
         'side_effect',
         'sliced',
@@ -202,13 +202,13 @@ def nth_or_last(iterable, n, default=_marker):
     return last(islice(iterable, n + 1), default=default)
 
 
-class peekable:
+class Peekable:
     """Wrap an iterator to allow lookahead and prepending elements.
 
     Call :meth:`peek` on the result to get the value that will be returned
     by :func:`next`. This won't advance the iterator:
 
-        >>> p = peekable(['a', 'b'])
+        >>> p = Peekable(['a', 'b'])
         >>> p.peek()
         'a'
         >>> next(p)
@@ -217,14 +217,14 @@ class peekable:
     Pass :meth:`peek` a default value to return that instead of raising
     ``StopIteration`` when the iterator is exhausted.
 
-        >>> p = peekable([])
+        >>> p = Peekable([])
         >>> p.peek('hi')
         'hi'
 
     peekables also offer a :meth:`prepend` method, which "inserts" items
     at the head of the iterable:
 
-        >>> p = peekable([1, 2, 3])
+        >>> p = Peekable([1, 2, 3])
         >>> p.prepend(10, 11, 12)
         >>> next(p)
         10
@@ -237,7 +237,7 @@ class peekable:
     :func:`next`, index 1 is the item after that, and so on:
     The values up to the given index will be cached.
 
-        >>> p = peekable(['a', 'b', 'c', 'd'])
+        >>> p = Peekable(['a', 'b', 'c', 'd'])
         >>> p[0]
         'a'
         >>> p[1]
@@ -251,7 +251,7 @@ class peekable:
 
     To check whether a peekable is exhausted, check its truth value:
 
-        >>> p = peekable(['a', 'b'])
+        >>> p = Peekable(['a', 'b'])
         >>> if p:  # peekable has items
         ...     list(p)
         ['a', 'b']
@@ -296,7 +296,7 @@ class peekable:
         ``self.peek()``. The items will be returned in
         first in, first out order::
 
-            >>> p = peekable([1, 2, 3])
+            >>> p = Peekable([1, 2, 3])
             >>> p.prepend(10, 11, 12)
             >>> next(p)
             10
@@ -306,7 +306,7 @@ class peekable:
         It is possible, by prepending items, to "resurrect" a peekable that
         previously raised ``StopIteration``.
 
-            >>> p = peekable([])
+            >>> p = Peekable([])
             >>> next(p)
             Traceback (most recent call last):
               ...
@@ -772,7 +772,7 @@ def substrings(iterable):
     seq = []
     for item in iter(iterable):
         seq.append(item)
-        yield (item,)
+        yield item,
     seq = tuple(seq)
     item_count = len(seq)
 
@@ -816,12 +816,12 @@ def substrings_indexes(seq, reverse=False):
     )
 
 
-class bucket:
+class Bucket:
     """Wrap *iterable* and return an object that buckets it iterable into
     child iterables based on a *key* function.
 
         >>> iterable = ['a1', 'b1', 'c1', 'a2', 'b2', 'c2', 'b3']
-        >>> s = bucket(iterable, key=lambda x: x[0])  # Bucket by 1st character
+        >>> s = Bucket(iterable, key=lambda x: x[0])  # Bucket by 1st character
         >>> sorted(list(s))  # Get the keys
         ['a', 'b', 'c']
         >>> a_iterable = s['a']
@@ -844,7 +844,7 @@ class bucket:
         >>> it = count(1, 2)  # Infinite sequence of odd numbers
         >>> key = lambda x: x % 10  # Bucket by last digit
         >>> validator = lambda x: x in {1, 3, 5, 7, 9}  # Odd digits only
-        >>> s = bucket(it, key=key, validator=validator)
+        >>> s = Bucket(it, key=key, validator=validator)
         >>> 2 in s
         False
         >>> list(s[2])
@@ -1793,14 +1793,14 @@ def groupby_transform(iterable, keyfunc=None, valuefunc=None):
     return ((k, map(valuefunc, g)) for k, g in res) if valuefunc else res
 
 
-class numeric_range(abc.Sequence, abc.Hashable):
+class NumericRange(abc.Sequence, abc.Hashable):
     """An extension of the built-in ``range()`` function whose arguments can
     be any orderable numeric type.
 
     With only *stop* specified, *start* defaults to ``0`` and *step*
     defaults to ``1``. The output items will match the type of *stop*:
 
-        >>> list(numeric_range(3.5))
+        >>> list(NumericRange(3.5))
         [0.0, 1.0, 2.0, 3.0]
 
     With only *start* and *stop* specified, *step* defaults to ``1``. The
@@ -1809,7 +1809,7 @@ class numeric_range(abc.Sequence, abc.Hashable):
         >>> from decimal import Decimal
         >>> start = Decimal('2.1')
         >>> stop = Decimal('5.1')
-        >>> list(numeric_range(start, stop))
+        >>> list(NumericRange(start, stop))
         [Decimal('2.1'), Decimal('3.1'), Decimal('4.1')]
 
     With *start*, *stop*, and *step*  specified the output items will match
@@ -1819,12 +1819,12 @@ class numeric_range(abc.Sequence, abc.Hashable):
         >>> start = Fraction(1, 2)  # Start at 1/2
         >>> stop = Fraction(5, 2)  # End at 5/2
         >>> step = Fraction(1, 2)  # Count by 1/2
-        >>> list(numeric_range(start, stop, step))
+        >>> list(NumericRange(start, stop, step))
         [Fraction(1, 2), Fraction(1, 1), Fraction(3, 2), Fraction(2, 1)]
 
     If *step* is zero, ``ValueError`` is raised. Negative steps are supported:
 
-        >>> list(numeric_range(3, -1, -1.0))
+        >>> list(NumericRange(3, -1, -1.0))
         [3.0, 2.0, 1.0, 0.0]
 
     Be aware of the limitations of floating point numbers; the representation
@@ -1837,7 +1837,7 @@ class numeric_range(abc.Sequence, abc.Hashable):
         >>> start = datetime.datetime(2019, 1, 1)
         >>> stop = datetime.datetime(2019, 1, 3)
         >>> step = datetime.timedelta(days=1)
-        >>> items = iter(numeric_range(start, stop, step))
+        >>> items = iter(NumericRange(start, stop, step))
         >>> next(items)
         datetime.datetime(2019, 1, 1, 0, 0)
         >>> next(items)
@@ -1887,7 +1887,7 @@ class numeric_range(abc.Sequence, abc.Hashable):
         return False
 
     def __eq__(self, other):
-        if isinstance(other, numeric_range):
+        if isinstance(other, NumericRange):
             empty_self = not bool(self)
             empty_other = not bool(other)
             if empty_self or empty_other:
@@ -1919,7 +1919,7 @@ class numeric_range(abc.Sequence, abc.Hashable):
             else:  # -self._len < key.stop < self._len
                 stop = self._get_by_index(key.stop)
 
-            return numeric_range(start, stop, step)
+            return NumericRange(start, stop, step)
         else:
             raise TypeError(
                     'numeric range indices must be '
@@ -1958,7 +1958,7 @@ class numeric_range(abc.Sequence, abc.Hashable):
             self._len = int(q) + int(r != self._zero)
 
     def __reduce__(self):
-        return numeric_range, (self._start, self._stop, self._step)
+        return NumericRange, (self._start, self._stop, self._step)
 
     def __repr__(self):
         if self._step == 1:
@@ -1970,8 +1970,8 @@ class numeric_range(abc.Sequence, abc.Hashable):
                                                       repr(self._step))
 
     def __reversed__(self):
-        return iter(numeric_range(self._get_by_index(-1),
-                                  self._start - self._step, -self._step))
+        return iter(NumericRange(self._get_by_index(-1),
+                                 self._start - self._step, -self._step))
 
     def count(self, value):
         return int(value in self)
@@ -2401,7 +2401,7 @@ class SequenceView(Sequence):
         return '{}({})'.format(self.__class__.__name__, repr(self._target))
 
 
-class seekable:
+class Seekable:
     """Wrap an iterator to allow for seeking backward and forward. This
     progressively caches the items in the source iterable so they can be
     re-visited.
@@ -2412,7 +2412,7 @@ class seekable:
     To "reset" an iterator, seek to ``0``:
 
         >>> from itertools import count
-        >>> it = seekable((str(n) for n in count()))
+        >>> it = Seekable((str(n) for n in count()))
         >>> next(it), next(it), next(it)
         ('0', '1', '2')
         >>> it.seek(0)
@@ -2423,7 +2423,7 @@ class seekable:
 
     You can also seek forward:
 
-        >>> it = seekable((str(n) for n in range(20)))
+        >>> it = Seekable((str(n) for n in range(20)))
         >>> it.seek(10)
         >>> next(it)
         '10'
@@ -2437,7 +2437,7 @@ class seekable:
     You may view the contents of the cache with the :meth:`elements` method.
     That returns a :class:`SequenceView`, a view that updates automatically:
 
-        >>> it = seekable((str(n) for n in range(10)))
+        >>> it = Seekable((str(n) for n in range(10)))
         >>> next(it), next(it), next(it)
         ('0', '1', '2')
         >>> elements = it.elements()
@@ -2453,7 +2453,7 @@ class seekable:
     size of the cache (this of course limits how far back you can seek).
 
         >>> from itertools import count
-        >>> it = seekable((str(n) for n in count()), maxlen=2)
+        >>> it = Seekable((str(n) for n in count()), maxlen=2)
         >>> next(it), next(it), next(it), next(it)
         ('0', '1', '2', '3')
         >>> list(it.elements())
@@ -2501,14 +2501,14 @@ class seekable:
             consume(self, remainder)
 
 
-class run_length:
+class RunLength:
     """
     :func:`run_length.encode` compresses an iterable with run-length encoding.
     It yields groups of repeated items with the count of how many times they
     were repeated:
 
         >>> uncompressed = 'abbcccdddd'
-        >>> list(run_length.encode(uncompressed))
+        >>> list(RunLength.encode(uncompressed))
         [('a', 1), ('b', 2), ('c', 3), ('d', 4)]
 
     :func:`run_length.decode` decompresses an iterable that was previously
@@ -2516,7 +2516,7 @@ class run_length:
     decompressed iterable:
 
         >>> compressed = [('a', 1), ('b', 2), ('c', 3), ('d', 4)]
-        >>> list(run_length.decode(compressed))
+        >>> list(RunLength.decode(compressed))
         ['a', 'b', 'b', 'c', 'c', 'c', 'd', 'd', 'd', 'd']
 
     """

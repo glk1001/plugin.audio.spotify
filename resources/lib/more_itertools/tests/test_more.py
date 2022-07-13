@@ -467,7 +467,8 @@ class PeekableTests(TestCase):
 class ConsumerTests(TestCase):
     """Tests for ``consumer()``"""
 
-    def test_consumer(self):
+    @staticmethod
+    def test_consumer():
         @mi.consumer
         def eater():
             while True:
@@ -803,28 +804,28 @@ class TestCollapse(TestCase):
     """Tests for ``collapse()``"""
 
     def test_collapse(self):
-        l = [[1], 2, [[3], 4], [[[5]]]]
-        self.assertEqual(list(mi.collapse(l)), [1, 2, 3, 4, 5])
+        lst = [[1], 2, [[3], 4], [[[5]]]]
+        self.assertEqual(list(mi.collapse(lst)), [1, 2, 3, 4, 5])
 
     def test_collapse_to_string(self):
-        l = [["s1"], "s2", [["s3"], "s4"], [[["s5"]]]]
-        self.assertEqual(list(mi.collapse(l)), ["s1", "s2", "s3", "s4", "s5"])
+        lst = [["s1"], "s2", [["s3"], "s4"], [[["s5"]]]]
+        self.assertEqual(list(mi.collapse(lst)), ["s1", "s2", "s3", "s4", "s5"])
 
     def test_collapse_flatten(self):
-        l = [[1], [2], [[3], 4], [[[5]]]]
-        self.assertEqual(list(mi.collapse(l, levels=1)), list(mi.flatten(l)))
+        lst = [[1], [2], [[3], 4], [[[5]]]]
+        self.assertEqual(list(mi.collapse(lst, levels=1)), list(mi.flatten(lst)))
 
     def test_collapse_to_level(self):
-        l = [[1], 2, [[3], 4], [[[5]]]]
-        self.assertEqual(list(mi.collapse(l, levels=2)), [1, 2, 3, 4, [5]])
+        lst = [[1], 2, [[3], 4], [[[5]]]]
+        self.assertEqual(list(mi.collapse(lst, levels=2)), [1, 2, 3, 4, [5]])
         self.assertEqual(
-                list(mi.collapse(mi.collapse(l, levels=1), levels=1)),
-                list(mi.collapse(l, levels=2))
+                list(mi.collapse(mi.collapse(lst, levels=1), levels=1)),
+                list(mi.collapse(lst, levels=2))
         )
 
     def test_collapse_to_list(self):
-        l = (1, [2], (3, [4, (5,)], 'ab'))
-        actual = list(mi.collapse(l, base_type=list))
+        lst = (1, [2], (3, [4, (5,)], 'ab'))
+        actual = list(mi.collapse(lst, base_type=list))
         expected = [1, [2], 3, [4, (5,)], 'ab']
         self.assertEqual(actual, expected)
 

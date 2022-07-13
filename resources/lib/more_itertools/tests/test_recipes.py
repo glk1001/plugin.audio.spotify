@@ -130,14 +130,14 @@ class NthTests(TestCase):
 
     def test_basic(self):
         """Make sure the nth item is returned"""
-        l = range(10)
-        for i, v in enumerate(l):
-            self.assertEqual(mi.nth(l, i), v)
+        rng = range(10)
+        for i, v in enumerate(rng):
+            self.assertEqual(mi.nth(rng, i), v)
 
     def test_default(self):
         """Ensure a default value is returned when nth item not found"""
-        l = range(3)
-        self.assertEqual(mi.nth(l, 100, "zebra"), "zebra")
+        rng = range(3)
+        self.assertEqual(mi.nth(rng, 100, "zebra"), "zebra")
 
     def test_negative_item_raises(self):
         """Ensure asking for a negative item raises an exception"""
@@ -403,27 +403,27 @@ class IterExceptTests(TestCase):
 
     def test_exact_exception(self):
         """ensure the exact specified exception is caught"""
-        l = [1, 2, 3]
-        i = mi.iter_except(l.pop, IndexError)
+        lst = [1, 2, 3]
+        i = mi.iter_except(lst.pop, IndexError)
         self.assertEqual(list(i), [3, 2, 1])
 
     def test_generic_exception(self):
         """ensure the generic exception can be caught"""
-        l = [1, 2]
-        i = mi.iter_except(l.pop, Exception)
+        lst = [1, 2]
+        i = mi.iter_except(lst.pop, Exception)
         self.assertEqual(list(i), [2, 1])
 
     def test_uncaught_exception_is_raised(self):
         """ensure a non-specified exception is raised"""
-        l = [1, 2, 3]
-        i = mi.iter_except(l.pop, KeyError)
+        lst = [1, 2, 3]
+        i = mi.iter_except(lst.pop, KeyError)
         self.assertRaises(IndexError, lambda: list(i))
 
     def test_first(self):
         """ensure first is run before the function"""
-        l = [1, 2, 3]
+        lst = [1, 2, 3]
         f = lambda: 25
-        i = mi.iter_except(l.pop, IndexError, f)
+        i = mi.iter_except(lst.pop, IndexError, f)
         self.assertEqual(list(i), [25, 3, 2, 1])
 
 
