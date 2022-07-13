@@ -1,12 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-'''
+"""
     plugin.audio.squeezebox
     spotty Player for Kodi
     utils.py
     Various helper methods
-'''
+"""
 
 import xbmc
 import xbmcvfs
@@ -14,14 +14,11 @@ import xbmcgui
 import os
 import stat
 import sys
-import urllib
 from traceback import format_exc
 import requests
 import subprocess
 import xbmcaddon
 import struct
-import random
-import io
 import time
 import math
 from threading import Thread, Event
@@ -76,7 +73,7 @@ except Exception:
 
 
 def log_msg(msg, loglevel=xbmc.LOGDEBUG):
-    '''log message to kodi log'''
+    """log message to kodi log"""
     if isinstance(msg, str):
         msg = msg.encode('utf-8')
     if DEBUG:
@@ -85,13 +82,13 @@ def log_msg(msg, loglevel=xbmc.LOGDEBUG):
 
 
 def log_exception(modulename, exceptiondetails):
-    '''helper to properly log an exception'''
+    """helper to properly log an exception"""
     log_msg(format_exc(sys.exc_info()), xbmc.LOGDEBUG)
     log_msg("Exception in %s ! --> %s" % (modulename, exceptiondetails), xbmc.LOGWARNING)
 
 
 def addon_setting(settingname, set_value=None):
-    '''get/set addon setting'''
+    """get/set addon setting"""
     addon = xbmcaddon.Addon(id=ADDON_ID)
     if set_value:
         addon.setSetting(settingname, set_value)
@@ -106,7 +103,6 @@ def kill_on_timeout(done, timeout, proc):
 
 def get_token(spotty):
     # get authentication token for api - prefer cached version
-    token_info = None
     try:
         if spotty.playback_supported:
             # try to get a token with spotty
@@ -129,7 +125,7 @@ def get_token(spotty):
 
 
 def request_token_spotty(spotty, use_creds=True):
-    '''request token by using the spotty binary'''
+    """request token by using the spotty binary"""
     token_info = None
     if spotty.playback_supported:
         try:
@@ -149,20 +145,20 @@ def request_token_spotty(spotty, use_creds=True):
                     result = eval(line)
             # transform token info to spotipy compatible format
             if result:
-                token_info = {}
-                token_info["access_token"] = result["accessToken"]
-                token_info["expires_in"] = result["expiresIn"]
-                token_info["token_type"] = result["tokenType"]
-                token_info["scope"] = ' '.join(result["scope"])
-                token_info['expires_at'] = int(time.time()) + token_info['expires_in']
-                token_info['refresh_token'] = result["accessToken"]
+                token_info = {'access_token': result['accessToken'],
+                              'expires_in': result['expiresIn'],
+                              'token_type': result['tokenType'],
+                              'scope': ' '.join(result['scope']),
+                              'expires_at': int(time.time()) + result['expiresIn'],
+                              'refresh_token': result['accessToken']
+                              }
         except Exception as exc:
             log_exception(__name__, exc)
     return token_info
 
 
 def request_token_web(force=False):
-    '''request the (initial) auth token by webbrowser'''
+    """request the (initial) auth token by webbrowser"""
     import spotipy
     from spotipy import oauth2
     xbmcvfs.mkdir("special://profile/addon_data/%s/" % ADDON_ID)
@@ -176,7 +172,6 @@ def request_token_web(force=False):
     token_info = sp_oauth.get_cached_token()
     if not token_info or force:
         # request token by using the webbrowser
-        p = None
         auth_url = sp_oauth.get_authorize_url()
 
         # show message to user that the browser is going to be launched
@@ -218,7 +213,7 @@ def request_token_web(force=False):
 
 
 def create_wave_header(duration):
-    '''generate a wave header for the stream'''
+    """generate a wave header for the stream"""
     file = BytesIO()
     numsamples = 44100 * duration
     channels = 2
@@ -272,7 +267,8 @@ def create_wave_header(duration):
 
 
 def process_method_on_list(method_to_run, items):
-    '''helper method that processes a method on each listitem with pooling if the system supports it'''
+    """helper method that processes a method on each list item
+       with pooling if the system supports it"""
     all_items = []
     if SUPPORTS_POOL:
         pool = ThreadPool()
@@ -388,18 +384,18 @@ def get_playername():
 
 
 class Spotty(object):
-    '''
+    """
         spotty is wrapped into a seperate class to store common properties
         this is done to prevent hitting a kodi issue where calling one of the infolabel methods
         at playback time causes a crash of the playback
-    '''
+    """
     playback_supported = False
     playername = None
     __spotty_binary = None
     __cache_path = None
 
     def __init__(self):
-        '''initialize with default values'''
+        """initialize with default values"""
         self.__cache_path = xbmcvfs.translatePath("special://profile/addon_data/%s/" % ADDON_ID)
         self.playername = get_playername()
         self.__spotty_binary = self.get_spotty_binary()
@@ -410,8 +406,9 @@ class Spotty(object):
         else:
             log_msg("Error while verifying spotty. Local playback is disabled.")
 
-    def test_spotty(self, binary_path):
-        '''self-test spotty binary'''
+    @staticmethod
+    def test_spotty(binary_path):
+        """self-test spotty binary"""
         try:
             st = os.stat(binary_path)
             os.chmod(binary_path, st.st_mode | stat.S_IEXEC)
@@ -444,7 +441,7 @@ class Spotty(object):
         return False
 
     def run_spotty(self, arguments=None, use_creds=False, disable_discovery=False, ap_port="54443"):
-        '''On supported platforms we include spotty binary'''
+        """On supported platforms we include spotty binary"""
         try:
             args = [
                     self.__spotty_binary,
@@ -466,7 +463,7 @@ class Spotty(object):
                 args += ["--disable-discovery"]
             if arguments:
                 args += arguments
-            if not "-n" in args:
+            if "-n" not in args:
                 args += ["-n", self.playername]
             startupinfo = None
             if os.name == 'nt':
@@ -479,18 +476,18 @@ class Spotty(object):
         return None
 
     def kill_spotty(self):
-        '''make sure we don't have any (remaining) spotty processes running before we start one'''
+        """make sure we don't have any (remaining) spotty processes running before we start one"""
         if xbmc.getCondVisibility("System.Platform.Windows"):
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             subprocess.Popen(["taskkill", "/IM", "spotty.exe"], startupinfo=startupinfo, shell=True)
         else:
-            if self.__spotty_binary != None:
+            if self.__spotty_binary is not None:
                 sp_binary_file = os.path.basename(self.__spotty_binary)
                 os.system("killall " + sp_binary_file)
 
     def get_spotty_binary(self):
-        '''find the correct spotty binary belonging to the platform'''
+        """find the correct spotty binary belonging to the platform"""
         sp_binary = None
         if xbmc.getCondVisibility("System.Platform.Windows"):
             sp_binary = os.path.join(os.path.dirname(__file__), "spotty", "windows", "spotty.exe")
@@ -508,13 +505,10 @@ class Spotty(object):
                                          "spotty-x86_64")
             else:
                 # just try to get the correct binary path if we're unsure about the platform/cpu
-                paths = []
-                ##                paths.append(os.path.join(os.path.dirname(__file__), "spotty", "arm-linux", "spotty-muslhf"))
-                paths.append(
-                        os.path.join(os.path.dirname(__file__), "spotty", "arm-linux", "spotty-hf"))
-                ##                paths.append(os.path.join(os.path.dirname(__file__), "spotty", "arm-linux", "spotty"))
-                paths.append(
-                        os.path.join(os.path.dirname(__file__), "spotty", "x86-linux", "spotty"))
+                paths = [
+                        os.path.join(os.path.dirname(__file__), "spotty", "arm-linux", "spotty-hf"),
+                        os.path.join(os.path.dirname(__file__), "spotty", "x86-linux", "spotty")
+                ]
                 for binary_path in paths:
                     if self.test_spotty(binary_path):
                         sp_binary = binary_path
@@ -524,12 +518,13 @@ class Spotty(object):
             os.chmod(sp_binary, st.st_mode | stat.S_IEXEC)
             log_msg("Architecture detected. Using spotty binary %s" % sp_binary)
         else:
-            log_msg(
-                    "Failed to detect architecture or platform not supported ! Local playback will not be available.")
+            log_msg("Failed to detect architecture or platform not supported !"
+                    " Local playback will not be available.")
         return sp_binary
 
-    def get_username(self):
-        ''' obtain/check (last) username of the credentials obtained by spotify connect'''
+    @staticmethod
+    def get_username():
+        """ obtain/check (last) username of the credentials obtained by spotify connect"""
         username = ""
         cred_file = xbmcvfs.translatePath(
                 "special://profile/addon_data/%s/credentials.json" % ADDON_ID)
