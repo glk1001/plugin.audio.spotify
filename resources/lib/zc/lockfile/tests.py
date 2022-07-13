@@ -15,16 +15,18 @@ import os, re, sys, unittest, doctest
 import zc.lockfile, time, threading
 from zope.testing import renormalizing, setupstack
 import tempfile
+
 try:
     from unittest.mock import Mock, patch
 except ImportError:
     from mock import Mock, patch
 
 checker = renormalizing.RENormalizing([
-    # Python 3 adds module path to error class name.
-    (re.compile("zc\.lockfile\.LockError:"),
-     r"LockError:"),
-    ])
+        # Python 3 adds module path to error class name.
+        (re.compile("zc\.lockfile\.LockError:"),
+         r"LockError:"),
+])
+
 
 def inc():
     while 1:
@@ -42,6 +44,7 @@ def inc():
     f.write(('%d\n' % v).encode('ASCII'))
     f.close()
     lock.close()
+
 
 def many_threads_read_and_write():
     r"""
@@ -71,6 +74,7 @@ def many_threads_read_and_write():
     >>> os.remove('f.lock')
 
     """
+
 
 def pid_in_lockfile():
     r"""
@@ -141,6 +145,7 @@ class TestLogger(object):
 
 class LockFileLogEntryTestCase(unittest.TestCase):
     """Tests for logging in case of lock failure"""
+
     def setUp(self):
         self.here = os.getcwd()
         self.tmp = tempfile.mkdtemp(prefix='zc.lockfile-test-')
@@ -183,11 +188,11 @@ class LockFileLogEntryTestCase(unittest.TestCase):
 def test_suite():
     suite = unittest.TestSuite()
     suite.addTest(doctest.DocFileSuite(
-        'README.txt', checker=checker,
-        setUp=setupstack.setUpDirectory, tearDown=setupstack.tearDown))
+            'README.txt', checker=checker,
+            setUp=setupstack.setUpDirectory, tearDown=setupstack.tearDown))
     suite.addTest(doctest.DocTestSuite(
-        setUp=setupstack.setUpDirectory, tearDown=setupstack.tearDown,
-        checker=checker))
+            setUp=setupstack.setUpDirectory, tearDown=setupstack.tearDown,
+            checker=checker))
     # Add unittest test cases from this module
     suite.addTest(unittest.defaultTestLoader.loadTestsFromName(__name__))
     return suite

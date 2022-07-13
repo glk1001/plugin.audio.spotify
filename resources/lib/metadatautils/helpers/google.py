@@ -4,6 +4,7 @@
 """get images from google images"""
 
 import os, sys
+
 if sys.version_info.major == 3:
     from .utils import DialogSelect, requests, log_exception
 else:
@@ -49,8 +50,9 @@ class GoogleImages(object):
                     listitem.setArt({'icon': img})
                     images_list.append(listitem)
         if manual_select and images_list:
-            dialog = DialogSelect("DialogSelect.xml", "", listing=images_list, window_title="%s - Google"
-                                  % xbmc.getLocalizedString(283))
+            dialog = DialogSelect("DialogSelect.xml", "", listing=images_list,
+                                  window_title="%s - Google"
+                                               % xbmc.getLocalizedString(283))
             dialog.doModal()
             selected_item = dialog.result
             del dialog
@@ -70,7 +72,8 @@ class GoogleImages(object):
             IEMobile/7.0; LG; GW910)'}
         html = ''
         try:
-            html = requests.get('https://www.google.com/search', headers=headers, params=params, timeout=5).text
+            html = requests.get('https://www.google.com/search', headers=headers, params=params,
+                                timeout=5).text
         except Exception as exc:
             log_exception(__name__, exc)
         soup = BeautifulSoup.BeautifulSoup(html, features="html.parser")

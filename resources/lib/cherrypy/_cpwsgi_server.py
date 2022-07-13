@@ -28,7 +28,7 @@ class CPWSGIHTTPRequest(cheroot.server.HTTPRequest):
                 HTTP connection object for this request
         """
         super(CPWSGIHTTPRequest, self).__init__(
-            server, conn, proxy_mode=True
+                server, conn, proxy_mode=True
         )
 
 
@@ -52,10 +52,10 @@ class CPWSGIServer(cheroot.wsgi.Server):
         """
         self.server_adapter = server_adapter
         self.max_request_header_size = (
-            self.server_adapter.max_request_header_size or 0
+                self.server_adapter.max_request_header_size or 0
         )
         self.max_request_body_size = (
-            self.server_adapter.max_request_body_size or 0
+                self.server_adapter.max_request_body_size or 0
         )
 
         server_name = (self.server_adapter.socket_host or
@@ -65,17 +65,17 @@ class CPWSGIServer(cheroot.wsgi.Server):
         self.wsgi_version = self.server_adapter.wsgi_version
 
         super(CPWSGIServer, self).__init__(
-            server_adapter.bind_addr, cherrypy.tree,
-            self.server_adapter.thread_pool,
-            server_name,
-            max=self.server_adapter.thread_pool_max,
-            request_queue_size=self.server_adapter.socket_queue_size,
-            timeout=self.server_adapter.socket_timeout,
-            shutdown_timeout=self.server_adapter.shutdown_timeout,
-            accepted_queue_size=self.server_adapter.accepted_queue_size,
-            accepted_queue_timeout=self.server_adapter.accepted_queue_timeout,
-            peercreds_enabled=self.server_adapter.peercreds,
-            peercreds_resolve_enabled=self.server_adapter.peercreds_resolve,
+                server_adapter.bind_addr, cherrypy.tree,
+                self.server_adapter.thread_pool,
+                server_name,
+                max=self.server_adapter.thread_pool_max,
+                request_queue_size=self.server_adapter.socket_queue_size,
+                timeout=self.server_adapter.socket_timeout,
+                shutdown_timeout=self.server_adapter.shutdown_timeout,
+                accepted_queue_size=self.server_adapter.accepted_queue_size,
+                accepted_queue_timeout=self.server_adapter.accepted_queue_timeout,
+                peercreds_enabled=self.server_adapter.peercreds,
+                peercreds_resolve_enabled=self.server_adapter.peercreds_resolve,
         )
         self.ConnectionClass.RequestHandlerClass = CPWSGIHTTPRequest
 
@@ -89,21 +89,21 @@ class CPWSGIServer(cheroot.wsgi.Server):
         if self.server_adapter.ssl_context:
             adapter_class = cheroot.server.get_ssl_adapter_class(ssl_module)
             self.ssl_adapter = adapter_class(
-                self.server_adapter.ssl_certificate,
-                self.server_adapter.ssl_private_key,
-                self.server_adapter.ssl_certificate_chain,
-                self.server_adapter.ssl_ciphers)
+                    self.server_adapter.ssl_certificate,
+                    self.server_adapter.ssl_private_key,
+                    self.server_adapter.ssl_certificate_chain,
+                    self.server_adapter.ssl_ciphers)
             self.ssl_adapter.context = self.server_adapter.ssl_context
         elif self.server_adapter.ssl_certificate:
             adapter_class = cheroot.server.get_ssl_adapter_class(ssl_module)
             self.ssl_adapter = adapter_class(
-                self.server_adapter.ssl_certificate,
-                self.server_adapter.ssl_private_key,
-                self.server_adapter.ssl_certificate_chain,
-                self.server_adapter.ssl_ciphers)
+                    self.server_adapter.ssl_certificate,
+                    self.server_adapter.ssl_private_key,
+                    self.server_adapter.ssl_certificate_chain,
+                    self.server_adapter.ssl_ciphers)
 
         self.stats['Enabled'] = getattr(
-            self.server_adapter, 'statistics', False)
+                self.server_adapter, 'statistics', False)
 
     def error_log(self, msg='', level=20, traceback=False):
         """Write given message to the error log."""

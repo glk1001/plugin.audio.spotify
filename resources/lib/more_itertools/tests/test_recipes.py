@@ -32,7 +32,7 @@ class AccumulateTests(TestCase):
     def test_custom_function(self):
         """Test accumulate with a custom function"""
         self.assertEqual(
-            list(mi.accumulate((1, 2, 3, 2, 1), func=max)), [1, 2, 3, 3, 3]
+                list(mi.accumulate((1, 2, 3, 2, 1), func=max)), [1, 2, 3, 3, 3]
         )
 
 
@@ -88,13 +88,13 @@ class TailTests(TestCase):
     def test_equal(self):
         """Length of iterable is equal to the requested tail"""
         self.assertEqual(
-            list(mi.tail(7, 'ABCDEFG')), ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+                list(mi.tail(7, 'ABCDEFG')), ['A', 'B', 'C', 'D', 'E', 'F', 'G']
         )
 
     def test_less(self):
         """Length of iterable is less than requested tail"""
         self.assertEqual(
-            list(mi.tail(8, 'ABCDEFG')), ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+                list(mi.tail(8, 'ABCDEFG')), ['A', 'B', 'C', 'D', 'E', 'F', 'G']
         )
 
 
@@ -205,8 +205,8 @@ class NcyclesTests(TestCase):
         r = ["a", "b", "c"]
         n = mi.ncycles(r, 3)
         self.assertEqual(
-            ["a", "b", "c", "a", "b", "c", "a", "b", "c"],
-            list(n)
+                ["a", "b", "c", "a", "b", "c", "a", "b", "c"],
+                list(n)
         )
 
     def test_null_case(self):
@@ -289,7 +289,7 @@ class GrouperTests(TestCase):
 
         """
         self.assertEqual(
-            list(mi.grouper(3, 'ABCDEF')), [('A', 'B', 'C'), ('D', 'E', 'F')]
+                list(mi.grouper(3, 'ABCDEF')), [('A', 'B', 'C'), ('D', 'E', 'F')]
         )
 
     def test_odd(self):
@@ -298,14 +298,14 @@ class GrouperTests(TestCase):
 
         """
         self.assertEqual(
-            list(mi.grouper(3, 'ABCDE')), [('A', 'B', 'C'), ('D', 'E', None)]
+                list(mi.grouper(3, 'ABCDE')), [('A', 'B', 'C'), ('D', 'E', None)]
         )
 
     def test_fill_value(self):
         """Test that the fill value is used to pad the final group"""
         self.assertEqual(
-            list(mi.grouper(3, 'ABCDE', 'x')),
-            [('A', 'B', 'C'), ('D', 'E', 'x')]
+                list(mi.grouper(3, 'ABCDE', 'x')),
+                [('A', 'B', 'C'), ('D', 'E', 'x')]
         )
 
 
@@ -315,15 +315,15 @@ class RoundrobinTests(TestCase):
     def test_even_groups(self):
         """Ensure ordered output from evenly populated iterables"""
         self.assertEqual(
-            list(mi.roundrobin('ABC', [1, 2, 3], range(3))),
-            ['A', 1, 0, 'B', 2, 1, 'C', 3, 2]
+                list(mi.roundrobin('ABC', [1, 2, 3], range(3))),
+                ['A', 1, 0, 'B', 2, 1, 'C', 3, 2]
         )
 
     def test_uneven_groups(self):
         """Ensure ordered output from unevenly populated iterables"""
         self.assertEqual(
-            list(mi.roundrobin('ABCD', [1, 2], range(0))),
-            ['A', 1, 'B', 2, 'C', 'D']
+                list(mi.roundrobin('ABCD', [1, 2], range(0))),
+                ['A', 1, 'B', 2, 'C', 'D']
         )
 
 
@@ -350,8 +350,8 @@ class PowersetTests(TestCase):
         """Ensure a proper enumeration"""
         p = mi.powerset([1, 2, 3])
         self.assertEqual(
-            list(p),
-            [(), (1,), (2,), (3,), (1, 2), (1, 3), (2, 3), (1, 2, 3)]
+                list(p),
+                [(), (1,), (2,), (3,), (1, 2), (1, 3), (2, 3), (1, 2, 3)]
         )
 
 
@@ -362,8 +362,8 @@ class UniqueEverseenTests(TestCase):
         """ensure duplicate elements are ignored"""
         u = mi.unique_everseen('AAAABBBBCCDAABBB')
         self.assertEqual(
-            ['A', 'B', 'C', 'D'],
-            list(u)
+                ['A', 'B', 'C', 'D'],
+                list(u)
         )
 
     def test_custom_key(self):
@@ -445,7 +445,7 @@ class FirstTrueTests(TestCase):
     def test_pred(self):
         """Test with a custom predicate"""
         self.assertEqual(
-            mi.first_true([2, 4, 6], pred=lambda x: x % 3 == 0), 6
+                mi.first_true([2, 4, 6], pred=lambda x: x % 3 == 0), 6
         )
 
 
@@ -551,7 +551,7 @@ class RandomCombinationTests(TestCase):
             combination = mi.random_combination(items, len(items))
             self.assertEqual(len(combination), len(set(combination)))
         self.assertRaises(
-            ValueError, lambda: mi.random_combination(items, len(items) + 1)
+                ValueError, lambda: mi.random_combination(items, len(items) + 1)
         )
 
 

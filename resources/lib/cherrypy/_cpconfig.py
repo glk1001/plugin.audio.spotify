@@ -141,10 +141,10 @@ def merge(base, other):
     for section, value_map in reprconf.Parser.load(other).items():
         if not isinstance(value_map, dict):
             raise ValueError(
-                'Application config must include section headers, but the '
-                "config you tried to merge doesn't have any sections. "
-                'Wrap your config in another dict with paths as section '
-                "headers, for example: {'/': config}.")
+                    'Application config must include section headers, but the '
+                    "config you tried to merge doesn't have any sections. "
+                    'Wrap your config in another dict with paths as section '
+                    "headers, for example: {'/': config}.")
         base.setdefault(section, {}).update(value_map)
 
 
@@ -169,9 +169,11 @@ class Config(reprconf.Config):
     @staticmethod
     def __call__(**kwargs):
         """Decorate for page handlers to set _cp_config."""
+
         def tool_decorator(f):
             _Vars(f).setdefault('_cp_config', {}).update(kwargs)
             return f
+
         return tool_decorator
 
 
@@ -189,41 +191,43 @@ class _Vars(object):
 
 # Sphinx begin config.environments
 Config.environments = environments = {
-    'staging': {
-        'engine.autoreload.on': False,
-        'checker.on': False,
-        'tools.log_headers.on': False,
-        'request.show_tracebacks': False,
-        'request.show_mismatched_params': False,
-    },
-    'production': {
-        'engine.autoreload.on': False,
-        'checker.on': False,
-        'tools.log_headers.on': False,
-        'request.show_tracebacks': False,
-        'request.show_mismatched_params': False,
-        'log.screen': False,
-    },
-    'embedded': {
-        # For use with CherryPy embedded in another deployment stack.
-        'engine.autoreload.on': False,
-        'checker.on': False,
-        'tools.log_headers.on': False,
-        'request.show_tracebacks': False,
-        'request.show_mismatched_params': False,
-        'log.screen': False,
-        'engine.SIGHUP': None,
-        'engine.SIGTERM': None,
-    },
-    'test_suite': {
-        'engine.autoreload.on': False,
-        'checker.on': False,
-        'tools.log_headers.on': False,
-        'request.show_tracebacks': True,
-        'request.show_mismatched_params': True,
-        'log.screen': False,
-    },
+        'staging': {
+                'engine.autoreload.on': False,
+                'checker.on': False,
+                'tools.log_headers.on': False,
+                'request.show_tracebacks': False,
+                'request.show_mismatched_params': False,
+        },
+        'production': {
+                'engine.autoreload.on': False,
+                'checker.on': False,
+                'tools.log_headers.on': False,
+                'request.show_tracebacks': False,
+                'request.show_mismatched_params': False,
+                'log.screen': False,
+        },
+        'embedded': {
+                # For use with CherryPy embedded in another deployment stack.
+                'engine.autoreload.on': False,
+                'checker.on': False,
+                'tools.log_headers.on': False,
+                'request.show_tracebacks': False,
+                'request.show_mismatched_params': False,
+                'log.screen': False,
+                'engine.SIGHUP': None,
+                'engine.SIGTERM': None,
+        },
+        'test_suite': {
+                'engine.autoreload.on': False,
+                'checker.on': False,
+                'tools.log_headers.on': False,
+                'request.show_tracebacks': True,
+                'request.show_mismatched_params': True,
+                'log.screen': False,
+        },
 }
+
+
 # Sphinx end config.environments
 
 

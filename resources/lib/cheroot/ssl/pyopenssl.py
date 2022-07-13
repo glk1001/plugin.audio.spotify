@@ -51,6 +51,7 @@ will be read, and the context will be automatically created from them.
 """
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import socket
@@ -133,9 +134,9 @@ class SSLFileobjectMixin:
     def recv(self, size):
         """Receive message of a size from the socket."""
         return self._safe_call(
-            True,
-            super(SSLFileobjectMixin, self).recv,
-            size,
+                True,
+                super(SSLFileobjectMixin, self).recv,
+                size,
         )
 
     def readline(self, size=-1):
@@ -145,25 +146,25 @@ class SSLFileobjectMixin:
         https://docs.python.org/3/library/io.html#io.IOBase.readline
         """
         return self._safe_call(
-            True,
-            super(SSLFileobjectMixin, self).readline,
-            size,
+                True,
+                super(SSLFileobjectMixin, self).readline,
+                size,
         )
 
     def sendall(self, *args, **kwargs):
         """Send whole message to the socket."""
         return self._safe_call(
-            False,
-            super(SSLFileobjectMixin, self).sendall,
-            *args, **kwargs
+                False,
+                super(SSLFileobjectMixin, self).sendall,
+                *args, **kwargs
         )
 
     def send(self, *args, **kwargs):
         """Send some part of message to the socket."""
         return self._safe_call(
-            False,
-            super(SSLFileobjectMixin, self).send,
-            *args, **kwargs
+                False,
+                super(SSLFileobjectMixin, self).send,
+                *args, **kwargs
         )
 
 
@@ -181,46 +182,52 @@ class SSLConnectionProxyMeta:
     def __new__(mcl, name, bases, nmspc):
         """Attach a list of proxy methods to a new class."""
         proxy_methods = (
-            'get_context', 'pending', 'send', 'write', 'recv', 'read',
-            'renegotiate', 'bind', 'listen', 'connect', 'accept',
-            'setblocking', 'fileno', 'close', 'get_cipher_list',
-            'getpeername', 'getsockname', 'getsockopt', 'setsockopt',
-            'makefile', 'get_app_data', 'set_app_data', 'state_string',
-            'sock_shutdown', 'get_peer_certificate', 'want_read',
-            'want_write', 'set_connect_state', 'set_accept_state',
-            'connect_ex', 'sendall', 'settimeout', 'gettimeout',
-            'shutdown',
+                'get_context', 'pending', 'send', 'write', 'recv', 'read',
+                'renegotiate', 'bind', 'listen', 'connect', 'accept',
+                'setblocking', 'fileno', 'close', 'get_cipher_list',
+                'getpeername', 'getsockname', 'getsockopt', 'setsockopt',
+                'makefile', 'get_app_data', 'set_app_data', 'state_string',
+                'sock_shutdown', 'get_peer_certificate', 'want_read',
+                'want_write', 'set_connect_state', 'set_accept_state',
+                'connect_ex', 'sendall', 'settimeout', 'gettimeout',
+                'shutdown',
         )
         proxy_methods_no_args = (
-            'shutdown',
+                'shutdown',
         )
 
         proxy_props = (
-            'family',
+                'family',
         )
 
         def lock_decorator(method):
             """Create a proxy method for a new class."""
+
             def proxy_wrapper(self, *args):
                 self._lock.acquire()
                 try:
                     new_args = (
-                        args[:] if method not in proxy_methods_no_args else []
+                            args[:] if method not in proxy_methods_no_args else []
                     )
                     return getattr(self._ssl_conn, method)(*new_args)
                 finally:
                     self._lock.release()
+
             return proxy_wrapper
+
         for m in proxy_methods:
             nmspc[m] = lock_decorator(m)
             nmspc[m].__name__ = m
 
         def make_property(property_):
             """Create a proxy method for a new class."""
+
             def proxy_prop_wrapper(self):
                 return getattr(self._ssl_conn, property_)
+
             proxy_prop_wrapper.__name__ = property_
             return property(proxy_prop_wrapper)
+
         for p in proxy_props:
             nmspc[p] = make_property(p)
 
@@ -276,7 +283,7 @@ class pyOpenSSLAdapter(Adapter):
             raise ImportError('You must install pyOpenSSL to use HTTPS.')
 
         super(pyOpenSSLAdapter, self).__init__(
-            certificate, private_key, certificate_chain, ciphers,
+                certificate, private_key, certificate_chain, ciphers,
         )
 
         self._environ = None
@@ -312,37 +319,37 @@ class pyOpenSSLAdapter(Adapter):
     def get_environ(self):
         """Return WSGI environ entries to be merged into each request."""
         ssl_environ = {
-            'wsgi.url_scheme': 'https',
-            'HTTPS': 'on',
-            'SSL_VERSION_INTERFACE': '%s %s/%s Python/%s' % (
-                cheroot_server.HTTPServer.version,
-                OpenSSL.version.__title__, OpenSSL.version.__version__,
-                sys.version,
-            ),
-            'SSL_VERSION_LIBRARY': SSL.SSLeay_version(
-                SSL.SSLEAY_VERSION,
-            ).decode(),
+                'wsgi.url_scheme': 'https',
+                'HTTPS': 'on',
+                'SSL_VERSION_INTERFACE': '%s %s/%s Python/%s' % (
+                        cheroot_server.HTTPServer.version,
+                        OpenSSL.version.__title__, OpenSSL.version.__version__,
+                        sys.version,
+                ),
+                'SSL_VERSION_LIBRARY': SSL.SSLeay_version(
+                        SSL.SSLEAY_VERSION,
+                ).decode(),
         }
 
         if self.certificate:
             # Server certificate attributes
             with open(self.certificate, 'rb') as cert_file:
                 cert = crypto.load_certificate(
-                    crypto.FILETYPE_PEM, cert_file.read(),
+                        crypto.FILETYPE_PEM, cert_file.read(),
                 )
 
             ssl_environ.update({
-                'SSL_SERVER_M_VERSION': cert.get_version(),
-                'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
-                # 'SSL_SERVER_V_START':
-                #   Validity of server's certificate (start time),
-                # 'SSL_SERVER_V_END':
-                #   Validity of server's certificate (end time),
+                    'SSL_SERVER_M_VERSION': cert.get_version(),
+                    'SSL_SERVER_M_SERIAL': cert.get_serial_number(),
+                    # 'SSL_SERVER_V_START':
+                    #   Validity of server's certificate (start time),
+                    # 'SSL_SERVER_V_END':
+                    #   Validity of server's certificate (end time),
             })
 
             for prefix, dn in [
-                ('I', cert.get_issuer()),
-                ('S', cert.get_subject()),
+                    ('I', cert.get_issuer()),
+                    ('S', cert.get_subject()),
             ]:
                 # X509Name objects don't seem to have a way to get the
                 # complete DN string. Use str() and slice it instead,
@@ -368,9 +375,9 @@ class pyOpenSSLAdapter(Adapter):
     def makefile(self, sock, mode='r', bufsize=-1):
         """Return socket file object."""
         cls = (
-            SSLFileobjectStreamReader
-            if 'r' in mode else
-            SSLFileobjectStreamWriter
+                SSLFileobjectStreamReader
+                if 'r' in mode else
+                SSLFileobjectStreamWriter
         )
         if SSL and isinstance(sock, ssl_conn_type):
             wrapped_socket = cls(sock, mode, bufsize)

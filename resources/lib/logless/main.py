@@ -18,7 +18,7 @@ try:
 except Exception as ex:
     psutil = None  # noqa
     logging.warning(
-        f"Could not load psutils. Some logging function may not be available. {ex}"
+            f"Could not load psutils. Some logging function may not be available. {ex}"
     )
 
 
@@ -56,14 +56,14 @@ def duration_to_string(seconds):
     """Return duration as a concise string. e.g. "32min 3s", "4hr 34min", etc."""
     units = ["hr", "min", "s"]
     duration_parts = [
-        int(part) for part in str(datetime.timedelta(seconds=int(seconds))).split(":")
+            int(part) for part in str(datetime.timedelta(seconds=int(seconds))).split(":")
     ]
     if duration_parts[0]:
         # if >=1hr, append seconds as tenth of minutes
         # duration_parts[1] = duration_parts[1] + round(duration_parts[2] / 60, 1)
         duration_parts = duration_parts[:2]
     result = " ".join(
-        [str(part) + units[x] for x, part in enumerate(duration_parts, 0) if part]
+            [str(part) + units[x] for x, part in enumerate(duration_parts, 0) if part]
     )
     return result or "0s"
 
@@ -86,7 +86,7 @@ def flush_buffers():
 
 
 def _convert_mem_units(
-    from_val, from_units: str = None, to_units: str = None, sig_digits=None
+        from_val, from_units: str = None, to_units: str = None, sig_digits=None
 ):
     """
     Convert memory units.
@@ -104,11 +104,11 @@ def _convert_mem_units(
     """
     from_units = from_units or "B"
     _mem_units_map = {
-        "B": 1,
-        "K": (1024 ** 1),
-        "MB": (1024 ** 2),
-        "GB": (1024 ** 3),
-        "TB": (1024 ** 4),
+            "B": 1,
+            "K": (1024 ** 1),
+            "MB": (1024 ** 2),
+            "GB": (1024 ** 3),
+            "TB": (1024 ** 4),
     }
     num_bytes = from_val * _mem_units_map[from_units]
     return_tuple = not to_units
@@ -168,20 +168,20 @@ def _cpu_usage_string(process_id=None):
 def _get_printable_context(context: dict = None, as_str=True):
     """Return a string or dict, obfuscating names that look like keys."""
     printable_dict = {
-        k: (
-            v
-            if not any(
-                [
-                    "secret" in k.lower(),
-                    "pwd" in k.lower(),
-                    "pass" in k.lower(),
-                    "access.key" in k.lower(),
-                ]
+            k: (
+                    v
+                    if not any(
+                            [
+                                    "secret" in k.lower(),
+                                    "pwd" in k.lower(),
+                                    "pass" in k.lower(),
+                                    "access.key" in k.lower(),
+                            ]
+                    )
+                    else "****"
             )
-            else "****"
-        )
-        for k, v in context.items()
-        if k != "__builtins__"
+            for k, v in context.items()
+            if k != "__builtins__"
     }
     if as_str:
         return "\n".join([f"\t{k}:\t{v}" for k, v in printable_dict.items()])
@@ -211,12 +211,12 @@ def fstr(fstring_text, locals, globals=None):
 
 
 def heartbeat_printer(
-    desc_text,
-    msg_queue: queue.Queue,
-    interval,
-    show_memory=True,
-    show_cpu=None,
-    start_time=None,
+        desc_text,
+        msg_queue: queue.Queue,
+        interval,
+        show_memory=True,
+        show_cpu=None,
+        start_time=None,
 ):
     start_time = start_time or time.time()
     show_memory = show_memory if show_memory is not None else True
@@ -235,13 +235,13 @@ def heartbeat_printer(
 
 @contextmanager
 def logged_block(
-    desc_text,
-    start_msg="Beginning {desc_text}...",
-    success_msg="Completed {desc_text} {success_detail}  {elapsed}",
-    success_detail="",  # noqa
-    show_memory=None,
-    heartbeat_interval=DEFAULT_HEARTBEAT_MINUTES * 60,
-    **kwargs,
+        desc_text,
+        start_msg="Beginning {desc_text}...",
+        success_msg="Completed {desc_text} {success_detail}  {elapsed}",
+        success_detail="",  # noqa
+        show_memory=None,
+        heartbeat_interval=DEFAULT_HEARTBEAT_MINUTES * 60,
+        **kwargs,
 ):
     """
     Time and log the execution inside a with block.
@@ -262,14 +262,14 @@ def logged_block(
     if heartbeat_interval:
         msg_queue = queue.Queue()
         heartbeat = threading.Thread(
-            target=heartbeat_printer,
-            args=[],
-            kwargs={
-                "desc_text": desc_text,
-                "msg_queue": msg_queue,
-                "interval": heartbeat_interval,
-                "show_memory": show_memory,
-            },
+                target=heartbeat_printer,
+                args=[],
+                kwargs={
+                        "desc_text": desc_text,
+                        "msg_queue": msg_queue,
+                        "interval": heartbeat_interval,
+                        "show_memory": show_memory,
+                },
         )
         heartbeat.daemon = True
         heartbeat.start()
@@ -313,15 +313,15 @@ class logged():
     """
 
     def __init__(
-        self,
-        desc_text="{fn.__name__}() for '{desc_detail}'",
-        desc_detail="",
-        start_msg="Beginning {desc_text}...",
-        success_msg="Completed {desc_text} {elapsed} ({success_detail})",
-        success_detail="",
-        buffer_lines=0,
-        log_fn=None,
-        **addl_kwargs,
+            self,
+            desc_text="{fn.__name__}() for '{desc_detail}'",
+            desc_detail="",
+            start_msg="Beginning {desc_text}...",
+            success_msg="Completed {desc_text} {elapsed} ({success_detail})",
+            success_detail="",
+            buffer_lines=0,
+            log_fn=None,
+            **addl_kwargs,
     ):
         """All arguments optional."""
         log_fn = log_fn or DEFAULT_LOGGER.info
@@ -354,13 +354,13 @@ class logged():
                 """Evaluate any f-strings in context_dict[context_key], save the result."""
                 try:
                     context_dict[context_key] = fstr(
-                        context_dict[context_key], locals=context_dict
+                            context_dict[context_key], locals=context_dict
                     )
                 except Exception as ex:
                     DEFAULT_LOGGER.warning(
-                        f"Error evaluating '{context_key}' "
-                        f"({context_dict.get(context_key, '(missing)')})"
-                        f": '{ex}' with context: '{_get_printable_context(context_dict)}'"
+                            f"Error evaluating '{context_key}' "
+                            f"({context_dict.get(context_key, '(missing)')})"
+                            f": '{ex}' with context: '{_get_printable_context(context_dict)}'"
                     )
 
             start = time.time()

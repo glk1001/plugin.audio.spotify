@@ -32,21 +32,22 @@ def load_tests(loader, tests, ignore):
 
 class CollateTests(TestCase):
     """Unit tests for ``collate()``"""
+
     # Also accidentally tests peekable, though that could use its own tests
 
     def test_default(self):
         """Test with the default `key` function."""
         iterables = [range(4), range(7), range(3, 6)]
         self.assertEqual(
-            sorted(reduce(list.__add__, [list(it) for it in iterables])),
-            list(mi.collate(*iterables))
+                sorted(reduce(list.__add__, [list(it) for it in iterables])),
+                list(mi.collate(*iterables))
         )
 
     def test_key(self):
         """Test using a custom `key` function."""
         iterables = [range(5, 0, -1), range(4, 0, -1)]
         actual = sorted(
-            reduce(list.__add__, [list(it) for it in iterables]), reverse=True
+                reduce(list.__add__, [list(it) for it in iterables]), reverse=True
         )
         expected = list(mi.collate(*iterables, key=lambda x: -x))
         self.assertEqual(actual, expected)
@@ -64,7 +65,7 @@ class CollateTests(TestCase):
         iterables = [range(4, 0, -1), range(7, 0, -1), range(3, 6, -1)]
 
         actual = sorted(
-            reduce(list.__add__, [list(it) for it in iterables]), reverse=True
+                reduce(list.__add__, [list(it) for it in iterables]), reverse=True
         )
         expected = list(mi.collate(*iterables, reverse=True))
         self.assertEqual(actual, expected)
@@ -80,7 +81,7 @@ class ChunkedTests(TestCase):
     def test_even(self):
         """Test when ``n`` divides evenly into the length of the iterable."""
         self.assertEqual(
-            list(mi.chunked('ABCDEF', 3)), [['A', 'B', 'C'], ['D', 'E', 'F']]
+                list(mi.chunked('ABCDEF', 3)), [['A', 'B', 'C'], ['D', 'E', 'F']]
         )
 
     def test_odd(self):
@@ -89,7 +90,7 @@ class ChunkedTests(TestCase):
 
         """
         self.assertEqual(
-            list(mi.chunked('ABCDE', 3)), [['A', 'B', 'C'], ['D', 'E']]
+                list(mi.chunked('ABCDE', 3)), [['A', 'B', 'C'], ['D', 'E']]
         )
 
 
@@ -131,6 +132,7 @@ class IterOnlyRange:
     >>> r[0]
     TypeError: 'IterOnlyRange' object does not support indexing
     """
+
     def __init__(self, n):
         """Set the length of the range."""
         self.n = n
@@ -204,6 +206,7 @@ class PeekableTests(TestCase):
     ``collate()``
 
     """
+
     def test_peek_default(self):
         """Make sure passing a default into ``peek()`` works."""
         p = mi.peekable([])
@@ -512,7 +515,7 @@ class IlenTests(TestCase):
         """Sanity-checks for ``ilen()``."""
         # Non-empty
         self.assertEqual(
-            mi.ilen(filter(lambda x: x % 10 == 0, range(101))), 11
+                mi.ilen(filter(lambda x: x % 10 == 0, range(101))), 11
         )
 
         # Empty
@@ -548,7 +551,7 @@ class OneTests(TestCase):
         self.assertRaises(ValueError, lambda: mi.one(it))  # burn 0 and 1
         self.assertEqual(next(it), 2)
         self.assertRaises(
-            OverflowError, lambda: mi.one(it, too_long=OverflowError)
+                OverflowError, lambda: mi.one(it, too_long=OverflowError)
         )
 
 
@@ -558,13 +561,13 @@ class IntersperseTest(TestCase):
     def test_even(self):
         iterable = (x for x in '01')
         self.assertEqual(
-            list(mi.intersperse(None, iterable)), ['0', None, '1']
+                list(mi.intersperse(None, iterable)), ['0', None, '1']
         )
 
     def test_odd(self):
         iterable = (x for x in '012')
         self.assertEqual(
-            list(mi.intersperse(None, iterable)), ['0', None, '1', None, '2']
+                list(mi.intersperse(None, iterable)), ['0', None, '1', None, '2']
         )
 
     def test_nested(self):
@@ -579,14 +582,14 @@ class IntersperseTest(TestCase):
 
     def test_n(self):
         for n, element, expected in [
-            (1, '_', ['0', '_', '1', '_', '2', '_', '3', '_', '4', '_', '5']),
-            (2, '_', ['0', '1', '_', '2', '3', '_', '4', '5']),
-            (3, '_', ['0', '1', '2', '_', '3', '4', '5']),
-            (4, '_', ['0', '1', '2', '3', '_', '4', '5']),
-            (5, '_', ['0', '1', '2', '3', '4', '_', '5']),
-            (6, '_', ['0', '1', '2', '3', '4', '5']),
-            (7, '_', ['0', '1', '2', '3', '4', '5']),
-            (3, ['a', 'b'], ['0', '1', '2', ['a', 'b'], '3', '4', '5']),
+                (1, '_', ['0', '_', '1', '_', '2', '_', '3', '_', '4', '_', '5']),
+                (2, '_', ['0', '1', '_', '2', '3', '_', '4', '5']),
+                (3, '_', ['0', '1', '2', '_', '3', '4', '5']),
+                (4, '_', ['0', '1', '2', '3', '_', '4', '5']),
+                (5, '_', ['0', '1', '2', '3', '4', '_', '5']),
+                (6, '_', ['0', '1', '2', '3', '4', '5']),
+                (7, '_', ['0', '1', '2', '3', '4', '5']),
+                (3, ['a', 'b'], ['0', '1', '2', ['a', 'b'], '3', '4', '5']),
         ]:
             iterable = (x for x in '012345')
             actual = list(mi.intersperse(element, iterable, n=n))
@@ -594,7 +597,7 @@ class IntersperseTest(TestCase):
 
     def test_n_zero(self):
         self.assertRaises(
-            ValueError, lambda: list(mi.intersperse('x', '012', n=0))
+                ValueError, lambda: list(mi.intersperse('x', '012', n=0))
         )
 
 
@@ -612,7 +615,7 @@ class UniqueToEachTests(TestCase):
         in the rest, those duplicates should be emitted."""
         iterables = ["mississippi", "missouri"]
         self.assertEqual(
-            mi.unique_to_each(*iterables), [['p', 'p'], ['o', 'u', 'r']]
+                mi.unique_to_each(*iterables), [['p', 'p'], ['o', 'u', 'r']]
         )
 
     def test_mixed(self):
@@ -646,8 +649,8 @@ class WindowedTests(TestCase):
         iterable = [1, 2, 3, 4, 5]
 
         for n, kwargs, expected in [
-            (6, {}, [(1, 2, 3, 4, 5, '!')]),  # n > len(iterable)
-            (3, {'step': 3}, [(1, 2, 3), (4, 5, '!')]),  # using ``step``
+                (6, {}, [(1, 2, 3, 4, 5, '!')]),  # n > len(iterable)
+                (3, {'step': 3}, [(1, 2, 3), (4, 5, '!')]),  # using ``step``
         ]:
             actual = list(mi.windowed(iterable, n, fillvalue='!', **kwargs))
             self.assertEqual(actual, expected)
@@ -667,13 +670,13 @@ class WindowedTests(TestCase):
         """The window should advance by the number of steps provided"""
         iterable = [1, 2, 3, 4, 5, 6, 7]
         for n, step, expected in [
-            (3, 2, [(1, 2, 3), (3, 4, 5), (5, 6, 7)]),  # n > step
-            (3, 3, [(1, 2, 3), (4, 5, 6), (7, None, None)]),  # n == step
-            (3, 4, [(1, 2, 3), (5, 6, 7)]),  # line up nicely
-            (3, 5, [(1, 2, 3), (6, 7, None)]),  # off by one
-            (3, 6, [(1, 2, 3), (7, None, None)]),  # off by two
-            (3, 7, [(1, 2, 3)]),  # step past the end
-            (7, 8, [(1, 2, 3, 4, 5, 6, 7)]),  # step > len(iterable)
+                (3, 2, [(1, 2, 3), (3, 4, 5), (5, 6, 7)]),  # n > step
+                (3, 3, [(1, 2, 3), (4, 5, 6), (7, None, None)]),  # n == step
+                (3, 4, [(1, 2, 3), (5, 6, 7)]),  # line up nicely
+                (3, 5, [(1, 2, 3), (6, 7, None)]),  # off by one
+                (3, 6, [(1, 2, 3), (7, None, None)]),  # off by two
+                (3, 7, [(1, 2, 3)]),  # step past the end
+                (7, 8, [(1, 2, 3, 4, 5, 6, 7)]),  # step > len(iterable)
         ]:
             actual = list(mi.windowed(iterable, n, step=step))
             self.assertEqual(actual, expected)
@@ -730,7 +733,7 @@ class SpyTests(TestCase):
         head, new_iterable = mi.spy(original_iterable)
         self.assertEqual(head, ['a'])
         self.assertEqual(
-            list(new_iterable), ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+                list(new_iterable), ['a', 'b', 'c', 'd', 'e', 'f', 'g']
         )
 
     def test_unpacking(self):
@@ -740,7 +743,7 @@ class SpyTests(TestCase):
         self.assertEqual(second, 'b')
         self.assertEqual(third, 'c')
         self.assertEqual(
-            list(new_iterable), ['a', 'b', 'c', 'd', 'e', 'f', 'g']
+                list(new_iterable), ['a', 'b', 'c', 'd', 'e', 'f', 'g']
         )
 
     def test_too_many(self):
@@ -815,8 +818,8 @@ class TestCollapse(TestCase):
         l = [[1], 2, [[3], 4], [[[5]]]]
         self.assertEqual(list(mi.collapse(l, levels=2)), [1, 2, 3, 4, [5]])
         self.assertEqual(
-            list(mi.collapse(mi.collapse(l, levels=1), levels=1)),
-            list(mi.collapse(l, levels=2))
+                list(mi.collapse(mi.collapse(l, levels=1), levels=1)),
+                list(mi.collapse(l, levels=2))
         )
 
     def test_collapse_to_list(self):
@@ -887,7 +890,7 @@ class SideEffectTests(TestCase):
 
         try:
             mi.consume(
-                mi.side_effect(func, u'abc', before=before, after=f.close)
+                    mi.side_effect(func, u'abc', before=before, after=f.close)
             )
         except RuntimeError:
             pass
@@ -981,7 +984,7 @@ class PaddedTest(TestCase):
 
         # With fillvalue
         self.assertEqual(
-            mi.take(5, mi.padded(seq, fillvalue='')), [1, 2, 3, '', '']
+                mi.take(5, mi.padded(seq, fillvalue='')), [1, 2, 3, '', '']
         )
 
     def test_invalid_n(self):
@@ -997,12 +1000,12 @@ class PaddedTest(TestCase):
 
         # No fillvalue
         self.assertEqual(
-            list(mi.padded(seq, n=7)), [1, 2, 3, 4, 5, None, None]
+                list(mi.padded(seq, n=7)), [1, 2, 3, 4, 5, None, None]
         )
 
         # With fillvalue
         self.assertEqual(
-            list(mi.padded(seq, fillvalue='', n=7)), [1, 2, 3, 4, 5, '', '']
+                list(mi.padded(seq, fillvalue='', n=7)), [1, 2, 3, 4, 5, '', '']
         )
 
     def test_next_multiple(self):
@@ -1010,30 +1013,30 @@ class PaddedTest(TestCase):
 
         # No need for padding: len(seq) % n == 0
         self.assertEqual(
-            list(mi.padded(seq, n=3, next_multiple=True)), [1, 2, 3, 4, 5, 6]
+                list(mi.padded(seq, n=3, next_multiple=True)), [1, 2, 3, 4, 5, 6]
         )
 
         # Padding needed: len(seq) < n
         self.assertEqual(
-            list(mi.padded(seq, n=8, next_multiple=True)),
-            [1, 2, 3, 4, 5, 6, None, None]
+                list(mi.padded(seq, n=8, next_multiple=True)),
+                [1, 2, 3, 4, 5, 6, None, None]
         )
 
         # No padding needed: len(seq) == n
         self.assertEqual(
-            list(mi.padded(seq, n=6, next_multiple=True)), [1, 2, 3, 4, 5, 6]
+                list(mi.padded(seq, n=6, next_multiple=True)), [1, 2, 3, 4, 5, 6]
         )
 
         # Padding needed: len(seq) > n
         self.assertEqual(
-            list(mi.padded(seq, n=4, next_multiple=True)),
-            [1, 2, 3, 4, 5, 6, None, None]
+                list(mi.padded(seq, n=4, next_multiple=True)),
+                [1, 2, 3, 4, 5, 6, None, None]
         )
 
         # With fillvalue
         self.assertEqual(
-            list(mi.padded(seq, fillvalue='', n=4, next_multiple=True)),
-            [1, 2, 3, 4, 5, 6, '', '']
+                list(mi.padded(seq, fillvalue='', n=4, next_multiple=True)),
+                [1, 2, 3, 4, 5, 6, '', '']
         )
 
 
@@ -1048,20 +1051,20 @@ class DistributeTest(TestCase):
         iterable = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
         for n, expected in [
-            (1, [iterable]),
-            (2, [[1, 3, 5, 7, 9], [2, 4, 6, 8, 10]]),
-            (3, [[1, 4, 7, 10], [2, 5, 8], [3, 6, 9]]),
-            (10, [[n] for n in range(1, 10 + 1)]),
+                (1, [iterable]),
+                (2, [[1, 3, 5, 7, 9], [2, 4, 6, 8, 10]]),
+                (3, [[1, 4, 7, 10], [2, 5, 8], [3, 6, 9]]),
+                (10, [[n] for n in range(1, 10 + 1)]),
         ]:
             self.assertEqual(
-                [list(x) for x in mi.distribute(n, iterable)], expected
+                    [list(x) for x in mi.distribute(n, iterable)], expected
             )
 
     def test_large_n(self):
         iterable = [1, 2, 3, 4]
         self.assertEqual(
-            [list(x) for x in mi.distribute(6, iterable)],
-            [[1], [2], [3], [4], [], []]
+                [list(x) for x in mi.distribute(6, iterable)],
+                [[1], [2], [3], [4], [], []]
         )
 
 
@@ -1077,9 +1080,9 @@ class StaggerTest(TestCase):
     def test_offsets(self):
         iterable = [0, 1, 2, 3]
         for offsets, expected in [
-            ((-2, 0, 2), [('', 0, 2), ('', 1, 3)]),
-            ((-2, -1), [('', ''), ('', 0), (0, 1), (1, 2), (2, 3)]),
-            ((1, 2), [(1, 2), (2, 3)]),
+                ((-2, 0, 2), [('', 0, 2), ('', 1, 3)]),
+                ((-2, -1), [('', ''), ('', 0), (0, 1), (1, 2), (2, 3)]),
+                ((1, 2), [(1, 2), (2, 3)]),
         ]:
             all_groups = mi.stagger(iterable, offsets=offsets, fillvalue='')
             self.assertEqual(list(all_groups), expected)
@@ -1087,15 +1090,15 @@ class StaggerTest(TestCase):
     def test_longest(self):
         iterable = [0, 1, 2, 3]
         for offsets, expected in [
-            (
-                (-1, 0, 1),
-                [('', 0, 1), (0, 1, 2), (1, 2, 3), (2, 3, ''), (3, '', '')]
-            ),
-            ((-2, -1), [('', ''), ('', 0), (0, 1), (1, 2), (2, 3), (3, '')]),
-            ((1, 2), [(1, 2), (2, 3), (3, '')]),
+                (
+                        (-1, 0, 1),
+                        [('', 0, 1), (0, 1, 2), (1, 2, 3), (2, 3, ''), (3, '', '')]
+                ),
+                ((-2, -1), [('', ''), ('', 0), (0, 1), (1, 2), (2, 3), (3, '')]),
+                ((1, 2), [(1, 2), (2, 3), (3, '')]),
         ]:
             all_groups = mi.stagger(
-                iterable, offsets=offsets, fillvalue='', longest=True
+                    iterable, offsets=offsets, fillvalue='', longest=True
             )
             self.assertEqual(list(all_groups), expected)
 
@@ -1108,7 +1111,7 @@ class ZipOffsetTest(TestCase):
         a_2 = [0, 1, 2, 3, 4, 5]
         a_3 = [0, 1, 2, 3, 4, 5, 6, 7]
         actual = list(
-            mi.zip_offset(a_1, a_2, a_3, offsets=(-1, 0, 1), fillvalue='')
+                mi.zip_offset(a_1, a_2, a_3, offsets=(-1, 0, 1), fillvalue='')
         )
         expected = [('', 0, 1), (0, 1, 2), (1, 2, 3), (2, 3, 4), (3, 4, 5)]
         self.assertEqual(actual, expected)
@@ -1118,16 +1121,16 @@ class ZipOffsetTest(TestCase):
         a_2 = [0, 1, 2, 3, 4, 5]
         a_3 = [0, 1, 2, 3, 4, 5, 6, 7]
         actual = list(
-            mi.zip_offset(a_1, a_2, a_3, offsets=(-1, 0, 1), longest=True)
+                mi.zip_offset(a_1, a_2, a_3, offsets=(-1, 0, 1), longest=True)
         )
         expected = [
-            (None, 0, 1),
-            (0, 1, 2),
-            (1, 2, 3),
-            (2, 3, 4),
-            (3, 4, 5),
-            (None, 5, 6),
-            (None, None, 7),
+                (None, 0, 1),
+                (0, 1, 2),
+                (1, 2, 3),
+                (2, 3, 4),
+                (3, 4, 5),
+                (None, 5, 6),
+                (None, None, 7),
         ]
         self.assertEqual(actual, expected)
 
@@ -1135,8 +1138,8 @@ class ZipOffsetTest(TestCase):
         iterables = [0, 1, 2], [2, 3, 4]
         offsets = (-1, 0, 1)
         self.assertRaises(
-            ValueError,
-            lambda: list(mi.zip_offset(*iterables, offsets=offsets))
+                ValueError,
+                lambda: list(mi.zip_offset(*iterables, offsets=offsets))
         )
 
 
@@ -1146,72 +1149,72 @@ class SortTogetherTest(TestCase):
     def test_key_list(self):
         """tests `key_list` including default, iterables include duplicates"""
         iterables = [
-            ['GA', 'GA', 'GA', 'CT', 'CT', 'CT'],
-            ['May', 'Aug.', 'May', 'June', 'July', 'July'],
-            [97, 20, 100, 70, 100, 20]
+                ['GA', 'GA', 'GA', 'CT', 'CT', 'CT'],
+                ['May', 'Aug.', 'May', 'June', 'July', 'July'],
+                [97, 20, 100, 70, 100, 20]
         ]
 
         self.assertEqual(
-            mi.sort_together(iterables),
-            [
-                ('CT', 'CT', 'CT', 'GA', 'GA', 'GA'),
-                ('June', 'July', 'July', 'May', 'Aug.', 'May'),
-                (70, 100, 20, 97, 20, 100)
-            ]
+                mi.sort_together(iterables),
+                [
+                        ('CT', 'CT', 'CT', 'GA', 'GA', 'GA'),
+                        ('June', 'July', 'July', 'May', 'Aug.', 'May'),
+                        (70, 100, 20, 97, 20, 100)
+                ]
         )
 
         self.assertEqual(
-            mi.sort_together(iterables, key_list=(0, 1)),
-            [
-                ('CT', 'CT', 'CT', 'GA', 'GA', 'GA'),
-                ('July', 'July', 'June', 'Aug.', 'May', 'May'),
-                (100, 20, 70, 20, 97, 100)
-            ]
+                mi.sort_together(iterables, key_list=(0, 1)),
+                [
+                        ('CT', 'CT', 'CT', 'GA', 'GA', 'GA'),
+                        ('July', 'July', 'June', 'Aug.', 'May', 'May'),
+                        (100, 20, 70, 20, 97, 100)
+                ]
         )
 
         self.assertEqual(
-            mi.sort_together(iterables, key_list=(0, 1, 2)),
-            [
-                ('CT', 'CT', 'CT', 'GA', 'GA', 'GA'),
-                ('July', 'July', 'June', 'Aug.', 'May', 'May'),
-                (20, 100, 70, 20, 97, 100)
-            ]
+                mi.sort_together(iterables, key_list=(0, 1, 2)),
+                [
+                        ('CT', 'CT', 'CT', 'GA', 'GA', 'GA'),
+                        ('July', 'July', 'June', 'Aug.', 'May', 'May'),
+                        (20, 100, 70, 20, 97, 100)
+                ]
         )
 
         self.assertEqual(
-            mi.sort_together(iterables, key_list=(2,)),
-            [
-                ('GA', 'CT', 'CT', 'GA', 'GA', 'CT'),
-                ('Aug.', 'July', 'June', 'May', 'May', 'July'),
-                (20, 20, 70, 97, 100, 100)
-            ]
+                mi.sort_together(iterables, key_list=(2,)),
+                [
+                        ('GA', 'CT', 'CT', 'GA', 'GA', 'CT'),
+                        ('Aug.', 'July', 'June', 'May', 'May', 'July'),
+                        (20, 20, 70, 97, 100, 100)
+                ]
         )
 
     def test_invalid_key_list(self):
         """tests `key_list` for indexes not available in `iterables`"""
         iterables = [
-            ['GA', 'GA', 'GA', 'CT', 'CT', 'CT'],
-            ['May', 'Aug.', 'May', 'June', 'July', 'July'],
-            [97, 20, 100, 70, 100, 20]
+                ['GA', 'GA', 'GA', 'CT', 'CT', 'CT'],
+                ['May', 'Aug.', 'May', 'June', 'July', 'July'],
+                [97, 20, 100, 70, 100, 20]
         ]
 
         self.assertRaises(
-            IndexError, lambda: mi.sort_together(iterables, key_list=(5,))
+                IndexError, lambda: mi.sort_together(iterables, key_list=(5,))
         )
 
     def test_reverse(self):
         """tests `reverse` to ensure a reverse sort for `key_list` iterables"""
         iterables = [
-            ['GA', 'GA', 'GA', 'CT', 'CT', 'CT'],
-            ['May', 'Aug.', 'May', 'June', 'July', 'July'],
-            [97, 20, 100, 70, 100, 20]
+                ['GA', 'GA', 'GA', 'CT', 'CT', 'CT'],
+                ['May', 'Aug.', 'May', 'June', 'July', 'July'],
+                [97, 20, 100, 70, 100, 20]
         ]
 
         self.assertEqual(
-            mi.sort_together(iterables, key_list=(0, 1, 2), reverse=True),
-            [('GA', 'GA', 'GA', 'CT', 'CT', 'CT'),
-             ('May', 'May', 'Aug.', 'June', 'July', 'July'),
-             (100, 97, 20, 70, 100, 20)]
+                mi.sort_together(iterables, key_list=(0, 1, 2), reverse=True),
+                [('GA', 'GA', 'GA', 'CT', 'CT', 'CT'),
+                 ('May', 'May', 'Aug.', 'June', 'July', 'July'),
+                 (100, 97, 20, 70, 100, 20)]
         )
 
     def test_uneven_iterables(self):
@@ -1221,12 +1224,12 @@ class SortTogetherTest(TestCase):
                      [97, 20, 100, 70, 100, 20, 0]]
 
         self.assertEqual(
-            mi.sort_together(iterables),
-            [
-                ('CT', 'CT', 'CT', 'GA', 'GA', 'GA'),
-                ('June', 'July', 'July', 'May', 'Aug.', 'May'),
-                (70, 100, 20, 97, 20, 100)
-            ]
+                mi.sort_together(iterables),
+                [
+                        ('CT', 'CT', 'CT', 'GA', 'GA', 'GA'),
+                        ('June', 'July', 'July', 'May', 'Aug.', 'May'),
+                        (70, 100, 20, 97, 20, 100)
+                ]
         )
 
 
@@ -1241,25 +1244,26 @@ class DivideTest(TestCase):
         iterable = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
         for n, expected in [
-            (1, [iterable]),
-            (2, [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]]),
-            (3, [[1, 2, 3, 4], [5, 6, 7], [8, 9, 10]]),
-            (10, [[n] for n in range(1, 10 + 1)]),
+                (1, [iterable]),
+                (2, [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]]),
+                (3, [[1, 2, 3, 4], [5, 6, 7], [8, 9, 10]]),
+                (10, [[n] for n in range(1, 10 + 1)]),
         ]:
             self.assertEqual(
-                [list(x) for x in mi.divide(n, iterable)], expected
+                    [list(x) for x in mi.divide(n, iterable)], expected
             )
 
     def test_large_n(self):
         iterable = [1, 2, 3, 4]
         self.assertEqual(
-            [list(x) for x in mi.divide(6, iterable)],
-            [[1], [2], [3], [4], [], []]
+                [list(x) for x in mi.divide(6, iterable)],
+                [[1], [2], [3], [4], [], []]
         )
 
 
 class TestAlwaysIterable(TestCase):
     """Tests for always_iterable()"""
+
     def test_single(self):
         self.assertEqual(list(mi.always_iterable(1)), [1])
 
@@ -1291,10 +1295,10 @@ class TestAlwaysIterable(TestCase):
     def test_iterables(self):
         self.assertEqual(list(mi.always_iterable([0, 1])), [0, 1])
         self.assertEqual(
-            list(mi.always_iterable([0, 1], base_type=list)), [[0, 1]]
+                list(mi.always_iterable([0, 1], base_type=list)), [[0, 1]]
         )
         self.assertEqual(
-            list(mi.always_iterable(iter('foo'))), ['f', 'o', 'o']
+                list(mi.always_iterable(iter('foo'))), ['f', 'o', 'o']
         )
         self.assertEqual(list(mi.always_iterable([])), [])
 
@@ -1372,10 +1376,10 @@ class AdjacentTests(TestCase):
         """Test that adjacent() raises an error with negative distance"""
         pred = lambda x: x
         self.assertRaises(
-            ValueError, lambda: mi.adjacent(pred, range(1000), -1)
+                ValueError, lambda: mi.adjacent(pred, range(1000), -1)
         )
         self.assertRaises(
-            ValueError, lambda: mi.adjacent(pred, range(10), -10)
+                ValueError, lambda: mi.adjacent(pred, range(10), -10)
         )
 
     def test_grouping(self):
@@ -1384,10 +1388,10 @@ class AdjacentTests(TestCase):
         grouper = mi.groupby_transform(iterable, itemgetter(0), itemgetter(1))
         actual = [(k, list(g)) for k, g in grouper]
         expected = [
-            (True, [0, 1]),
-            (False, [2, 3]),
-            (True, [4, 5, 6]),
-            (False, [7, 8, 9]),
+                (True, [0, 1]),
+                (False, [2, 3]),
+                (True, [4, 5, 6]),
+                (False, [7, 8, 9]),
         ]
         self.assertEqual(actual, expected)
 
@@ -1429,14 +1433,14 @@ class GroupByTransformTests(TestCase):
 
         # Test the standard usage of grouping one iterable using another's keys
         grouper = mi.groupby_transform(
-            iterable, keyfunc=itemgetter(0), valuefunc=itemgetter(-1)
+                iterable, keyfunc=itemgetter(0), valuefunc=itemgetter(-1)
         )
         actual = [(k, list(g)) for k, g in grouper]
         expected = [(0, [0, 1, 2, 3, 4]), (1, [5, 6, 7, 8, 9])]
         self.assertEqual(actual, expected)
 
         grouper = mi.groupby_transform(
-            iterable, keyfunc=itemgetter(1), valuefunc=itemgetter(-1)
+                iterable, keyfunc=itemgetter(1), valuefunc=itemgetter(-1)
         )
         actual = [(k, list(g)) for k, g in grouper]
         expected = [(0, [0, 1, 2]), (1, [3, 4, 5]), (2, [6, 7, 8]), (3, [9])]
@@ -1445,7 +1449,7 @@ class GroupByTransformTests(TestCase):
         # and now for something a little different
         d = dict(zip(range(10), 'abcdefghij'))
         grouper = mi.groupby_transform(
-            range(10), keyfunc=lambda x: x // 5, valuefunc=d.get
+                range(10), keyfunc=lambda x: x // 5, valuefunc=d.get
         )
         actual = [(k, ''.join(g)) for k, g in grouper]
         expected = [(0, 'abcde'), (1, 'fghij')]
@@ -1469,53 +1473,53 @@ class GroupByTransformTests(TestCase):
 class NumericRangeTests(TestCase):
     def test_basic(self):
         for args, expected in [
-            ((4,), [0, 1, 2, 3]),
-            ((4.0,), [0.0, 1.0, 2.0, 3.0]),
-            ((1.0, 4), [1.0, 2.0, 3.0]),
-            ((1, 4.0), [1, 2, 3]),
-            ((1.0, 5), [1.0, 2.0, 3.0, 4.0]),
-            ((0, 20, 5), [0, 5, 10, 15]),
-            ((0, 20, 5.0), [0.0, 5.0, 10.0, 15.0]),
-            ((0, 10, 3), [0, 3, 6, 9]),
-            ((0, 10, 3.0), [0.0, 3.0, 6.0, 9.0]),
-            ((0, -5, -1), [0, -1, -2, -3, -4]),
-            ((0.0, -5, -1), [0.0, -1.0, -2.0, -3.0, -4.0]),
-            ((1, 2, Fraction(1, 2)), [Fraction(1, 1), Fraction(3, 2)]),
-            ((0,), []),
-            ((0.0,), []),
-            ((1, 0), []),
-            ((1.0, 0.0), []),
-            ((Fraction(2, 1),), [Fraction(0, 1), Fraction(1, 1)]),
-            ((Decimal('2.0'),), [Decimal('0.0'), Decimal('1.0')]),
+                ((4,), [0, 1, 2, 3]),
+                ((4.0,), [0.0, 1.0, 2.0, 3.0]),
+                ((1.0, 4), [1.0, 2.0, 3.0]),
+                ((1, 4.0), [1, 2, 3]),
+                ((1.0, 5), [1.0, 2.0, 3.0, 4.0]),
+                ((0, 20, 5), [0, 5, 10, 15]),
+                ((0, 20, 5.0), [0.0, 5.0, 10.0, 15.0]),
+                ((0, 10, 3), [0, 3, 6, 9]),
+                ((0, 10, 3.0), [0.0, 3.0, 6.0, 9.0]),
+                ((0, -5, -1), [0, -1, -2, -3, -4]),
+                ((0.0, -5, -1), [0.0, -1.0, -2.0, -3.0, -4.0]),
+                ((1, 2, Fraction(1, 2)), [Fraction(1, 1), Fraction(3, 2)]),
+                ((0,), []),
+                ((0.0,), []),
+                ((1, 0), []),
+                ((1.0, 0.0), []),
+                ((Fraction(2, 1),), [Fraction(0, 1), Fraction(1, 1)]),
+                ((Decimal('2.0'),), [Decimal('0.0'), Decimal('1.0')]),
         ]:
             actual = list(mi.numeric_range(*args))
             self.assertEqual(actual, expected)
             self.assertTrue(
-                all(type(a) == type(e) for a, e in zip(actual, expected))
+                    all(type(a) == type(e) for a, e in zip(actual, expected))
             )
 
     def test_arg_count(self):
         self.assertRaises(TypeError, lambda: list(mi.numeric_range()))
         self.assertRaises(
-            TypeError, lambda: list(mi.numeric_range(0, 1, 2, 3))
+                TypeError, lambda: list(mi.numeric_range(0, 1, 2, 3))
         )
 
     def test_zero_step(self):
         self.assertRaises(
-            ValueError, lambda: list(mi.numeric_range(1, 2, 0))
+                ValueError, lambda: list(mi.numeric_range(1, 2, 0))
         )
 
 
 class CountCycleTests(TestCase):
     def test_basic(self):
         expected = [
-            (0, 'a'), (0, 'b'), (0, 'c'),
-            (1, 'a'), (1, 'b'), (1, 'c'),
-            (2, 'a'), (2, 'b'), (2, 'c'),
+                (0, 'a'), (0, 'b'), (0, 'c'),
+                (1, 'a'), (1, 'b'), (1, 'c'),
+                (2, 'a'), (2, 'b'), (2, 'c'),
         ]
         for actual in [
-            mi.take(9, mi.count_cycle('abc')),  # n=None
-            list(mi.count_cycle('abc', 3)),  # n=3
+                mi.take(9, mi.count_cycle('abc')),  # n=None
+                list(mi.count_cycle('abc', 3)),  # n=3
         ]:
             self.assertEqual(actual, expected)
 
@@ -1579,7 +1583,7 @@ class StripFunctionTests(TestCase):
 
     def test_not_hashable(self):
         iterable = [
-            list('http://'), list('www'), list('.example'), list('.com')
+                list('http://'), list('www'), list('.example'), list('.com')
         ]
         pred = lambda x: x in [list('http://'), list('www'), list('.com')]
 
@@ -1631,19 +1635,19 @@ class ConsecutiveGroupsTest(TestCase):
 
     def test_exotic_ordering(self):
         iterable = [
-            ('a', 'b', 'c', 'd'),
-            ('a', 'c', 'b', 'd'),
-            ('a', 'c', 'd', 'b'),
-            ('a', 'd', 'b', 'c'),
-            ('d', 'b', 'c', 'a'),
-            ('d', 'c', 'a', 'b'),
+                ('a', 'b', 'c', 'd'),
+                ('a', 'c', 'b', 'd'),
+                ('a', 'c', 'd', 'b'),
+                ('a', 'd', 'b', 'c'),
+                ('d', 'b', 'c', 'a'),
+                ('d', 'c', 'a', 'b'),
         ]
         ordering = list(permutations('abcd')).index
         actual = [list(g) for g in mi.consecutive_groups(iterable, ordering)]
         expected = [
-            [('a', 'b', 'c', 'd')],
-            [('a', 'c', 'b', 'd'), ('a', 'c', 'd', 'b'), ('a', 'd', 'b', 'c')],
-            [('d', 'b', 'c', 'a'), ('d', 'c', 'a', 'b')],
+                [('a', 'b', 'c', 'd')],
+                [('a', 'c', 'b', 'd'), ('a', 'c', 'd', 'b'), ('a', 'd', 'b', 'c')],
+                [('d', 'b', 'c', 'a'), ('d', 'c', 'a', 'b')],
         ]
         self.assertEqual(actual, expected)
 
@@ -1726,7 +1730,7 @@ class SeekableTest(TestCase):
 
         elements = s.elements()
         self.assertEqual(
-            [elements[i] for i in range(10)], [str(n) for n in range(10)]
+                [elements[i] for i in range(10)], [str(n) for n in range(10)]
         )
         self.assertEqual(len(elements), 10)
 
@@ -1859,15 +1863,15 @@ class CircularShiftsTests(TestCase):
     def test_simple_circular_shifts(self):
         # test the a simple iterator case
         self.assertEqual(
-            mi.circular_shifts(range(4)),
-            [(0, 1, 2, 3), (1, 2, 3, 0), (2, 3, 0, 1), (3, 0, 1, 2)]
+                mi.circular_shifts(range(4)),
+                [(0, 1, 2, 3), (1, 2, 3, 0), (2, 3, 0, 1), (3, 0, 1, 2)]
         )
 
     def test_duplicates(self):
         # test non-distinct entries
         self.assertEqual(
-            mi.circular_shifts([0, 1, 0, 1]),
-            [(0, 1, 0, 1), (1, 0, 1, 0), (0, 1, 0, 1), (1, 0, 1, 0)]
+                mi.circular_shifts([0, 1, 0, 1]),
+                [(0, 1, 0, 1), (1, 0, 1, 0), (0, 1, 0, 1), (1, 0, 1, 0)]
         )
 
 
@@ -1942,7 +1946,7 @@ class MapReduceTests(TestCase):
         valuefunc = int
         reducefunc = lambda value_list: reduce(mul, value_list, 1)
         actual = sorted(
-            mi.map_reduce(iterable, keyfunc, valuefunc, reducefunc).items()
+                mi.map_reduce(iterable, keyfunc, valuefunc, reducefunc).items()
         )
         expected = [(0, 0), (1, 6), (2, 4)]
         self.assertEqual(actual, expected)
@@ -2045,7 +2049,7 @@ class ReplaceTests(TestCase):
         pred = lambda *args: (args == (0, 1, 2)) or (args == (7, 8, 9))
         substitutes = []
         actual = list(
-            mi.replace(iterable, pred, substitutes, count=1, window_size=3)
+                mi.replace(iterable, pred, substitutes, count=1, window_size=3)
         )
         expected = [3, 4, 5, 6, 7, 8, 9]
         self.assertEqual(actual, expected)

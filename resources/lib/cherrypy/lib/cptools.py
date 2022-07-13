@@ -73,7 +73,7 @@ def validate_etags(autotags=False, debug=False):
                          'TOOLS.ETAGS')
         if conditions and not (conditions == ['*'] or etag in conditions):
             raise cherrypy.HTTPError(412, 'If-Match failed: ETag %r did '
-                                     'not match %r' % (etag, conditions))
+                                          'not match %r' % (etag, conditions))
 
         conditions = request.headers.elements('If-None-Match') or []
         conditions = [str(x) for x in conditions]
@@ -88,7 +88,7 @@ def validate_etags(autotags=False, debug=False):
                 raise cherrypy.HTTPRedirect([], 304)
             else:
                 raise cherrypy.HTTPError(412, 'If-None-Match failed: ETag %r '
-                                         'matched %r' % (etag, conditions))
+                                              'matched %r' % (etag, conditions))
 
 
 def validate_since():
@@ -281,7 +281,6 @@ def referer(pattern, accept=True, accept_missing=False, error=403,
 
 
 class SessionAuth(object):
-
     """Assert that the user is logged in."""
 
     session_key = 'username'
@@ -359,8 +358,8 @@ Message: %(error_msg)s
         if not username:
             url = cherrypy.url(qs=request.query_string)
             self._debug_message(
-                'No username, routing to login_screen with from_page %(url)r',
-                locals(),
+                    'No username, routing to login_screen with from_page %(url)r',
+                    locals(),
             )
             response.body = self.login_screen(url)
             if 'Content-Length' in response.headers:
@@ -410,9 +409,9 @@ def session_auth(**kwargs):
     via a keyword arg to this function:
 
     """ + '\n    '.join(
-        '{!s}: {!s}'.format(k, type(getattr(SessionAuth, k)).__name__)
-        for k in dir(SessionAuth)
-        if not k.startswith('__')
+            '{!s}: {!s}'.format(k, type(getattr(SessionAuth, k)).__name__)
+            for k in dir(SessionAuth)
+            if not k.startswith('__')
     )
     sa = SessionAuth()
     for k, v in kwargs.items():
@@ -493,6 +492,7 @@ def flatten(debug=False):
     This allows cherrypy.response.body to consist of 'nested generators';
     that is, a set of generators that yield generators.
     """
+
     def flattener(input):
         numchunks = 0
         for x in input:
@@ -505,6 +505,7 @@ def flatten(debug=False):
                     yield y
         if debug:
             cherrypy.log('Flattened %d chunks' % numchunks, 'TOOLS.FLATTEN')
+
     response = cherrypy.serving.response
     response.body = flattener(response.body)
 
@@ -611,13 +612,14 @@ def autovary(ignore=None, debug=False):
         v = set([e.value for e in resp_h.elements('Vary')])
         if debug:
             cherrypy.log(
-                'Accessed headers: %s' % request.headers.accessed_headers,
-                'TOOLS.AUTOVARY')
+                    'Accessed headers: %s' % request.headers.accessed_headers,
+                    'TOOLS.AUTOVARY')
         v = v.union(request.headers.accessed_headers)
         v = v.difference(ignore)
         v = list(v)
         v.sort()
         resp_h['Vary'] = ', '.join(v)
+
     request.hooks.attach('before_finalize', set_response_header, 95)
 
 

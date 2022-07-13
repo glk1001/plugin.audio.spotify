@@ -11,6 +11,7 @@ __all__ = ["contextmanager", "closing", "ContextDecorator", "ExitStack",
 # Backwards compatibility
 __all__ += ["ContextStack"]
 
+
 class ContextDecorator(object):
     "A base class or mixin that enables context managers to work as decorators."
 
@@ -48,6 +49,7 @@ class ContextDecorator(object):
         def inner(*args, **kwds):
             with self._recreate_cm():
                 return func(*args, **kwds)
+
         return inner
 
 
@@ -151,9 +153,11 @@ def contextmanager(func):
             <cleanup>
 
     """
+
     @wraps(func)
     def helper(*args, **kwds):
         return _GeneratorContextManager(func, args, kwds)
+
     return helper
 
 
@@ -174,16 +178,18 @@ class closing(object):
             f.close()
 
     """
+
     def __init__(self, thing):
         self.thing = thing
+
     def __enter__(self):
         return self.thing
+
     def __exit__(self, *exc_info):
         self.thing.close()
 
 
 class _RedirectStream(object):
-
     _stream = None
 
     def __init__(self, new_target):
@@ -269,7 +275,9 @@ if _HAVE_EXCEPTION_CHAINING:
             # Change the end of the chain to point to the exception
             # we expect it to reference
             new_exc.__context__ = old_exc
+
         return _fix_exception_context
+
 
     def _reraise_with_existing_context(exc_details):
         try:
@@ -285,11 +293,12 @@ else:
     def _make_context_fixer(frame_exc):
         return lambda new_exc, old_exc: None
 
+
     # Use 3 argument raise in Python 2,
     # but use exec to avoid SyntaxError in Python 3
     def _reraise_with_existing_context(exc_details):
         exc_type, exc_value, exc_tb = exc_details
-        exec ("raise exc_type, exc_value, exc_tb")
+        exec("raise exc_type, exc_value, exc_tb")
 
 # Handle old-style classes if they exist
 try:
@@ -302,8 +311,9 @@ else:
     def _get_type(obj):
         obj_type = type(obj)
         if obj_type is InstanceType:
-            return obj.__class__ # Old-style class
-        return obj_type # New-style class
+            return obj.__class__  # Old-style class
+        return obj_type  # New-style class
+
 
 # Inspired by discussions on http://bugs.python.org/issue13585
 class ExitStack(object):
@@ -318,6 +328,7 @@ class ExitStack(object):
             # in the list raise an exception
 
     """
+
     def __init__(self):
         self._exit_callbacks = deque()
 
@@ -330,8 +341,10 @@ class ExitStack(object):
 
     def _push_cm_exit(self, cm, cm_exit):
         """Helper to correctly register callbacks to __exit__ methods"""
+
         def _exit_wrapper(*exc_details):
             return cm_exit(cm, *exc_details)
+
         _exit_wrapper.__self__ = cm
         self.push(_exit_wrapper)
 
@@ -353,20 +366,22 @@ class ExitStack(object):
             self._exit_callbacks.append(exit)
         else:
             self._push_cm_exit(exit, exit_method)
-        return exit # Allow use as a decorator
+        return exit  # Allow use as a decorator
 
     def callback(self, callback, *args, **kwds):
         """Registers an arbitrary callback and arguments.
 
         Cannot suppress exceptions.
         """
+
         def _exit_wrapper(exc_type, exc, tb):
             callback(*args, **kwds)
+
         # We changed the signature, so using @wraps is not appropriate, but
         # setting __wrapped__ may still help with introspection
         _exit_wrapper.__wrapped__ = callback
         self.push(_exit_wrapper)
-        return callback # Allow use as a decorator
+        return callback  # Allow use as a decorator
 
     def enter_context(self, cm):
         """Enters the supplied context manager
@@ -416,6 +431,7 @@ class ExitStack(object):
         if pending_raise:
             _reraise_with_existing_context(exc_details)
         return received_exc and suppressed_exc
+
 
 # Preserve backwards compatibility
 class ContextStack(ExitStack):

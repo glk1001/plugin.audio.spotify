@@ -5,8 +5,7 @@ from cherrypy.lib.reprconf import attributes
 from cherrypy._cpcompat import text_or_bytes
 from cherrypy.process.servers import ServerAdapter
 
-
-__all__ = ('Server', )
+__all__ = ('Server',)
 
 
 class Server(ServerAdapter):
@@ -178,6 +177,7 @@ class Server(ServerAdapter):
         if not self.httpserver:
             self.httpserver, self.bind_addr = self.httpserver_from_self()
         super(Server, self).start()
+
     start.priority = 75
 
     @property

@@ -9,6 +9,7 @@
 
 import os, sys
 
+
 def get_streamdetails(kodidb, db_id, media_type):
     """helper to get all streamdetails from a video item in kodi db"""
     streamdetails = {}

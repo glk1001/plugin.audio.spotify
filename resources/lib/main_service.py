@@ -8,7 +8,8 @@
     Background service which launches the spotty binary and monitors the player
 '''
 
-from utils import log_msg, ADDON_ID, log_exception, get_token, Spotty, PROXY_PORT, parse_spotify_track
+from utils import log_msg, ADDON_ID, log_exception, get_token, Spotty, PROXY_PORT, \
+    parse_spotify_track
 from player_monitor import ConnectPlayer
 from connect_daemon import ConnectDaemon
 from httpproxy import ProxyRunner
@@ -110,7 +111,6 @@ class MainService:
         del self.win
         log_msg('stopped', xbmc.LOGINFO)
 
-
     def switch_user(self, restart_daemon=False):
         '''called whenever we switch to a different user/credentials'''
         log_msg("login credentials changed")
@@ -131,7 +131,6 @@ class MainService:
                     username = username1
         return username
 
-
     def stop_connect_daemon(self):
         ''' stop spotty connect daemon if needed '''
         if self.connect_daemon and self.connect_daemon.daemon_active:
@@ -146,7 +145,6 @@ class MainService:
                     self.connect_daemon = ConnectDaemon(self.spotty)
                 if not self.connect_daemon.daemon_active:
                     self.connect_daemon.start()
-
 
     def renew_token(self):
         '''refresh/retrieve the token'''

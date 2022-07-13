@@ -36,7 +36,7 @@ class SpotifyOSD(xbmcgui.WindowXMLDialog):
     def onAction(self, action):
         '''triggers on kodi navigation events'''
         action_id = action.getId()
-        if action_id in (9, 10, 92, 216, 247, 257, 275, 61467, 61448, ):
+        if action_id in (9, 10, 92, 216, 247, 257, 275, 61467, 61448,):
             self.close_dialog()
         elif action_id in (12, 68, 79, 229):
             self.toggle_playback()
@@ -87,7 +87,8 @@ class SpotifyOSD(xbmcgui.WindowXMLDialog):
             self.is_playing = True
             self.getControl(3202).setEnabled(True)
             self.sp.start_playback()
-    
+
+
 class SpotifyOSDUpdateThread(threading.Thread):
     '''Background thread to complement our OSD dialog,
     fills the listing while UI keeps responsive'''
@@ -200,7 +201,8 @@ class SpotifyOSDUpdateThread(threading.Thread):
 
         # get additional artwork
         artwork = self.dialog.metadatautils.get_music_artwork(artist, album, title)
-        fanart = artwork["art"].get("fanart", "special://home/addons/plugin.audio.spotify/fanart.jpg")
+        fanart = artwork["art"].get("fanart",
+                                    "special://home/addons/plugin.audio.spotify/fanart.jpg")
         self.dialog.getControl(3300).setImage(fanart)
         efa = artwork["art"].get("extrafanart", "")
         self.dialog.getControl(3301).setLabel(efa)

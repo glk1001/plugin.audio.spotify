@@ -1,6 +1,7 @@
 """Implementation of the SSL adapter base interface."""
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 from abc import ABCMeta, abstractmethod

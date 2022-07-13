@@ -13,6 +13,7 @@ import requests
 import arrow
 from requests.packages.urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
+
 if sys.version_info.major == 3:
     import traceback
     from urllib.parse import unquote
@@ -31,10 +32,10 @@ except Exception:
 
 try:
     from multiprocessing.pool import ThreadPool
+
     SUPPORTS_POOL = True
 except Exception:
     SUPPORTS_POOL = False
-
 
 ADDON_ID = "script.module.metadatautils"
 KODI_LANGUAGE = xbmc.getLanguage(xbmc.ISO_639_1)
@@ -75,7 +76,8 @@ def log_exception(modulename, exceptiondetails):
     if sys.version_info.major == 3:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        log_msg("Exception details: Type: %s Value: %s Traceback: %s" % (exc_type.__name__, exc_value, ''.join(line for line in lines)), xbmc.LOGWARNING)
+        log_msg("Exception details: Type: %s Value: %s Traceback: %s" % (
+        exc_type.__name__, exc_value, ''.join(line for line in lines)), xbmc.LOGWARNING)
     else:
         log_msg(format_exc(sys.exc_info()), xbmc.LOGWARNING)
     log_msg("Exception in %s ! --> %s" % (modulename, exceptiondetails), xbmc.LOGERROR)
@@ -98,9 +100,9 @@ def rate_limiter(rl_params):
     if (prev_timestamp + rl_delay) > cur_timestamp:
         sec_to_wait = (prev_timestamp + rl_delay) - cur_timestamp
         log_msg(
-            "Rate limiter active for %s - delaying request with %s seconds - "
-            "Configure a personal API key in the settings to get rid of this message and the delay." %
-            (rl_name, sec_to_wait), xbmc.LOGINFO)
+                "Rate limiter active for %s - delaying request with %s seconds - "
+                "Configure a personal API key in the settings to get rid of this message and the delay." %
+                (rl_name, sec_to_wait), xbmc.LOGINFO)
         while sec_to_wait and not monitor.abortRequested():
             monitor.waitForAbort(1)
             # keep setting the timestamp to create some sort of queue
@@ -159,12 +161,12 @@ def get_xml(url, params=None, retries=0, ratelimit=None):
         response = requests.get(url, params=params, timeout=20)
         if response and response.content and response.status_code == 200:
             tree = ET.fromstring(response.content)
-            #child = tree.find('movie')
-            if(len(tree)):
+            # child = tree.find('movie')
+            if (len(tree)):
                 child = tree[0]
-            #log_exception(__name__, child)
+            # log_exception(__name__, child)
             for attrName, attrValue in child.items():
-                result.update({attrName : attrValue})
+                result.update({attrName: attrValue})
         elif response.status_code in (429, 503, 504):
             raise Exception('Read timed out')
     except Exception as exc:
@@ -178,7 +180,7 @@ def get_xml(url, params=None, retries=0, ratelimit=None):
         else:
             log_exception(__name__, exc)
     return result
-    
+
 
 def try_encode(text, encoding="utf-8"):
     """helper to encode a string to utf-8"""
@@ -291,20 +293,21 @@ def get_duration(duration):
         if total_minutes < 60:
             hours = 0
         else:
-            hours = total_minutes  // 60 % 60
+            hours = total_minutes // 60 % 60
         minutes = total_minutes - (hours * 60)
         formatted_time = "%s:%s" % (hours, str(minutes).zfill(2))
     except Exception as exc:
         log_exception(__name__, exc)
         return {}
     return {
-        "Duration": formatted_time,
-        "Duration.Hours": hours,
-        "Duration.Minutes": minutes,
-        "Runtime": total_minutes,
-        "RuntimeExtended": "%s %s" % (total_minutes, xbmc.getLocalizedString(12391)),
-        "DurationAndRuntime": "%s (%s min.)" % (formatted_time, total_minutes),
-        "DurationAndRuntimeExtended": "%s (%s %s)" % (formatted_time, total_minutes, xbmc.getLocalizedString(12391))
+            "Duration": formatted_time,
+            "Duration.Hours": hours,
+            "Duration.Minutes": minutes,
+            "Runtime": total_minutes,
+            "RuntimeExtended": "%s %s" % (total_minutes, xbmc.getLocalizedString(12391)),
+            "DurationAndRuntime": "%s (%s min.)" % (formatted_time, total_minutes),
+            "DurationAndRuntimeExtended": "%s (%s %s)" % (
+            formatted_time, total_minutes, xbmc.getLocalizedString(12391))
     }
 
 
@@ -617,7 +620,8 @@ def download_artwork(folderpath, artwork):
                     xbmcvfs.mkdir(efa_path)
                     images = []
                     for count, image in enumerate(value):
-                        image = download_image(os.path.join(efa_path, "fanart%s.jpg" % count), image)
+                        image = download_image(os.path.join(efa_path, "fanart%s.jpg" % count),
+                                               image)
                         images.append(image)
                         if LIMIT_EXTRAFANART and count == LIMIT_EXTRAFANART:
                             break
@@ -630,7 +634,8 @@ def download_artwork(folderpath, artwork):
                     xbmcvfs.mkdir(efa_path)
                     images = []
                     for count, image in enumerate(value):
-                        image = download_image(os.path.join(efa_path, "poster%s.jpg" % count), image)
+                        image = download_image(os.path.join(efa_path, "poster%s.jpg" % count),
+                                               image)
                         images.append(image)
                         if LIMIT_EXTRAFANART and count == LIMIT_EXTRAFANART:
                             break
@@ -669,7 +674,8 @@ def download_artwork(folderpath, artwork):
                     xbmcvfs.mkdir(efa_path)
                     images = []
                     for count, image in enumerate(value):
-                        image = download_image(os.path.join(efa_path, "fanart%s.jpg" % count), image)
+                        image = download_image(os.path.join(efa_path, "fanart%s.jpg" % count),
+                                               image)
                         images.append(image)
                         if LIMIT_EXTRAFANART and count == LIMIT_EXTRAFANART:
                             break
@@ -682,7 +688,8 @@ def download_artwork(folderpath, artwork):
                     xbmcvfs.mkdir(efa_path)
                     images = []
                     for count, image in enumerate(value):
-                        image = download_image(os.path.join(efa_path, "poster%s.jpg" % count), image)
+                        image = download_image(os.path.join(efa_path, "poster%s.jpg" % count),
+                                               image)
                         images.append(image)
                         if LIMIT_EXTRAFANART and count == LIMIT_EXTRAFANART:
                             break
@@ -723,7 +730,8 @@ def refresh_image(imagepath):
         dbpath = xbmc.translatePath("special://database/Textures13.db").decode('utf-8')
     connection = sqlite3.connect(dbpath, timeout=30, isolation_level=None)
     try:
-        cache_image = connection.execute('SELECT cachedurl FROM texture WHERE url = ?', (imagepath,)).fetchone()
+        cache_image = connection.execute('SELECT cachedurl FROM texture WHERE url = ?',
+                                         (imagepath,)).fetchone()
         if sys.version_info.major == 3:
             if cache_image and isinstance(cache_image, str):
                 if xbmcvfs.exists(cache_image):
@@ -740,6 +748,7 @@ def refresh_image(imagepath):
     finally:
         del connection
 
+
 # pylint: disable-msg=too-many-local-variables
 
 
@@ -749,7 +758,8 @@ def manual_set_artwork(artwork, mediatype, header=None):
     if mediatype == "artist":
         art_types = ["thumb", "poster", "fanart", "banner", "clearart", "clearlogo", "landscape"]
     elif mediatype == "album":
-        art_types = ["thumb", "discart", "thumbback", "spine", "album3Dthumb", "album3Dflat", "album3Dcase", "album3Dface"]
+        art_types = ["thumb", "discart", "thumbback", "spine", "album3Dthumb", "album3Dflat",
+                     "album3Dcase", "album3Dface"]
     else:
         art_types = ["thumb", "poster", "fanart", "banner", "clearart",
                      "clearlogo", "discart", "landscape", "characterart"]
@@ -810,7 +820,8 @@ def manual_set_artwork(artwork, mediatype, header=None):
                 listitem.setProperty("icon", item)
                 artoptions.append(listitem)
 
-            dialog = DialogSelect("DialogSelect.xml", "", listing=artoptions, window_title=subheader)
+            dialog = DialogSelect("DialogSelect.xml", "", listing=artoptions,
+                                  window_title=subheader)
             dialog.doModal()
             selected_item = dialog.result
             del dialog
@@ -827,10 +838,10 @@ def manual_set_artwork(artwork, mediatype, header=None):
                 dialog = xbmcgui.Dialog()
                 if sys.version_info.major == 3:
                     image = dialog.browse(2, xbmc.getLocalizedString(1030),
-                                      'files', mask='.gif|.png|.jpg')
+                                          'files', mask='.gif|.png|.jpg')
                 else:
                     image = dialog.browse(2, xbmc.getLocalizedString(1030),
-                                      'files', mask='.gif|.png|.jpg').decode("utf-8")
+                                          'files', mask='.gif|.png|.jpg').decode("utf-8")
                 del dialog
                 if image:
                     artwork[label] = image
@@ -838,6 +849,7 @@ def manual_set_artwork(artwork, mediatype, header=None):
 
     # return endresult
     return changemade, artwork
+
 
 # pylint: enable-msg=too-many-local-variables
 
@@ -871,7 +883,7 @@ class DialogSelect(xbmcgui.WindowXMLDialog):
 
     def onAction(self, action):
         """On kodi action"""
-        if action.getId() in (9, 10, 92, 216, 247, 257, 275, 61467, 61448, ):
+        if action.getId() in (9, 10, 92, 216, 247, 257, 275, 61467, 61448,):
             self.result = -1
             self.close()
 

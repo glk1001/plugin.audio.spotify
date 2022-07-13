@@ -62,9 +62,9 @@ class Checker(object):
                 key_atoms = key.strip('/').split('/')
                 if key_atoms[:len(sn_atoms)] == sn_atoms:
                     warnings.warn(
-                        'The application mounted at %r has config '
-                        'entries that start with its script name: %r' % (sn,
-                                                                         key))
+                            'The application mounted at %r has config '
+                            'entries that start with its script name: %r' % (sn,
+                                                                             key))
 
     def check_site_config_entries_in_app_config(self):
         """Check for mounted Applications that have site-scoped config."""
@@ -115,10 +115,10 @@ class Checker(object):
             for key in app.config.keys():
                 if key.startswith('[') or key.endswith(']'):
                     warnings.warn(
-                        'The application mounted at %r has config '
-                        'section names with extraneous brackets: %r. '
-                        'Config *files* need brackets; config *dicts* '
-                        '(e.g. passed to tree.mount) do not.' % (sn, key))
+                            'The application mounted at %r has config '
+                            'section names with extraneous brackets: %r. '
+                            'Config *files* need brackets; config *dicts* '
+                            '(e.g. passed to tree.mount) do not.' % (sn, key))
 
     def check_static_paths(self):
         """Check Application config for incorrect static paths."""
@@ -149,19 +149,19 @@ class Checker(object):
                                 testdir = os.path.join(root, dir[1:])
                                 if os.path.exists(testdir):
                                     msg += (
-                                        '\nIf you meant to serve the '
-                                        'filesystem folder at %r, remove the '
-                                        'leading slash from dir.' % (testdir,))
+                                            '\nIf you meant to serve the '
+                                            'filesystem folder at %r, remove the '
+                                            'leading slash from dir.' % (testdir,))
                         else:
                             if not root:
                                 msg = (
-                                    'dir is a relative path and '
-                                    'no root provided.')
+                                        'dir is a relative path and '
+                                        'no root provided.')
                             else:
                                 fulldir = os.path.join(root, dir)
                                 if not os.path.isabs(fulldir):
                                     msg = ('%r is not an absolute path.' % (
-                                        fulldir,))
+                                            fulldir,))
 
                         if fulldir and not os.path.exists(fulldir):
                             if msg:
@@ -175,17 +175,17 @@ class Checker(object):
 
     # -------------------------- Compatibility -------------------------- #
     obsolete = {
-        'server.default_content_type': 'tools.response_headers.headers',
-        'log_access_file': 'log.access_file',
-        'log_config_options': None,
-        'log_file': 'log.error_file',
-        'log_file_not_found': None,
-        'log_request_headers': 'tools.log_headers.on',
-        'log_to_screen': 'log.screen',
-        'show_tracebacks': 'request.show_tracebacks',
-        'throw_errors': 'request.throw_errors',
-        'profiler.on': ('cherrypy.tree.mount(profiler.make_app('
-                        'cherrypy.Application(Root())))'),
+            'server.default_content_type': 'tools.response_headers.headers',
+            'log_access_file': 'log.access_file',
+            'log_config_options': None,
+            'log_file': 'log.error_file',
+            'log_file_not_found': None,
+            'log_request_headers': 'tools.log_headers.on',
+            'log_to_screen': 'log.screen',
+            'show_tracebacks': 'request.show_tracebacks',
+            'throw_errors': 'request.throw_errors',
+            'profiler.on': ('cherrypy.tree.mount(profiler.make_app('
+                            'cherrypy.Application(Root())))'),
     }
 
     deprecated = {}
@@ -241,22 +241,22 @@ class Checker(object):
                             # namespace is preceded by "cherrypy."
                             if atoms[0] == 'cherrypy' and atoms[1] in ns:
                                 msg = (
-                                    'The config entry %r is invalid; '
-                                    'try %r instead.\nsection: [%s]'
-                                    % (k, '.'.join(atoms[1:]), section))
+                                        'The config entry %r is invalid; '
+                                        'try %r instead.\nsection: [%s]'
+                                        % (k, '.'.join(atoms[1:]), section))
                             else:
                                 msg = (
-                                    'The config entry %r is invalid, '
-                                    'because the %r config namespace '
-                                    'is unknown.\n'
-                                    'section: [%s]' % (k, atoms[0], section))
+                                        'The config entry %r is invalid, '
+                                        'because the %r config namespace '
+                                        'is unknown.\n'
+                                        'section: [%s]' % (k, atoms[0], section))
                             warnings.warn(msg)
                         elif atoms[0] == 'tools':
                             if atoms[1] not in dir(cherrypy.tools):
                                 msg = (
-                                    'The config entry %r may be invalid, '
-                                    'because the %r tool was not found.\n'
-                                    'section: [%s]' % (k, atoms[1], section))
+                                        'The config entry %r may be invalid, '
+                                        'because the %r tool was not found.\n'
+                                        'section: [%s]' % (k, atoms[1], section))
                                 warnings.warn(msg)
 
     def check_config_namespaces(self):

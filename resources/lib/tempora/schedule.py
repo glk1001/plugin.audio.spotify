@@ -44,9 +44,9 @@ class DelayedCommand(datetime.datetime):
     @classmethod
     def from_datetime(cls, other):
         return cls(
-            other.year, other.month, other.day, other.hour,
-            other.minute, other.second, other.microsecond,
-            other.tzinfo,
+                other.year, other.month, other.day, other.hour,
+                other.minute, other.second, other.microsecond,
+                other.tzinfo,
         )
 
     @classmethod
@@ -91,6 +91,7 @@ class PeriodicCommand(DelayedCommand):
     Like a delayed command, but expect this command to run every delay
     seconds.
     """
+
     def _next_time(self):
         """
         Add delay to self, localized
@@ -117,8 +118,8 @@ class PeriodicCommand(DelayedCommand):
     def __setattr__(self, key, value):
         if key == 'delay' and not value > datetime.timedelta():
             raise ValueError(
-                "A PeriodicCommand must have a positive, "
-                "non-zero delay."
+                    "A PeriodicCommand must have a positive, "
+                    "non-zero delay."
             )
         super(PeriodicCommand, self).__setattr__(key, value)
 
@@ -158,6 +159,7 @@ class Scheduler:
     A rudimentary abstract scheduler accepting DelayedCommands
     and dispatching them on schedule.
     """
+
     def __init__(self):
         self.queue = []
 
@@ -186,6 +188,7 @@ class InvokeScheduler(Scheduler):
     """
     Command targets are functions to be invoked on schedule.
     """
+
     def run(self, command):
         command.target()
 
@@ -194,6 +197,7 @@ class CallbackScheduler(Scheduler):
     """
     Command targets are passed to a dispatch callable on schedule.
     """
+
     def __init__(self, dispatch):
         super(CallbackScheduler, self).__init__()
         self.dispatch = dispatch

@@ -8,6 +8,7 @@
 """
 
 import os, sys
+
 if sys.version_info.major == 3:
     from .utils import ADDON_ID, get_compare_string, log_msg
 else:
@@ -31,9 +32,9 @@ class MusicBrainz(object):
             self.cache = simplecache
         import musicbrainzngs as mbrainz
         mbrainz.set_useragent(
-            "script.skin.helper.service",
-            "1.0.0",
-            "https://github.com/marcelveldt/script.skin.helper.service")
+                "script.skin.helper.service",
+                "1.0.0",
+                "https://github.com/marcelveldt/script.skin.helper.service")
         mbrainz.set_rate_limit(limit_or_interval=2.0, new_requests=1)
         addon = xbmcaddon.Addon(ADDON_ID)
         if addon.getSetting("music_art_mb_mirror"):
@@ -125,7 +126,8 @@ class MusicBrainz(object):
         artistid = ""
         albumid = ""
         mb_albums = self.mbrainz.search_release_groups(query=album,
-                                                       limit=20, offset=None, strict=False, artist=artist)
+                                                       limit=20, offset=None, strict=False,
+                                                       artist=artist)
 
         if mb_albums and mb_albums.get("release-group-list"):
             for albumtype in ["Album", "Single", ""]:
@@ -181,7 +183,8 @@ class MusicBrainz(object):
         artistid = ""
         albumid = ""
         mb_albums = self.mbrainz.search_recordings(query=track,
-                                                   limit=20, offset=None, strict=False, artist=artist)
+                                                   limit=20, offset=None, strict=False,
+                                                   artist=artist)
         if mb_albums and mb_albums.get("recording-list"):
             for mb_recording in mb_albums["recording-list"]:
                 if albumid and artistid:
@@ -205,10 +208,12 @@ class MusicBrainz(object):
                                 # grab release group details to make sure we're
                                 # not looking at some various artists compilation
                                 mb_album = self.mbrainz.get_release_group_by_id(
-                                    mb_release["release-group"]["id"], includes=["artist-credits"])
+                                        mb_release["release-group"]["id"],
+                                        includes=["artist-credits"])
                                 mb_album = mb_album["release-group"]
                                 if mb_album.get("artist-credit"):
-                                    artistid = self.match_artistcredit(mb_album["artist-credit"], artist)
+                                    artistid = self.match_artistcredit(mb_album["artist-credit"],
+                                                                       artist)
                                     if artistid:
                                         albumid = mb_release["release-group"]["id"]
                                         break

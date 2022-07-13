@@ -15,7 +15,7 @@ def _grep(full_text, match_with, insensitive=True, fn=any):
         match_with = [match_with]
     if insensitive:
         return "\n".join(
-            [l for l in lines if fn([m.lower() in l.lower() for m in match_with])]
+                [l for l in lines if fn([m.lower() in l.lower() for m in match_with])]
         )
     else:
         return "\n".join([l for l in lines if fn([m in l for m in match_with])])
@@ -23,17 +23,17 @@ def _grep(full_text, match_with, insensitive=True, fn=any):
 
 @logged("running command: {'(hidden)' if hide else cmd}")
 def run(
-    cmd: str,
-    working_dir=None,
-    echo=True,
-    raise_error=True,
-    log_file_path: str = None,
-    shell=True,
-    daemon=False,
-    hide=False,
-    cwd=None,
-    wait_test=None,
-    wait_max=None,
+        cmd: str,
+        working_dir=None,
+        echo=True,
+        raise_error=True,
+        log_file_path: str = None,
+        shell=True,
+        daemon=False,
+        hide=False,
+        cwd=None,
+        wait_test=None,
+        wait_max=None,
 ):
     """ Run a CLI command and return a tuple: (return_code, output_text) """
     loglines = []
@@ -47,12 +47,12 @@ def run(
     else:
         cmd = cmd.replace("\n", " \\\n")
     proc = subprocess.Popen(
-        cmd,
-        stderr=subprocess.STDOUT,
-        stdout=subprocess.PIPE,
-        universal_newlines=True,
-        shell=shell,
-        cwd=cwd,
+            cmd,
+            stderr=subprocess.STDOUT,
+            stdout=subprocess.PIPE,
+            universal_newlines=True,
+            shell=shell,
+            cwd=cwd,
     )
     start_time = time.time()
     if working_dir:
@@ -73,8 +73,8 @@ def run(
                 break
             if wait_max and time.time() >= start_time + wait_max:
                 logging.info(
-                    f"{line}\nMax timeout expired (wait_max={wait_max})."
-                    f" Returning..."
+                        f"{line}\nMax timeout expired (wait_max={wait_max})."
+                        f" Returning..."
                 )
                 if callable(wait_test):
                     return_code = 1
@@ -102,25 +102,25 @@ def run(
     else:
         return_code = proc.returncode
         if (
-            return_code != 0
-            and raise_error
-            and ((daemon == False) or (return_code is not None))
+                return_code != 0
+                and raise_error
+                and ((daemon == False) or (return_code is not None))
         ):
             err_msg = f"Command failed (exit code {return_code}): {cmd}"
             if not echo:
                 print_str = output_text
             elif len(output_text.splitlines()) > 10:
                 print_str = _grep(
-                    output_text, ["error", "exception", "warning", "fail", "deprecat"]
+                        output_text, ["error", "exception", "warning", "fail", "deprecat"]
                 )
             else:
                 print_str = ""
             if print_str:
                 err_msg += (
-                    f"{'-' * 80}\n"
-                    f"SCRIPT ERRORS:\n{'-' * 80}\n"
-                    f"{print_str}\n{'-' * 80}\n"
-                    f"END OF SCRIPT OUTPUT\n{'-' * 80}"
+                        f"{'-' * 80}\n"
+                        f"SCRIPT ERRORS:\n{'-' * 80}\n"
+                        f"{print_str}\n{'-' * 80}\n"
+                        f"END OF SCRIPT OUTPUT\n{'-' * 80}"
                 )
             raise RuntimeError(err_msg)
     return return_code, output_text

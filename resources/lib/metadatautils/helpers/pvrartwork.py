@@ -8,11 +8,14 @@
 """
 
 import os, sys
+
 if sys.version_info.major == 3:
-    from .utils import get_clean_image, DialogSelect, log_msg, extend_dict, ADDON_ID, download_artwork, normalize_string
+    from .utils import get_clean_image, DialogSelect, log_msg, extend_dict, ADDON_ID, \
+        download_artwork, normalize_string
     from urllib.parse import quote_plus
 else:
-    from utils import get_clean_image, DialogSelect, log_msg, extend_dict, ADDON_ID, download_artwork, normalize_string
+    from utils import get_clean_image, DialogSelect, log_msg, extend_dict, ADDON_ID, \
+        download_artwork, normalize_string
     from urllib import quote_plus
 import xbmc
 import xbmcgui
@@ -42,7 +45,7 @@ class PvrArtwork(object):
         """
         details = {"art": {}}
         # try cache first
-        
+
         # use searchtitle when searching cache 
         cache_title = title.lower()
         cache_channel = channel.lower()
@@ -79,26 +82,29 @@ class PvrArtwork(object):
                 details["genre"] = genre.split(" / ")
                 details["media_type"] = self.get_mediatype_from_genre(genre)
             searchtitle = self.get_searchtitle(title, channel)
-                        
+
             # only continue if we pass our basic checks
             filterstr = self.pvr_proceed_lookup(title, channel, genre, recordingdetails)
             proceed_lookup = False if filterstr else True
             if not proceed_lookup and manual_select:
                 # warn user about active skip filter
                 proceed_lookup = xbmcgui.Dialog().yesno(
-                    message=self._mutils.addon.getLocalizedString(32027), line2=filterstr,
-                    heading=xbmc.getLocalizedString(750))
+                        message=self._mutils.addon.getLocalizedString(32027), line2=filterstr,
+                        heading=xbmc.getLocalizedString(750))
 
             if proceed_lookup:
 
                 # if manual lookup get the title from the user
                 if manual_select:
                     if sys.version_info.major == 3:
-                        searchtitle = xbmcgui.Dialog().input(xbmc.getLocalizedString(16017), searchtitle,
-                                                         type=xbmcgui.INPUT_ALPHANUM)
+                        searchtitle = xbmcgui.Dialog().input(xbmc.getLocalizedString(16017),
+                                                             searchtitle,
+                                                             type=xbmcgui.INPUT_ALPHANUM)
                     else:
-                        searchtitle = xbmcgui.Dialog().input(xbmc.getLocalizedString(16017), searchtitle,
-                                                         type=xbmcgui.INPUT_ALPHANUM).decode("utf-8")
+                        searchtitle = xbmcgui.Dialog().input(xbmc.getLocalizedString(16017),
+                                                             searchtitle,
+                                                             type=xbmcgui.INPUT_ALPHANUM).decode(
+                            "utf-8")
                     if not searchtitle:
                         return
 
@@ -118,20 +124,22 @@ class PvrArtwork(object):
                 # lookup custom path
                 details = extend_dict(details, self.lookup_custom_path(searchtitle, title))
                 # lookup movie/tv library
-                details = extend_dict(details, self.lookup_local_library(searchtitle, details["media_type"]))
+                details = extend_dict(details,
+                                      self.lookup_local_library(searchtitle, details["media_type"]))
 
                 # do internet scraping if enabled
                 if self._mutils.addon.getSetting("pvr_art_scraper") == "true":
 
                     log_msg(
-                        "pvrart start scraping metadata for title: %s - media_type: %s" %
-                        (searchtitle, details["media_type"]))
+                            "pvrart start scraping metadata for title: %s - media_type: %s" %
+                            (searchtitle, details["media_type"]))
 
                     # prefer tmdb scraper
                     tmdb_result = self._mutils.get_tmdb_details(
-                        "", "", searchtitle, "", "", details["media_type"],
+                            "", "", searchtitle, "", "", details["media_type"],
                             manual_select=manual_select, ignore_cache=manual_select)
-                    log_msg("pvrart lookup for title: %s - TMDB result: %s" % (searchtitle, tmdb_result))
+                    log_msg("pvrart lookup for title: %s - TMDB result: %s" % (
+                    searchtitle, tmdb_result))
                     if tmdb_result:
                         details["media_type"] = tmdb_result["media_type"]
                         details = extend_dict(details, tmdb_result)
@@ -139,40 +147,48 @@ class PvrArtwork(object):
                     # fallback to tvdb scraper
                     # following 3 lines added as part of "auto refresh" fix. ensure manual_select=true for TVDB lookup. No idea why this works
                     tempmanualselect = manual_select
-                    manual_select="true"                
-                    log_msg("DEBUG INFO: TVDB lookup: searchtitle: %s channel: %s manual_select: %s" %(searchtitle, channel, manual_select))
+                    manual_select = "true"
+                    log_msg(
+                        "DEBUG INFO: TVDB lookup: searchtitle: %s channel: %s manual_select: %s" % (
+                        searchtitle, channel, manual_select))
                     if (not tmdb_result or (tmdb_result and not tmdb_result.get("art")) or
                             details["media_type"] == "tvshow"):
                         # original code: tvdb_match = self.lookup_tvdb(searchtitle, channel, manual_select=manual_select). part of "auto refresh" fix.
-                        tvdb_match = self.lookup_tvdb(searchtitle, channel, manual_select=manual_select, tempmanualselect=tempmanualselect)
-                        log_msg("pvrart lookup for title: %s - TVDB result: %s" % (searchtitle, tvdb_match))
+                        tvdb_match = self.lookup_tvdb(searchtitle, channel,
+                                                      manual_select=manual_select,
+                                                      tempmanualselect=tempmanualselect)
+                        log_msg("pvrart lookup for title: %s - TVDB result: %s" % (
+                        searchtitle, tvdb_match))
                         if tvdb_match:
                             # get full tvdb results and extend with tmdb
                             if not details["media_type"]:
                                 details["media_type"] = "tvshow"
-                            details = extend_dict(details, self._mutils.thetvdb.get_series(tvdb_match))
-                            details = extend_dict(details, self._mutils.tmdb.get_videodetails_by_externalid(
-                                tvdb_match, "tvdb_id"), ["poster", "fanart"])
+                            details = extend_dict(details,
+                                                  self._mutils.thetvdb.get_series(tvdb_match))
+                            details = extend_dict(details,
+                                                  self._mutils.tmdb.get_videodetails_by_externalid(
+                                                          tvdb_match, "tvdb_id"),
+                                                  ["poster", "fanart"])
                     # part of "auto refresh" fix - revert manual_select to original value
                     manual_select = tempmanualselect
                     # fanart.tv scraping - append result to existing art
                     if details.get("imdbnumber") and details["media_type"] == "movie":
                         details["art"] = extend_dict(
-                            details["art"], self._mutils.fanarttv.movie(
-                                details["imdbnumber"]), [
-                                "poster", "fanart", "landscape"])
+                                details["art"], self._mutils.fanarttv.movie(
+                                        details["imdbnumber"]), [
+                                        "poster", "fanart", "landscape"])
                     elif details.get("tvdb_id") and details["media_type"] == "tvshow":
                         details["art"] = extend_dict(
-                            details["art"], self._mutils.fanarttv.tvshow(
-                                details["tvdb_id"]), [
-                                "poster", "fanart", "landscape"])
+                                details["art"], self._mutils.fanarttv.tvshow(
+                                        details["tvdb_id"]), [
+                                        "poster", "fanart", "landscape"])
 
                     # append omdb details
                     if details.get("imdbnumber"):
                         details = extend_dict(
-                            details, self._mutils.omdb.get_details_by_imdbid(
-                                details["imdbnumber"]), [
-                                "rating", "votes"])
+                                details, self._mutils.omdb.get_details_by_imdbid(
+                                        details["imdbnumber"]), [
+                                        "rating", "votes"])
 
                     # set thumbnail - prefer scrapers
                     thumb = ""
@@ -198,13 +214,16 @@ class PvrArtwork(object):
                     if details["art"].get("fanarts"):
                         for count, item in enumerate(details["art"]["fanarts"]):
                             details["art"]["fanart.%s" % count] = item
-                        if not details["art"].get("extrafanart") and len(details["art"]["fanarts"]) > 1:
-                            details["art"]["extrafanart"] = "plugin://script.skin.helper.service/"\
-                                "?action=extrafanart&fanarts=%s" % quote_plus(repr(details["art"]["fanarts"]))
+                        if not details["art"].get("extrafanart") and len(
+                                details["art"]["fanarts"]) > 1:
+                            details["art"]["extrafanart"] = "plugin://script.skin.helper.service/" \
+                                                            "?action=extrafanart&fanarts=%s" % quote_plus(
+                                repr(details["art"]["fanarts"]))
 
                     # download artwork to custom folder
                     if self._mutils.addon.getSetting("pvr_art_download") == "true":
-                        details["art"] = download_artwork(self.get_custom_path(searchtitle, title), details["art"])
+                        details["art"] = download_artwork(self.get_custom_path(searchtitle, title),
+                                                          details["art"])
 
             log_msg("pvrart lookup for title: %s - final result: %s" % (searchtitle, details))
 
@@ -241,11 +260,14 @@ class PvrArtwork(object):
         options.append(self._mutils.addon.getLocalizedString(32029))  # Refresh item (manual lookup)
         options.append(self._mutils.addon.getLocalizedString(32036))  # Choose art
         if channel in ignorechannels:
-            options.append(self._mutils.addon.getLocalizedString(32030))  # Remove channel from ignore list
+            options.append(
+                self._mutils.addon.getLocalizedString(32030))  # Remove channel from ignore list
         else:
-            options.append(self._mutils.addon.getLocalizedString(32031))  # Add channel to ignore list
+            options.append(
+                self._mutils.addon.getLocalizedString(32031))  # Add channel to ignore list
         if title in ignoretitles:
-            options.append(self._mutils.addon.getLocalizedString(32032))  # Remove title from ignore list
+            options.append(
+                self._mutils.addon.getLocalizedString(32032))  # Remove title from ignore list
         else:
             options.append(self._mutils.addon.getLocalizedString(32033))  # Add title to ignore list
         options.append(self._mutils.addon.getLocalizedString(32034))  # Open addon settings
@@ -255,10 +277,12 @@ class PvrArtwork(object):
         del dialog
         if ret == 0:
             # Refresh item (auto lookup)
-            self.get_pvr_artwork(title=title, channel=channel, genre=genre, ignore_cache=True, manual_select=False)
+            self.get_pvr_artwork(title=title, channel=channel, genre=genre, ignore_cache=True,
+                                 manual_select=False)
         elif ret == 1:
             # Refresh item (manual lookup)
-            self.get_pvr_artwork(title=title, channel=channel, genre=genre, ignore_cache=True, manual_select=True)
+            self.get_pvr_artwork(title=title, channel=channel, genre=genre, ignore_cache=True,
+                                 manual_select=True)
         elif ret == 2:
             # Choose art
             self.manual_set_pvr_artwork(title, channel, genre)
@@ -270,7 +294,8 @@ class PvrArtwork(object):
                 ignorechannels.append(channel)
             ignorechannels_str = "|".join(ignorechannels)
             self._mutils.addon.setSetting("pvr_art_ignore_channels", ignorechannels_str)
-            self.get_pvr_artwork(title=title, channel=channel, genre=genre, ignore_cache=True, manual_select=False)
+            self.get_pvr_artwork(title=title, channel=channel, genre=genre, ignore_cache=True,
+                                 manual_select=False)
         elif ret == 4:
             # Add/remove title to ignore list
             if title in ignoretitles:
@@ -279,7 +304,8 @@ class PvrArtwork(object):
                 ignoretitles.append(title)
             ignoretitles_str = "|".join(ignoretitles)
             self._mutils.addon.setSetting("pvr_art_ignore_titles", ignoretitles_str)
-            self.get_pvr_artwork(title=title, channel=channel, genre=genre, ignore_cache=True, manual_select=False)
+            self.get_pvr_artwork(title=title, channel=channel, genre=genre, ignore_cache=True,
+                                 manual_select=False)
         elif ret == 5:
             # Open addon settings
             xbmc.executebuiltin("Addon.OpenSettings(%s)" % ADDON_ID)
@@ -305,13 +331,16 @@ class PvrArtwork(object):
                             19552, 19553, 19554, 19555, 19556, 19557, 19558, 19559]
             for kodi_string in kodi_strings:
                 kodi_string = xbmc.getLocalizedString(kodi_string).lower()
-                if (genre and (genre in kodi_string or kodi_string in genre)) or kodi_string in title:
+                if (genre and (
+                        genre in kodi_string or kodi_string in genre)) or kodi_string in title:
                     filters.append("Common genres like weather/sports are set to be ignored")
-        if self._mutils.addon.getSetting("pvr_art_recordings_only") == "true" and not recordingdetails:
+        if self._mutils.addon.getSetting(
+                "pvr_art_recordings_only") == "true" and not recordingdetails:
             filters.append("PVR Artwork is enabled for recordings only")
         if filters:
             filterstr = " - ".join(filters)
-            log_msg("PVR artwork - filter active for title: %s - channel %s --> %s" % (title, channel, filterstr))
+            log_msg("PVR artwork - filter active for title: %s - channel %s --> %s" % (
+            title, channel, filterstr))
             return filterstr
         else:
             return ""
@@ -333,7 +362,8 @@ class PvrArtwork(object):
                     break
         if not media_type:
             # Kodi defined tvshow genres
-            kodi_genres = [19505, 19516, 19517, 19518, 19520, 19532, 19533, 19534, 19535, 19548, 19549,
+            kodi_genres = [19505, 19516, 19517, 19518, 19520, 19532, 19533, 19534, 19535, 19548,
+                           19549,
                            19550, 19551, 19552, 19553, 19554, 19555, 19556, 19557, 19558, 19559]
             for kodi_genre in kodi_genres:
                 if xbmc.getLocalizedString(kodi_genre) in genre:
@@ -351,7 +381,8 @@ class PvrArtwork(object):
         if sys.version_info.major == 3:
             splitters = self._mutils.addon.getSetting("pvr_art_splittitlechar").split("|")
         else:
-            splitters = self._mutils.addon.getSetting("pvr_art_splittitlechar").decode("utf-8").split("|")
+            splitters = self._mutils.addon.getSetting("pvr_art_splittitlechar").decode(
+                "utf-8").split("|")
         if channel:
             splitters.append(" %s" % channel.lower())
         for splitchar in splitters:
@@ -362,8 +393,11 @@ class PvrArtwork(object):
             # following line removed as always seems to return blanks. also addon settings changed to replace ": " with " "
             # title = re.sub(self._mutils.addon.getSetting("pvr_art_stripchars"), '', title)
         else:
-            title = re.sub(self._mutils.addon.getSetting("pvr_art_replace_by_space").decode("utf-8"), ' ', title)
-            title = re.sub(self._mutils.addon.getSetting("pvr_art_stripchars").decode("utf-8"), '', title)
+            title = re.sub(
+                self._mutils.addon.getSetting("pvr_art_replace_by_space").decode("utf-8"), ' ',
+                title)
+            title = re.sub(self._mutils.addon.getSetting("pvr_art_stripchars").decode("utf-8"), '',
+                           title)
         title = title.strip()
         return title
 
@@ -377,7 +411,8 @@ class PvrArtwork(object):
         details = {}
         recordings = self._mutils.kodidb.recordings()
         for item in recordings:
-            if (title == item["title"] or title in item["file"]) and (channel == item["channel"] or not channel):
+            if (title == item["title"] or title in item["file"]) and (
+                    channel == item["channel"] or not channel):
                 # grab thumb from pvr
                 if item.get("art"):
                     details["thumbnail"] = get_clean_image(item["art"].get("thumb"))
@@ -398,9 +433,9 @@ class PvrArtwork(object):
         tvdb_result = self._mutils.thetvdb.search_series(searchtitle, True)
         searchchannel = channel.lower().split("hd")[0].replace(" ", "")
         if " FHD" in channel:
-            searchchannel = channel.lower().split("fhd")[0].replace(" ", "")           
+            searchchannel = channel.lower().split("fhd")[0].replace(" ", "")
         if " HD" in channel:
-            searchchannel = channel.lower().split("hd")[0].replace(" ", "")      
+            searchchannel = channel.lower().split("hd")[0].replace(" ", "")
         if " SD" in channel:
             searchchannel = channel.lower().split("sd")[0].replace(" ", "")
         match_results = []
@@ -410,7 +445,7 @@ class PvrArtwork(object):
                 if not item["seriesName"]:
                     continue  # seriesname can be None in some conditions
                 itemtitle = item["seriesName"].lower()
-                if not item["network"]: 
+                if not item["network"]:
                     continue  # network can be None in some conditions
                 network = item["network"].lower().replace(" ", "")
                 # high score if channel name matches
@@ -420,7 +455,8 @@ class PvrArtwork(object):
                 if searchtitle == itemtitle:
                     item["score"] += 1000
                 # match title by replacing some characters
-                if re.sub('\*|,|.\"|\'| |:|;', '', searchtitle) == re.sub('\*|,|.\"|\'| |:|;', '', itemtitle):
+                if re.sub('\*|,|.\"|\'| |:|;', '', searchtitle) == re.sub('\*|,|.\"|\'| |:|;', '',
+                                                                          itemtitle):
                     item["score"] += 750
                 # add SequenceMatcher score to the results
                 stringmatchscore = SM(None, searchtitle, itemtitle).ratio()
@@ -443,11 +479,11 @@ class PvrArtwork(object):
                     listitem.setArt({'icon': thumb})
                     listitems.append(listitem)
                 dialog = DialogSelect(
-                    "DialogSelect.xml",
-                    "",
-                    listing=listitems,
-                    window_title="%s - TVDB" %
-                    xbmc.getLocalizedString(283))
+                        "DialogSelect.xml",
+                        "",
+                        listing=listitems,
+                        window_title="%s - TVDB" %
+                                     xbmc.getLocalizedString(283))
                 dialog.doModal()
                 selected_item = dialog.result
                 del dialog
@@ -496,7 +532,8 @@ class PvrArtwork(object):
             for item in files:
                 if sys.version_info.major < 3:
                     item = item.decode("utf-8")
-                if item in ["banner.jpg", "clearart.png", "poster.jpg", "disc.png", "characterart.png",
+                if item in ["banner.jpg", "clearart.png", "poster.jpg", "disc.png",
+                            "characterart.png",
                             "fanart.jpg", "landscape.jpg"]:
                     key = item.split(".")[0]
                     details["art"][key] = title_path + item

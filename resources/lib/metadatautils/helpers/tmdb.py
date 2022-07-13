@@ -8,10 +8,13 @@
 """
 
 import os, sys
+
 if sys.version_info.major == 3:
-    from .utils import get_json, KODI_LANGUAGE, try_parse_int, DialogSelect, get_compare_string, int_with_commas, ADDON_ID
+    from .utils import get_json, KODI_LANGUAGE, try_parse_int, DialogSelect, get_compare_string, \
+        int_with_commas, ADDON_ID
 else:
-    from utils import get_json, KODI_LANGUAGE, try_parse_int, DialogSelect, get_compare_string, int_with_commas, ADDON_ID
+    from utils import get_json, KODI_LANGUAGE, try_parse_int, DialogSelect, get_compare_string, \
+        int_with_commas, ADDON_ID
 from difflib import SequenceMatcher as SM
 from simplecache import use_cache
 from operator import itemgetter
@@ -47,7 +50,8 @@ class Tmdb(object):
             year: (optional) the year of the movie to search for (enhances search result if supplied)
             manual_select: (optional) if True will show select dialog with all results
         """
-        details = self.select_best_match(self.search_movies(title, year), manual_select=manual_select)
+        details = self.select_best_match(self.search_movies(title, year),
+                                         manual_select=manual_select)
         if details:
             details = self.get_movie_details(details["id"])
         return details
@@ -72,13 +76,15 @@ class Tmdb(object):
             year: (optional) the year of the movie to search for (enhances search result if supplied)
             manual_select: (optional) if True will show select dialog with all results
         """
-        details = self.select_best_match(self.search_tvshows(title, year), manual_select=manual_select)
+        details = self.select_best_match(self.search_tvshows(title, year),
+                                         manual_select=manual_select)
         if details:
             details = self.get_tvshow_details(details["id"])
         return details
 
     @use_cache(4)
-    def search_video(self, title, prefyear="", preftype="", manual_select=False, ignore_cache=False):
+    def search_video(self, title, prefyear="", preftype="", manual_select=False,
+                     ignore_cache=False):
         """
             Search tmdb for a specific entry (can be movie or tvshow), returns full details of best match
             parameters:
@@ -156,7 +162,8 @@ class Tmdb(object):
                 "profile_path"] if result["profile_path"] else ""
             item = {"name": result["name"],
                     "thumb": cast_thumb,
-                    "roles": [item["title"] if item.get("title") else item["name"] for item in result["known_for"]]}
+                    "roles": [item["title"] if item.get("title") else item["name"] for item in
+                              result["known_for"]]}
             return item
         else:
             return {}
@@ -164,9 +171,9 @@ class Tmdb(object):
     def get_movie_details(self, movie_id):
         """get all moviedetails"""
         params = {
-            "append_to_response": "keywords,videos,credits,images",
-            "include_image_language": "%s,en" % KODI_LANGUAGE,
-            "language": KODI_LANGUAGE
+                "append_to_response": "keywords,videos,credits,images",
+                "include_image_language": "%s,en" % KODI_LANGUAGE,
+                "language": KODI_LANGUAGE
         }
         return self.map_details(self.get_data("movie/%s" % movie_id, params), "movie")
 
@@ -179,17 +186,19 @@ class Tmdb(object):
             details["title"] = result["name"]
             details["plot"] = result["overview"]
             details["tmdb_id"] = result["id"]
-            details["art"]["poster"] = "https://image.tmdb.org/t/p/original%s" % result["poster_path"]
-            details["art"]["fanart"] = "https://image.tmdb.org/t/p/original%s" % result["backdrop_path"]
+            details["art"]["poster"] = "https://image.tmdb.org/t/p/original%s" % result[
+                "poster_path"]
+            details["art"]["fanart"] = "https://image.tmdb.org/t/p/original%s" % result[
+                "backdrop_path"]
             details["totalmovies"] = len(result["parts"])
         return details
 
     def get_tvshow_details(self, tvshow_id):
         """get all tvshowdetails"""
         params = {
-            "append_to_response": "keywords,videos,external_ids,credits,images",
-            "include_image_language": "%s,en" % KODI_LANGUAGE,
-            "language": KODI_LANGUAGE
+                "append_to_response": "keywords,videos,external_ids,credits,images",
+                "include_image_language": "%s,en" % KODI_LANGUAGE,
+                "language": KODI_LANGUAGE
         }
         return self.map_details(self.get_data("tv/%s" % tvshow_id, params), "tvshow")
 
@@ -265,23 +274,27 @@ class Tmdb(object):
                 for cast_member in data["credits"]["cast"]:
                     cast_thumb = ""
                     if cast_member["profile_path"]:
-                        cast_thumb = "https://image.tmdb.org/t/p/original%s" % cast_member["profile_path"]
-                    details["cast"].append({"name": cast_member["name"], "role": cast_member["character"],
-                                            "thumbnail": cast_thumb})
+                        cast_thumb = "https://image.tmdb.org/t/p/original%s" % cast_member[
+                            "profile_path"]
+                    details["cast"].append(
+                            {"name": cast_member["name"], "role": cast_member["character"],
+                             "thumbnail": cast_thumb})
                     details["castandrole"].append((cast_member["name"], cast_member["character"]))
             # crew (including writers and directors)
             if "crew" in data["credits"]:
                 for crew_member in data["credits"]["crew"]:
                     cast_thumb = ""
                     if crew_member["profile_path"]:
-                        cast_thumb = "https://image.tmdb.org/t/p/original%s" % crew_member["profile_path"]
+                        cast_thumb = "https://image.tmdb.org/t/p/original%s" % crew_member[
+                            "profile_path"]
                     if crew_member["job"] in ["Author", "Writer"]:
                         details["writer"].append(crew_member["name"])
                     if crew_member["job"] in ["Producer", "Executive Producer"]:
                         details["director"].append(crew_member["name"])
                     if crew_member["job"] in ["Producer", "Executive Producer", "Author", "Writer"]:
-                        details["cast"].append({"name": crew_member["name"], "role": crew_member["job"],
-                                                "thumbnail": cast_thumb})
+                        details["cast"].append(
+                                {"name": crew_member["name"], "role": crew_member["job"],
+                                 "thumbnail": cast_thumb})
         # artwork
         details["art"] = {}
         if data.get("images"):
@@ -296,7 +309,8 @@ class Tmdb(object):
         if not details["art"].get("poster") and data.get("poster_path"):
             details["art"]["poster"] = "https://image.tmdb.org/t/p/original%s" % data["poster_path"]
         if not details["art"].get("fanart") and data.get("backdrop_path"):
-            details["art"]["fanart"] = "https://image.tmdb.org/t/p/original%s" % data["backdrop_path"]
+            details["art"]["fanart"] = "https://image.tmdb.org/t/p/original%s" % data[
+                "backdrop_path"]
         # movies only
         if media_type == "movie":
             details["title"] = data["title"]
@@ -346,7 +360,8 @@ class Tmdb(object):
                 seasons = []
                 for count, item in enumerate(tmdboverviewdetails):
                     seasons.append(item["overview"])
-                    details["seasons.formatted.%s" % count] = "%s %s[CR]%s[CR]" % (item["name"], item["air_date"], item["overview"])
+                    details["seasons.formatted.%s" % count] = "%s %s[CR]%s[CR]" % (
+                    item["name"], item["air_date"], item["overview"])
                 details["seasons.formatted"] = "[CR]".join(seasons)
             if data.get("external_ids"):
                 details["imdbnumber"] = data["external_ids"].get("imdb_id", "")
@@ -356,7 +371,8 @@ class Tmdb(object):
         # trailer
         for video in data["videos"]["results"]:
             if video["site"] == "YouTube" and video["type"] == "Trailer":
-                details["trailer"] = 'plugin://plugin.video.youtube/?action=play_video&videoid=%s' % video["key"]
+                details["trailer"] = 'plugin://plugin.video.youtube/?action=play_video&videoid=%s' % \
+                                     video["key"]
                 break
         return details
 
@@ -389,7 +405,8 @@ class Tmdb(object):
                 item["score"] = 0
                 itemtitle = item["title"] if item.get("title") else item["name"]
                 itemtitle = itemtitle.lower()
-                itemorgtitle = item["original_title"] if item.get("original_title") else item["original_name"]
+                itemorgtitle = item["original_title"] if item.get("original_title") else item[
+                    "original_name"]
                 itemorgtitle = itemorgtitle.lower()
 
                 # high score if year matches
@@ -421,7 +438,8 @@ class Tmdb(object):
                 # higher score if result ALSO matches our preferred type or native language
                 # (only when we already have a score)
                 if item["score"]:
-                    if preftype and (item["media_type"] in preftype) or (preftype in item["media_type"]):
+                    if preftype and (item["media_type"] in preftype) or (
+                            preftype in item["media_type"]):
                         item["score"] += 250  # matches preferred type
                     if item["original_language"] == KODI_LANGUAGE:
                         item["score"] += 500  # native language!
@@ -452,8 +470,9 @@ class Tmdb(object):
                 listitem.setArt({'icon': thumb})
                 results_list.append(listitem)
             if manual_select and results_list:
-                dialog = DialogSelect("DialogSelect.xml", "", listing=results_list, window_title="%s - TMDB"
-                                      % xbmc.getLocalizedString(283))
+                dialog = DialogSelect("DialogSelect.xml", "", listing=results_list,
+                                      window_title="%s - TMDB"
+                                                   % xbmc.getLocalizedString(283))
                 dialog.doModal()
                 selected_item = dialog.result
                 del dialog

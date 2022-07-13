@@ -16,7 +16,6 @@ from cherrypy.lib import httputil, reprconf, encoding
 
 
 class Hook(object):
-
     """A callback and its metadata: failsafe, priority, and kwargs."""
 
     callback = None
@@ -74,7 +73,6 @@ class Hook(object):
 
 
 class HookMap(dict):
-
     """A map of call points to lists of callbacks (Hook objects)."""
 
     def __new__(cls, points=None):
@@ -107,9 +105,9 @@ class HookMap(dict):
         """
         assert isinstance(hooks, collections.abc.Iterator)
         quiet_errors = (
-            cherrypy.HTTPError,
-            cherrypy.HTTPRedirect,
-            cherrypy.InternalRedirect,
+                cherrypy.HTTPError,
+                cherrypy.HTTPRedirect,
+                cherrypy.InternalRedirect,
         )
         safe = filter(operator.attrgetter('failsafe'), hooks)
         for hook in hooks:
@@ -130,14 +128,15 @@ class HookMap(dict):
         for k, v in self.items():
             newmap[k] = v[:]
         return newmap
+
     copy = __copy__
 
     def __repr__(self):
         cls = self.__class__
         return '%s.%s(points=%r)' % (
-            cls.__module__,
-            cls.__name__,
-            list(self)
+                cls.__module__,
+                cls.__name__,
+                list(self)
         )
 
 
@@ -190,7 +189,6 @@ hookpoints = ['on_start_resource', 'before_request_body',
 
 
 class Request(object):
-
     """An HTTP request.
 
     This object represents the metadata of an HTTP request message;
@@ -481,12 +479,12 @@ class Request(object):
     """A lazy object generating and memorizing UUID4 on ``str()`` render."""
 
     namespaces = reprconf.NamespaceSet(
-        **{'hooks': hooks_namespace,
-           'request': request_namespace,
-           'response': response_namespace,
-           'error_page': error_page_namespace,
-           'tools': cherrypy.tools,
-           })
+            **{'hooks': hooks_namespace,
+               'request': request_namespace,
+               'response': response_namespace,
+               'error_page': error_page_namespace,
+               'tools': cherrypy.tools,
+               })
 
     def __init__(self, local_host, remote_host, scheme='http',
                  server_protocol='HTTP/1.1'):
@@ -669,7 +667,7 @@ class Request(object):
         self.get_resource(path_info)
 
         self.body = _cpreqbody.RequestBody(
-            self.rfile, self.headers, request_params=self.params)
+                self.rfile, self.headers, request_params=self.params)
 
         self.namespaces(self.config)
 
@@ -705,12 +703,12 @@ class Request(object):
         """Parse the query string into Python structures. (Core)"""
         try:
             p = httputil.parse_query_string(
-                self.query_string, encoding=self.query_string_encoding)
+                    self.query_string, encoding=self.query_string_encoding)
         except UnicodeDecodeError:
             raise cherrypy.HTTPError(
-                404, 'The given query string could not be processed. Query '
-                'strings for this resource must be encoded with %r.' %
-                self.query_string_encoding)
+                    404, 'The given query string could not be processed. Query '
+                         'strings for this resource must be encoded with %r.' %
+                         self.query_string_encoding)
 
         self.params.update(p)
 
@@ -753,7 +751,7 @@ class Request(object):
         # dispatchers can only be specified in app.config, not in _cp_config
         # (since custom dispatchers may not even have an app.root).
         dispatch = self.app.find_config(
-            path, 'request.dispatch', self.dispatch)
+                path, 'request.dispatch', self.dispatch)
 
         # dispatch() should set self.handler and self.config
         dispatch(path)
@@ -773,7 +771,6 @@ class Request(object):
 
 
 class ResponseBody(object):
-
     """The body of the HTTP response (the response entity)."""
 
     unicode_err = ('Page handlers MUST return bytes. Use tools.encode '
@@ -799,7 +796,6 @@ class ResponseBody(object):
 
 
 class Response(object):
-
     """An HTTP Response, including status, headers, and body."""
 
     status = ''
@@ -845,9 +841,9 @@ class Response(object):
         # Since we know all our keys are titled strings, we can
         # bypass HeaderMap.update and get a big speed boost.
         dict.update(self.headers, {
-            'Content-Type': 'text/html',
-            'Server': 'CherryPy/' + cherrypy.__version__,
-            'Date': httputil.HTTPDate(self.time),
+                'Content-Type': 'text/html',
+                'Server': 'CherryPy/' + cherrypy.__version__,
+                'Date': httputil.HTTPDate(self.time),
         })
         self.cookie = SimpleCookie()
 
@@ -876,7 +872,7 @@ class Response(object):
 
         self.status = '%s %s' % (code, reason)
         self.output_status = ntob(str(code), 'ascii') + \
-            b' ' + headers.encode(reason)
+                             b' ' + headers.encode(reason)
 
         if self.stream:
             # The upshot: wsgiserver will chunk the response if

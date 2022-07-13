@@ -4,6 +4,7 @@
 """Get artwork for media from fanart.tv"""
 
 import os, sys
+
 if sys.version_info.major == 3:
     from .utils import get_json, KODI_LANGUAGE, process_method_on_list, try_parse_int, ADDON_ID
 else:
@@ -35,7 +36,8 @@ class FanartTv(object):
         """get artist artwork"""
         data = self.get_data("music/%s" % artist_id)
         mapping_table = [("artistbackground", "fanart"), ("artistthumb", "thumb"),
-                         ("hdmusiclogo", "clearlogo"), ("musiclogo", "clearlogo"), ("musicbanner", "banner")]
+                         ("hdmusiclogo", "clearlogo"), ("musiclogo", "clearlogo"),
+                         ("musicbanner", "banner")]
         return self.map_artwork(data, mapping_table)
 
     def album(self, album_id):
@@ -68,17 +70,23 @@ class FanartTv(object):
     def movie(self, movie_id):
         """get movie artwork"""
         data = self.get_data("movies/%s" % movie_id)
-        mapping_table = [("hdmovielogo", "clearlogo"), ("moviedisc", "discart"), ("movielogo", "clearlogo"),
-                         ("movieposter", "poster"), ("hdmovieclearart", "clearart"), ("movieart", "clearart"),
-                         ("moviebackground", "fanart"), ("moviebanner", "banner"), ("moviethumb", "landscape")]
+        mapping_table = [("hdmovielogo", "clearlogo"), ("moviedisc", "discart"),
+                         ("movielogo", "clearlogo"),
+                         ("movieposter", "poster"), ("hdmovieclearart", "clearart"),
+                         ("movieart", "clearart"),
+                         ("moviebackground", "fanart"), ("moviebanner", "banner"),
+                         ("moviethumb", "landscape")]
         return self.map_artwork(data, mapping_table)
 
     def tvshow(self, tvshow_id):
         """get tvshow artwork"""
         data = self.get_data("tv/%s" % tvshow_id)
-        mapping_table = [("hdtvlogo", "clearlogo"), ("clearlogo", "clearlogo"), ("hdclearart", "clearart"),
-                         ("clearart", "clearart"), ("showbackground", "fanart"), ("tvthumb", "landscape"),
-                         ("tvbanner", "banner"), ("characterart", "characterart"), ("tvposter", "poster")]
+        mapping_table = [("hdtvlogo", "clearlogo"), ("clearlogo", "clearlogo"),
+                         ("hdclearart", "clearart"),
+                         ("clearart", "clearart"), ("showbackground", "fanart"),
+                         ("tvthumb", "landscape"),
+                         ("tvbanner", "banner"), ("characterart", "characterart"),
+                         ("tvposter", "poster")]
         return self.map_artwork(data, mapping_table)
 
     def tvseason(self, tvshow_id, season):

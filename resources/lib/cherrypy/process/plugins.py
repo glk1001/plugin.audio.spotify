@@ -31,7 +31,6 @@ _module__file__base = os.getcwd()
 
 
 class SimplePlugin(object):
-
     """Plugin base class which auto-subscribes methods for known channels."""
 
     bus = None
@@ -59,7 +58,6 @@ class SimplePlugin(object):
 
 
 class SignalHandler(object):
-
     """Register bus channels (and listeners) for system signals.
 
     You can modify what signals your application listens for, and what it does
@@ -132,8 +130,8 @@ class SignalHandler(object):
         (Buildbot, Jenkins).
         """
         return (
-            self._original_pid != os.getpid() and
-            not os.isatty(sys.stdin.fileno())
+                self._original_pid != os.getpid() and
+                not os.isatty(sys.stdin.fileno())
         )
 
     def subscribe(self):
@@ -218,7 +216,6 @@ except ImportError:
 
 
 class DropPrivileges(SimplePlugin):
-
     """Drop privileges. uid/gid arguments not available on Windows.
 
     Special thanks to `Gavin Baker
@@ -325,6 +322,7 @@ class DropPrivileges(SimplePlugin):
                              (old_umask, self.umask))
 
         self.finalized = True
+
     # This is slightly higher than the priority for server.start
     # in order to facilitate the most common use: starting on a low
     # port (which requires root) and then dropping to another user.
@@ -332,7 +330,6 @@ class DropPrivileges(SimplePlugin):
 
 
 class Daemonizer(SimplePlugin):
-
     """Daemonize the running script.
 
     Use this with a Web Site Process Bus via::
@@ -374,6 +371,7 @@ class Daemonizer(SimplePlugin):
         self.daemonize(self.stdin, self.stdout, self.stderr, self.bus.log)
 
         self.finalized = True
+
     start.priority = 65
 
     @staticmethod
@@ -389,7 +387,7 @@ class Daemonizer(SimplePlugin):
         sys.stderr.flush()
 
         error_tmpl = (
-            '{sys.argv[0]}: fork #{n} failed: ({exc.errno}) {exc.strerror}\n'
+                '{sys.argv[0]}: fork #{n} failed: ({exc.errno}) {exc.strerror}\n'
         )
 
         for fork in range(2):
@@ -423,7 +421,6 @@ class Daemonizer(SimplePlugin):
 
 
 class PIDFile(SimplePlugin):
-
     """Maintain a PID file via a WSPBus."""
 
     def __init__(self, bus, pidfile):
@@ -439,6 +436,7 @@ class PIDFile(SimplePlugin):
             open(self.pidfile, 'wb').write(ntob('%s\n' % pid, 'utf8'))
             self.bus.log('PID %r written to %r.' % (pid, self.pidfile))
             self.finalized = True
+
     start.priority = 70
 
     def exit(self):
@@ -452,7 +450,6 @@ class PIDFile(SimplePlugin):
 
 
 class PerpetualTimer(threading.Timer):
-
     """A responsive subclass of threading.Timer whose run() method repeats.
 
     Use this timer only when you really need a very interruptible timer;
@@ -475,14 +472,13 @@ class PerpetualTimer(threading.Timer):
             except Exception:
                 if self.bus:
                     self.bus.log(
-                        'Error in perpetual timer thread function %r.' %
-                        self.function, level=40, traceback=True)
+                            'Error in perpetual timer thread function %r.' %
+                            self.function, level=40, traceback=True)
                 # Quit on first error to avoid massive logs.
                 raise
 
 
 class BackgroundTask(threading.Thread):
-
     """A subclass of threading.Thread whose run() method repeats.
 
     Use this class for most repeating tasks. It uses time.sleep() to wait
@@ -524,7 +520,6 @@ class BackgroundTask(threading.Thread):
 
 
 class Monitor(SimplePlugin):
-
     """WSPBus listener to periodically run a callback in its own thread."""
 
     callback = None
@@ -557,6 +552,7 @@ class Monitor(SimplePlugin):
                 self.bus.log('Started monitor thread %r.' % threadname)
             else:
                 self.bus.log('Monitor thread %r already started.' % threadname)
+
     start.priority = 70
 
     def stop(self):
@@ -581,7 +577,6 @@ class Monitor(SimplePlugin):
 
 
 class Autoreloader(Monitor):
-
     """Monitor which re-executes the process when files change.
 
     This :ref:`plugin<plugins>` restarts the process (via :func:`os.execv`)
@@ -622,13 +617,14 @@ class Autoreloader(Monitor):
         if self.thread is None:
             self.mtimes = {}
         Monitor.start(self)
+
     start.priority = 70
 
     def sysfiles(self):
         """Return a Set of sys.modules filenames to monitor."""
         search_mod_names = filter(
-            re.compile(self.match).match,
-            list(sys.modules.keys()),
+                re.compile(self.match).match,
+                list(sys.modules.keys()),
         )
         mods = map(sys.modules.get, search_mod_names)
         return set(filter(None, map(self._file_for_module, mods)))
@@ -637,8 +633,8 @@ class Autoreloader(Monitor):
     def _file_for_module(cls, module):
         """Return the relevant file for the module."""
         return (
-            cls._archive_for_zip_module(module)
-            or cls._file_for_file_module(module)
+                cls._archive_for_zip_module(module)
+                or cls._file_for_file_module(module)
         )
 
     @staticmethod
@@ -661,7 +657,7 @@ class Autoreloader(Monitor):
     def _make_absolute(filename):
         """Ensure filename is absolute to avoid effect of os.chdir."""
         return filename if os.path.isabs(filename) else (
-            os.path.normpath(os.path.join(_module__file__base, filename))
+                os.path.normpath(os.path.join(_module__file__base, filename))
         )
 
     def run(self):
@@ -698,7 +694,6 @@ class Autoreloader(Monitor):
 
 
 class ThreadManager(SimplePlugin):
-
     """Manager for HTTP request threads.
 
     If you have control over thread creation and destruction, publish to
@@ -751,4 +746,5 @@ class ThreadManager(SimplePlugin):
         for thread_ident, i in self.threads.items():
             self.bus.publish('stop_thread', i)
         self.threads.clear()
+
     graceful = stop

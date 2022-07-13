@@ -3,8 +3,8 @@
 from .main import logged, logged_block, get_logger, flush_buffers
 
 __all__ = [
-    "logged",
-    "logged_block",
-    "get_logger",
-    "flush_buffers",
+        "logged",
+        "logged_block",
+        "get_logger",
+        "flush_buffers",
 ]

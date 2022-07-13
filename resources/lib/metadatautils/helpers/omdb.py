@@ -3,10 +3,13 @@
 
 """get metadata from omdb"""
 import os, sys
+
 if sys.version_info.major == 3:
-    from .utils import get_json, get_xml, formatted_number, int_with_commas, try_parse_int, KODI_LANGUAGE, ADDON_ID
+    from .utils import get_json, get_xml, formatted_number, int_with_commas, try_parse_int, \
+        KODI_LANGUAGE, ADDON_ID
 else:
-    from utils import get_json, get_xml, formatted_number, int_with_commas, try_parse_int, KODI_LANGUAGE, ADDON_ID
+    from utils import get_json, get_xml, formatted_number, int_with_commas, try_parse_int, \
+        KODI_LANGUAGE, ADDON_ID
 from simplecache import use_cache
 import arrow
 import xbmc
@@ -90,7 +93,8 @@ class Omdb(object):
                     date_time = arrow.get(value, "DD MMM YYYY")
                     result["premiered"] = date_time.strftime(xbmc.getRegion("dateshort"))
                     try:
-                        result["premiered.formatted"] = date_time.format('DD MMM YYYY', locale=KODI_LANGUAGE)
+                        result["premiered.formatted"] = date_time.format('DD MMM YYYY',
+                                                                         locale=KODI_LANGUAGE)
                     except Exception:
                         result["premiered.formatted"] = value
                 elif key == "runtime":
@@ -126,7 +130,8 @@ class Omdb(object):
                 elif key == "DVD":
                     date_time = arrow.get(value, "DD MMM YYYY")
                     result["dvdrelease"] = date_time.format('YYYY-MM-DD')
-                    result["dvdrelease.formatted"] = date_time.format('DD MMM YYYY', locale=KODI_LANGUAGE)
+                    result["dvdrelease.formatted"] = date_time.format('DD MMM YYYY',
+                                                                      locale=KODI_LANGUAGE)
                 elif key == "Production":
                     result["studio"] = value.split(", ")
                 elif key == "Website":
@@ -140,7 +145,7 @@ class Omdb(object):
                     else:
                         result["type"] = value
                     result["media_type"] = result["type"]
-            # rotten tomatoes
+                # rotten tomatoes
                 elif key == "tomatoMeter":
                     result["rottentomatoes.meter"] = value
                     result["rottentomatoesmeter"] = value
@@ -148,7 +153,8 @@ class Omdb(object):
                     result["rottentomatoes.image"] = value
                 elif key == "tomatoRating":
                     result["rottentomatoes.rating"] = value
-                    result["rottentomatoes.rating.percent"] = "%s" % (try_parse_int(float(value) * 10))
+                    result["rottentomatoes.rating.percent"] = "%s" % (
+                        try_parse_int(float(value) * 10))
                     result["rating.rt"] = value
                 elif key == "tomatoReviews":
                     result["rottentomatoes.reviews"] = formatted_number(value)
@@ -162,7 +168,8 @@ class Omdb(object):
                     result["rottentomatoes.usermeter"] = value
                 elif key == "tomatoUserRating":
                     result["rottentomatoes.userrating"] = value
-                    result["rottentomatoes.userrating.percent"] = "%s" % (try_parse_int(float(value) * 10))
+                    result["rottentomatoes.userrating.percent"] = "%s" % (
+                        try_parse_int(float(value) * 10))
                 elif key == "tomatoUserReviews":
                     result["rottentomatoes.userreviews"] = int_with_commas(value)
                 elif key == "tomatoeURL":
@@ -185,7 +192,8 @@ class Omdb(object):
                     date_time = arrow.get(value, "DD MMM YYYY")
                     result["premiered"] = date_time.strftime(xbmc.getRegion("dateshort"))
                     try:
-                        result["premiered.formatted"] = date_time.format('DD MMM YYYY', locale=KODI_LANGUAGE)
+                        result["premiered.formatted"] = date_time.format('DD MMM YYYY',
+                                                                         locale=KODI_LANGUAGE)
                     except Exception:
                         result["premiered.formatted"] = value
                 elif key == "runtime":
@@ -221,7 +229,8 @@ class Omdb(object):
                 elif key == "DVD":
                     date_time = arrow.get(value, "DD MMM YYYY")
                     result["dvdrelease"] = date_time.format('YYYY-MM-DD')
-                    result["dvdrelease.formatted"] = date_time.format('DD MMM YYYY', locale=KODI_LANGUAGE)
+                    result["dvdrelease.formatted"] = date_time.format('DD MMM YYYY',
+                                                                      locale=KODI_LANGUAGE)
                 elif key == "Production":
                     result["studio"] = value.split(", ")
                 elif key == "Website":
@@ -235,7 +244,7 @@ class Omdb(object):
                     else:
                         result["type"] = value
                     result["media_type"] = result["type"]
-            # rotten tomatoes
+                # rotten tomatoes
                 elif key == "tomatoMeter":
                     result["rottentomatoes.meter"] = value
                     result["rottentomatoesmeter"] = value
@@ -243,7 +252,8 @@ class Omdb(object):
                     result["rottentomatoes.image"] = value
                 elif key == "tomatoRating":
                     result["rottentomatoes.rating"] = value
-                    result["rottentomatoes.rating.percent"] = "%s" % (try_parse_int(float(value) * 10))
+                    result["rottentomatoes.rating.percent"] = "%s" % (
+                        try_parse_int(float(value) * 10))
                     result["rating.rt"] = value
                 elif key == "tomatoReviews":
                     result["rottentomatoes.reviews"] = formatted_number(value)
@@ -257,7 +267,8 @@ class Omdb(object):
                     result["rottentomatoes.usermeter"] = value
                 elif key == "tomatoUserRating":
                     result["rottentomatoes.userrating"] = value
-                    result["rottentomatoes.userrating.percent"] = "%s" % (try_parse_int(float(value) * 10))
+                    result["rottentomatoes.userrating.percent"] = "%s" % (
+                        try_parse_int(float(value) * 10))
                 elif key == "tomatoUserReviews":
                     result["rottentomatoes.userreviews"] = int_with_commas(value)
                 elif key == "tomatoeURL":

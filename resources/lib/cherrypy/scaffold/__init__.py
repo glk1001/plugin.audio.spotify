@@ -16,6 +16,7 @@ import cherrypy
 from cherrypy import tools, url
 
 import os
+
 local_dir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 
 
@@ -49,10 +50,10 @@ Or, just look at the pretty picture:<br />
             return 'Have %d %s, %s.' % (int(a), b, c)
 
     files = tools.staticdir.handler(
-        section='/files',
-        dir=os.path.join(local_dir, 'static'),
-        # Ignore .php files, etc.
-                match=r'\.(css|gif|html?|ico|jpe?g|js|png|swf|xml)$',
+            section='/files',
+            dir=os.path.join(local_dir, 'static'),
+            # Ignore .php files, etc.
+            match=r'\.(css|gif|html?|ico|jpe?g|js|png|swf|xml)$',
     )
 
 

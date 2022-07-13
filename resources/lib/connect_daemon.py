@@ -35,19 +35,25 @@ class ConnectDaemon(threading.Thread):
         spotty_args = ["--lms", "localhost:52308/lms", "--player-mac", "None"]
         disable_discovery = False
         if xbmcvfs.exists("/run/libreelec/"):
-            disable_discovery = True # avahi on libreelec conflicts with the mdns implementation of librespot
+            disable_discovery = True  # avahi on libreelec conflicts with the mdns implementation of librespot
             xbmc.executebuiltin("SetProperty(spotify-discovery,disabled,Home)")
         try:
             try:
                 log_msg("trying AP Port 443", xbmc.LOGINFO)
-                self.__spotty_proc = self.__spotty.run_spotty(arguments=spotty_args, disable_discovery=disable_discovery, ap_port="443")
+                self.__spotty_proc = self.__spotty.run_spotty(arguments=spotty_args,
+                                                              disable_discovery=disable_discovery,
+                                                              ap_port="443")
             except:
                 try:
-                    log_msg("trying AP Port 80", xbmc.LOGINFO)                    
-                    self.__spotty_proc = self.__spotty.run_spotty(arguments=spotty_args, disable_discovery=disable_discovery, ap_port="80")
+                    log_msg("trying AP Port 80", xbmc.LOGINFO)
+                    self.__spotty_proc = self.__spotty.run_spotty(arguments=spotty_args,
+                                                                  disable_discovery=disable_discovery,
+                                                                  ap_port="80")
                 except:
-                    log_msg("trying AP Port 4070", xbmc.LOGINFO)                    
-                    self.__spotty_proc = self.__spotty.run_spotty(arguments=spotty_args, disable_discovery=disable_discovery, ap_port="4070")                
+                    log_msg("trying AP Port 4070", xbmc.LOGINFO)
+                    self.__spotty_proc = self.__spotty.run_spotty(arguments=spotty_args,
+                                                                  disable_discovery=disable_discovery,
+                                                                  ap_port="4070")
             while not self.__exit:
                 line = self.__spotty_proc.stdout.readline()
                 if self.__spotty_proc.returncode and self.__spotty_proc.returncode > 0 and not self.__exit:
@@ -56,9 +62,7 @@ class ConnectDaemon(threading.Thread):
                     break
                 xbmc.sleep(100)
             self.daemon_active = False
-            log_msg("Stopped Spotify Connect Daemon")        
+            log_msg("Stopped Spotify Connect Daemon")
         except:
             self.daemon_active = False
             log_msg("Cannot run SPOTTY, No APs available", xbmc.LOGINFO)
-
-

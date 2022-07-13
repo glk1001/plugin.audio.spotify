@@ -1,6 +1,7 @@
 """Pytest fixtures and other helpers for doing testing by end-users."""
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 from contextlib import closing
@@ -22,14 +23,14 @@ ANY_INTERFACE_IPV4 = '0.0.0.0'
 ANY_INTERFACE_IPV6 = '::'
 
 config = {
-    cheroot.wsgi.Server: {
-        'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
-        'wsgi_app': None,
-    },
-    cheroot.server.HTTPServer: {
-        'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
-        'gateway': cheroot.server.Gateway,
-    },
+        cheroot.wsgi.Server: {
+                'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
+                'wsgi_app': None,
+        },
+        cheroot.server.HTTPServer: {
+                'bind_addr': (NO_INTERFACE, EPHEMERAL_PORT),
+                'gateway': cheroot.server.Gateway,
+        },
 }
 
 
@@ -42,8 +43,8 @@ def cheroot_server(server_factory):
         try:
             actual_bind_addr = (interface, bind_port)
             httpserver = server_factory(  # create it
-                bind_addr=actual_bind_addr,
-                **conf
+                    bind_addr=actual_bind_addr,
+                    **conf
             )
         except OSError:
             pass
@@ -78,33 +79,33 @@ def native_server():
 class _TestClient:
     def __init__(self, server):
         self._interface, self._host, self._port = _get_conn_data(
-            server.bind_addr,
+                server.bind_addr,
         )
         self.server_instance = server
         self._http_connection = self.get_connection()
 
     def get_connection(self):
         name = '{interface}:{port}'.format(
-            interface=self._interface,
-            port=self._port,
+                interface=self._interface,
+                port=self._port,
         )
         conn_cls = (
-            http_client.HTTPConnection
-            if self.server_instance.ssl_adapter is None else
-            http_client.HTTPSConnection
+                http_client.HTTPConnection
+                if self.server_instance.ssl_adapter is None else
+                http_client.HTTPSConnection
         )
         return conn_cls(name)
 
     def request(
-        self, uri, method='GET', headers=None, http_conn=None,
-        protocol='HTTP/1.1',
+            self, uri, method='GET', headers=None, http_conn=None,
+            protocol='HTTP/1.1',
     ):
         return webtest.openURL(
-            uri, method=method,
-            headers=headers,
-            host=self._host, port=self._port,
-            http_conn=http_conn or self._http_connection,
-            protocol=protocol,
+                uri, method=method,
+                headers=headers,
+                host=self._host, port=self._port,
+                http_conn=http_conn or self._http_connection,
+                protocol=protocol,
         )
 
     def __getattr__(self, attr_name):

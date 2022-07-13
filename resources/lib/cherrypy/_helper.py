@@ -12,6 +12,7 @@ def expose(func=None, alias=None):
 
     Optionally provide an alias or set of aliases.
     """
+
     def expose_(func):
         func.exposed = True
         if alias is not None:

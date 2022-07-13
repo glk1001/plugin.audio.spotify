@@ -1,6 +1,7 @@
 """Socket file object."""
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import socket
@@ -16,7 +17,6 @@ import six
 
 from . import errors
 from ._compat import extract_bytes, memoryview
-
 
 # Write only 16K at a time to sockets
 SOCK_WRITE_BLOCKSIZE = 16384
@@ -75,7 +75,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
         while bytes_sent < payload_size:
             try:
                 bytes_sent += self.send(
-                    data_mv[bytes_sent:bytes_sent + SOCK_WRITE_BLOCKSIZE],
+                        data_mv[bytes_sent:bytes_sent + SOCK_WRITE_BLOCKSIZE],
                 )
             except socket.error as e:
                 if e.args[0] not in errors.socket_errors_nonblocking:
@@ -103,8 +103,8 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
                 return data
             except socket.error as e:
                 what = (
-                    e.args[0] not in errors.socket_errors_nonblocking
-                    and e.args[0] not in errors.socket_error_eintr
+                        e.args[0] not in errors.socket_errors_nonblocking
+                        and e.args[0] not in errors.socket_error_eintr
                 )
                 if what:
                     raise
@@ -116,7 +116,7 @@ class MakeFile_PY2(getattr(socket, '_fileobject', object)):
             pass
 
     _fileobject_uses_str_type = six.PY2 and isinstance(
-        socket._fileobject(FauxSocket())._rbuf, six.string_types,
+            socket._fileobject(FauxSocket())._rbuf, six.string_types,
     )
 
     # FauxSocket is no longer needed
@@ -425,6 +425,7 @@ if not six.PY2:
             """Return true if there is buffered data to read."""
             return len(self._read_buf) > self._read_pos
 
+
     class StreamWriter(BufferedWriter):
         """Socket stream writer."""
 
@@ -438,6 +439,7 @@ if not six.PY2:
             res = super().write(val, *args, **kwargs)
             self.bytes_written += len(val)
             return res
+
 
     def MakeFile(sock, mode='r', bufsize=io.DEFAULT_BUFFER_SIZE):
         """File object attached to a socket object."""

@@ -41,10 +41,10 @@ import warnings
 
 import cherrypy
 
-
 try:
     import profile
     import pstats
+
 
     def new_func_strip_path(func_name):
         """Make profiler output more readable by adding `__init__` modules' parents
@@ -52,17 +52,17 @@ try:
         filename, line, name = func_name
         if filename.endswith('__init__.py'):
             return (
-                os.path.basename(filename[:-12]) + filename[-12:],
-                line,
-                name,
+                    os.path.basename(filename[:-12]) + filename[-12:],
+                    line,
+                    name,
             )
         return os.path.basename(filename), line, name
+
 
     pstats.func_strip_path = new_func_strip_path
 except ImportError:
     profile = None
     pstats = None
-
 
 _count = 0
 
@@ -136,7 +136,7 @@ class Profiler(object):
         runs.sort()
         for i in runs:
             yield "<a href='report?filename=%s' target='main'>%s</a><br />" % (
-                i, i)
+                    i, i)
 
     @cherrypy.expose
     def report(self, filename):
@@ -198,6 +198,7 @@ class make_app:
             for line in self.nextapp(environ, start_response):
                 result.append(line)
             return result
+
         return self.profiler.run(gather)
 
 

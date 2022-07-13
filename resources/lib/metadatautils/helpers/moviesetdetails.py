@@ -6,6 +6,7 @@
 """
 
 import os, sys
+
 if sys.version_info.major == 3:
     from .kodi_constants import FIELDS_MOVIES
     from .utils import get_duration, get_clean_image, extend_dict
@@ -39,7 +40,8 @@ def get_moviesetdetails(metadatautils, title, set_id):
             details["plot"] = details["plots"]
         details["extendedplot"] = details["titles"] + u"[CR]" + details["plot"]
         all_fanarts = details["art"]["fanarts"]
-        efa_path = "plugin://script.skin.helper.service/?action=extrafanart&fanarts=%s" % quote_plus(repr(all_fanarts))
+        efa_path = "plugin://script.skin.helper.service/?action=extrafanart&fanarts=%s" % quote_plus(
+            repr(all_fanarts))
         details["art"]["extrafanart"] = efa_path
         for count, fanart in enumerate(all_fanarts):
             details["art"]["ExtraFanArt.%s" % count] = fanart
@@ -53,10 +55,11 @@ def get_online_setdata(metadatautils, title):
     if details:
         # append images from fanart.tv
         details["art"] = extend_dict(
-            details["art"],
-            metadatautils.fanarttv.movie(details["tmdb_id"]),
-            ["poster", "fanart", "clearlogo", "clearart"])
+                details["art"],
+                metadatautils.fanarttv.movie(details["tmdb_id"]),
+                ["poster", "fanart", "clearlogo", "clearart"])
     return details
+
 
 # pylint: disable-msg=too-many-local-variables
 
@@ -97,7 +100,8 @@ def get_kodidb_setdata(metadatautils, set_id):
 
         # art labels
         art = item['art']
-        for label in ["poster", "fanart", "landscape", "clearlogo", "clearart", "banner", "discart"]:
+        for label in ["poster", "fanart", "landscape", "clearlogo", "clearart", "banner",
+                      "discart"]:
             if art.get(label):
                 details['%s.art.%s' % (count, label)] = get_clean_image(art[label])
                 if not movieset["art"].get(label):
@@ -144,7 +148,8 @@ def get_kodidb_setdata(metadatautils, set_id):
 
         title_list += "%s (%s)[CR]" % (item['label'], item['year'])
         if item['plotoutline']:
-            plot += "[B]%s (%s)[/B][CR]%s[CR][CR]" % (item['label'], item['year'], item['plotoutline'])
+            plot += "[B]%s (%s)[/B][CR]%s[CR][CR]" % (
+            item['label'], item['year'], item['plotoutline'])
         else:
             plot += "[B]%s (%s)[/B][CR]%s[CR][CR]" % (item['label'], item['year'], item['plot'])
         runtime += item['runtime']
@@ -179,7 +184,8 @@ def get_kodidb_setdata(metadatautils, set_id):
     details["country"] = countries
     details["watchedcount"] = str(watchedcount)
     details["unwatchedcount"] = str(unwatchedcount)
-    details.update(metadatautils.studiologos.get_studio_logo(studio, metadatautils.studiologos_path))
+    details.update(
+        metadatautils.studiologos.get_studio_logo(studio, metadatautils.studiologos_path))
     details["count"] = total_movies
     details["art"]["fanarts"] = all_fanarts
     return details

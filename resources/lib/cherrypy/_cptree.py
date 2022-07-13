@@ -211,11 +211,11 @@ class Tree(object):
         """
         if script_name is None:
             raise TypeError(
-                "The 'script_name' argument may not be None. Application "
-                'objects may, however, possess a script_name of None (in '
-                'order to inpect the WSGI environ for SCRIPT_NAME upon each '
-                'request). You cannot mount such Applications on this Tree; '
-                'you must pass them to a WSGI server interface directly.')
+                    "The 'script_name' argument may not be None. Application "
+                    'objects may, however, possess a script_name of None (in '
+                    'order to inpect the WSGI environ for SCRIPT_NAME upon each '
+                    'request). You cannot mount such Applications on this Tree; '
+                    'you must pass them to a WSGI server interface directly.')
 
         # Next line both 1) strips trailing slash and 2) maps "/" -> "".
         script_name = script_name.rstrip('/')
@@ -224,23 +224,23 @@ class Tree(object):
             app = root
             if script_name != '' and script_name != app.script_name:
                 raise ValueError(
-                    'Cannot specify a different script name and pass an '
-                    'Application instance to cherrypy.mount')
+                        'Cannot specify a different script name and pass an '
+                        'Application instance to cherrypy.mount')
             script_name = app.script_name
         else:
             app = Application(root, script_name)
 
             # If mounted at "", add favicon.ico
             needs_favicon = (
-                script_name == ''
-                and root is not None
-                and not hasattr(root, 'favicon_ico')
+                    script_name == ''
+                    and root is not None
+                    and not hasattr(root, 'favicon_ico')
             )
             if needs_favicon:
                 favicon = os.path.join(
-                    os.getcwd(),
-                    os.path.dirname(__file__),
-                    'favicon.ico',
+                        os.getcwd(),
+                        os.path.dirname(__file__),
+                        'favicon.ico',
                 )
                 root.favicon_ico = tools.staticfile.handler(favicon)
 

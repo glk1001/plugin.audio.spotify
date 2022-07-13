@@ -8,6 +8,7 @@
 """
 
 import os, sys
+
 if sys.version_info.major == 3:
     from .utils import get_json, strip_newlines, KODI_LANGUAGE, get_compare_string, ADDON_ID
 else:
@@ -15,6 +16,7 @@ else:
 from simplecache import use_cache
 import xbmcvfs
 import xbmcaddon
+
 
 class TheAudioDb(object):
     """get metadata from the audiodb"""
@@ -33,7 +35,7 @@ class TheAudioDb(object):
         if api_key:
             self.api_key = api_key
         del addon
-        
+
     def search(self, artist, album, track):
         """get musicbrainz id by query of artist, album and/or track"""
         artist = artist.lower()
@@ -72,26 +74,33 @@ class TheAudioDb(object):
         data = self.get_data("/search.php", {'s': artist})
         if data and data.get("artists"):
             adbdetails = data["artists"][0]
-            if adbdetails.get("strArtistBanner") and xbmcvfs.exists(adbdetails.get("strArtistBanner")):
+            if adbdetails.get("strArtistBanner") and xbmcvfs.exists(
+                    adbdetails.get("strArtistBanner")):
                 details["art"]["banner"] = adbdetails.get("strArtistBanner")
                 details["art"]["banners"] = [adbdetails.get("strArtistBanner")]
             details["art"]["fanarts"] = []
-            if adbdetails.get("strArtistFanart") and xbmcvfs.exists(adbdetails.get("strArtistFanart")):
+            if adbdetails.get("strArtistFanart") and xbmcvfs.exists(
+                    adbdetails.get("strArtistFanart")):
                 details["art"]["fanart"] = adbdetails.get("strArtistFanart")
                 details["art"]["fanarts"].append(adbdetails.get("strArtistFanart"))
-            if adbdetails.get("strArtistFanart2") and xbmcvfs.exists(adbdetails.get("strArtistFanart2")):
+            if adbdetails.get("strArtistFanart2") and xbmcvfs.exists(
+                    adbdetails.get("strArtistFanart2")):
                 details["art"]["fanarts"].append(adbdetails.get("strArtistFanart2"))
-            if adbdetails.get("strArtistFanart3") and xbmcvfs.exists(adbdetails.get("strArtistFanart3")):
+            if adbdetails.get("strArtistFanart3") and xbmcvfs.exists(
+                    adbdetails.get("strArtistFanart3")):
                 details["art"]["fanarts"].append(adbdetails.get("strArtistFanart3"))
-            if adbdetails.get("strArtistWideThumb") and xbmcvfs.exists(adbdetails.get("strArtistWideThumb")):
+            if adbdetails.get("strArtistWideThumb") and xbmcvfs.exists(
+                    adbdetails.get("strArtistWideThumb")):
                 details["art"]["landscape"] = adbdetails.get("strArtistWideThumb")
             if adbdetails.get("strArtistLogo") and xbmcvfs.exists(adbdetails.get("strArtistLogo")):
                 details["art"]["clearlogo"] = adbdetails.get("strArtistLogo")
                 details["art"]["clearlogos"] = [adbdetails.get("strArtistLogo")]
-            if adbdetails.get("strArtistClearart") and xbmcvfs.exists(adbdetails.get("strArtistClearart")):
+            if adbdetails.get("strArtistClearart") and xbmcvfs.exists(
+                    adbdetails.get("strArtistClearart")):
                 details["art"]["clearart"] = adbdetails.get("strArtistClearart")
                 details["art"]["cleararts"] = [adbdetails.get("strArtistClearart")]
-            if adbdetails.get("strArtistThumb") and xbmcvfs.exists(adbdetails.get("strArtistThumb")):
+            if adbdetails.get("strArtistThumb") and xbmcvfs.exists(
+                    adbdetails.get("strArtistThumb")):
                 details["art"]["thumb"] = adbdetails["strArtistThumb"]
                 details["art"]["thumbs"] = [adbdetails["strArtistThumb"]]
             if adbdetails.get("strBiography" + KODI_LANGUAGE.upper()):
@@ -144,15 +153,20 @@ class TheAudioDb(object):
                 details["art"]["discarts"] = [adbdetails.get("strAlbumCDart")]
             if adbdetails.get("strAlbumSpine") and xbmcvfs.exists(adbdetails.get("strAlbumSpine")):
                 details["art"]["spine"] = adbdetails.get("strAlbumSpine")
-            if adbdetails.get("strAlbumThumbBack") and xbmcvfs.exists(adbdetails.get("strAlbumThumbBack")):
+            if adbdetails.get("strAlbumThumbBack") and xbmcvfs.exists(
+                    adbdetails.get("strAlbumThumbBack")):
                 details["art"]["thumbback"] = adbdetails.get("strAlbumThumbBack")
-            if adbdetails.get("strAlbum3DCase") and xbmcvfs.exists(adbdetails.get("strAlbum3DCase")):
+            if adbdetails.get("strAlbum3DCase") and xbmcvfs.exists(
+                    adbdetails.get("strAlbum3DCase")):
                 details["art"]["album3Dcase"] = adbdetails.get("strAlbum3DCase")
-            if adbdetails.get("strAlbum3DFlat") and xbmcvfs.exists(adbdetails.get("strAlbum3DFlat")):
+            if adbdetails.get("strAlbum3DFlat") and xbmcvfs.exists(
+                    adbdetails.get("strAlbum3DFlat")):
                 details["art"]["album3Dflat"] = adbdetails.get("strAlbum3DFlat")
-            if adbdetails.get("strAlbum3DFace") and xbmcvfs.exists(adbdetails.get("strAlbum3DFace")):
+            if adbdetails.get("strAlbum3DFace") and xbmcvfs.exists(
+                    adbdetails.get("strAlbum3DFace")):
                 details["art"]["album3Dface"] = adbdetails.get("strAlbum3DFace")
-            if adbdetails.get("strAlbum3DThumb") and xbmcvfs.exists(adbdetails.get("strAlbum3DThumb")):
+            if adbdetails.get("strAlbum3DThumb") and xbmcvfs.exists(
+                    adbdetails.get("strAlbum3DThumb")):
                 details["art"]["album3Dthumb"] = adbdetails.get("strAlbum3DThumb")
             if adbdetails.get("strDescription%s" % KODI_LANGUAGE.upper()):
                 details["plot"] = adbdetails.get("strDescription%s" % KODI_LANGUAGE.upper())
@@ -184,7 +198,8 @@ class TheAudioDb(object):
                         tracks = []
                         for count, item in enumerate(adbtrackdetails):
                             tracks.append(item["strTrack"])
-                            details["tracks.formatted.%s" % count] = item["intTrackNumber"] + "." + item["strTrack"]
+                            details["tracks.formatted.%s" % count] = item["intTrackNumber"] + "." + \
+                                                                     item["strTrack"]
                             details["tracks.clean.formatted.%s" % count] = item["strTrack"]
                         details["tracks.formatted"] = "[CR]".join(tracks)
         return details

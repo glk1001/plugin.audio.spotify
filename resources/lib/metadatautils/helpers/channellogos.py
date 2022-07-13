@@ -8,6 +8,7 @@
 """
 
 import os, sys
+
 if sys.version_info.major == 3:
     from .utils import get_json, get_clean_image
 else:
@@ -44,12 +45,12 @@ class ChannelLogos(object):
         result = ""
         if xbmc.getCondVisibility("PVR.HasTVChannels"):
             results = self.kodidb.get_json(
-                'PVR.GetChannels',
-                fields=["thumbnail"],
-                returntype="tvchannels",
-                optparam=(
-                    "channelgroupid",
-                    "alltv"))
+                    'PVR.GetChannels',
+                    fields=["thumbnail"],
+                    returntype="tvchannels",
+                    optparam=(
+                            "channelgroupid",
+                            "alltv"))
             for item in results:
                 if item["label"] == searchphrase:
                     channelicon = get_clean_image(item['thumbnail'])

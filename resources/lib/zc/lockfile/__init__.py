@@ -15,11 +15,14 @@
 import os
 import errno
 import logging
+
 logger = logging.getLogger("zc.lockfile")
+
 
 class LockError(Exception):
     """Couldn't get a lock
     """
+
 
 try:
     import fcntl
@@ -29,6 +32,8 @@ except ImportError:
     except ImportError:
         def _lock_file(file):
             raise TypeError('No file-locking support on this platform')
+
+
         def _unlock_file(file):
             raise TypeError('No file-locking support on this platform')
 
@@ -41,6 +46,7 @@ except ImportError:
             except IOError:
                 raise LockError("Couldn't lock %r" % file.name)
 
+
         def _unlock_file(file):
             try:
                 file.seek(0)
@@ -52,24 +58,27 @@ else:
     # Unix
     _flags = fcntl.LOCK_EX | fcntl.LOCK_NB
 
+
     def _lock_file(file):
         try:
             fcntl.flock(file.fileno(), _flags)
         except IOError:
             raise LockError("Couldn't lock %r" % file.name)
 
+
     def _unlock_file(file):
         fcntl.flock(file.fileno(), fcntl.LOCK_UN)
 
+
 class LazyHostName(object):
     """Avoid importing socket and calling gethostname() unnecessarily"""
+
     def __str__(self):
         import socket
         return socket.gethostname()
 
 
 class LockFile:
-
     _fp = None
 
     def __init__(self, path, content_template='{pid}'):

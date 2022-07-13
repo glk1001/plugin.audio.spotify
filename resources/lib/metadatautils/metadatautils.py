@@ -24,10 +24,11 @@ class MetadataUtils(object):
     '''
     _audiodb, _addon, _close_called, _omdb, _kodidb, _tmdb, _fanarttv, _channellogos = [None] * 8
     _imdb, _google, _studiologos, _animatedart, _thetvdb, _musicart, _pvrart, _lastfm = [None] * 8
-    _studiologos_path, _process_method_on_list, _detect_plugin_content, _get_streamdetails = [None] * 4
-    _extend_dict, _get_clean_image, _get_duration, _get_extrafanart, _get_extraposter, _get_moviesetdetails = [None] * 6
+    _studiologos_path, _process_method_on_list, _detect_plugin_content, _get_streamdetails = [
+                                                                                                     None] * 4
+    _extend_dict, _get_clean_image, _get_duration, _get_extrafanart, _get_extraposter, _get_moviesetdetails = [
+                                                                                                                      None] * 6
     cache = None
-
 
     def __init__(self):
         '''Initialize and load all our helpers'''
@@ -51,10 +52,11 @@ class MetadataUtils(object):
             self._get_extraposter = get_extraposter
         return self._get_extraposter(file_path)
 
-    def get_music_artwork(self, artist, album="", track="", disc="", ignore_cache=False, flush_cache=False):
+    def get_music_artwork(self, artist, album="", track="", disc="", ignore_cache=False,
+                          flush_cache=False):
         '''method to get music artwork for the goven artist/album/song'''
         return self.musicart.get_music_artwork(
-            artist, album, track, disc, ignore_cache=ignore_cache, flush_cache=flush_cache)
+                artist, album, track, disc, ignore_cache=ignore_cache, flush_cache=flush_cache)
 
     def music_artwork_options(self, artist, album="", track="", disc=""):
         '''options for music metadata for specific item'''
@@ -91,10 +93,12 @@ class MetadataUtils(object):
         # add additional art with special path
         if result:
             result = {"art": result}
-            for arttype in ["fanarts", "posters", "clearlogos", "banners", "discarts", "cleararts", "characterarts"]:
+            for arttype in ["fanarts", "posters", "clearlogos", "banners", "discarts", "cleararts",
+                            "characterarts"]:
                 if result["art"].get(arttype):
-                    result["art"][arttype] = "plugin://script.skin.helper.service/"\
-                        "?action=extrafanart&fanarts=%s" % quote_plus(repr(result["art"][arttype]))
+                    result["art"][arttype] = "plugin://script.skin.helper.service/" \
+                                             "?action=extrafanart&fanarts=%s" % quote_plus(
+                        repr(result["art"][arttype]))
         return result
 
     @use_cache(90)
@@ -104,19 +108,20 @@ class MetadataUtils(object):
         result = {}
         if imdb_id:
             result = self.tmdb.get_videodetails_by_externalid(
-                imdb_id, "imdb_id")
+                    imdb_id, "imdb_id")
         elif tvdb_id:
             result = self.tmdb.get_videodetails_by_externalid(
-                tvdb_id, "tvdb_id")
+                    tvdb_id, "tvdb_id")
         elif title and media_type in ["movies", "setmovies", "movie"]:
             result = self.tmdb.search_movie(
-                title, year, manual_select=manual_select, ignore_cache=ignore_cache)
+                    title, year, manual_select=manual_select, ignore_cache=ignore_cache)
         elif title and media_type in ["tvshows", "tvshow"]:
             result = self.tmdb.search_tvshow(
-                title, year, manual_select=manual_select, ignore_cache=ignore_cache)
+                    title, year, manual_select=manual_select, ignore_cache=ignore_cache)
         elif title:
             result = self.tmdb.search_video(
-                title, year, preftype=preftype, manual_select=manual_select, ignore_cache=ignore_cache)
+                    title, year, preftype=preftype, manual_select=manual_select,
+                    ignore_cache=ignore_cache)
         if result and result.get("status"):
             result["status"] = self.translate_string(result["status"])
         if result and result.get("runtime"):
@@ -144,7 +149,7 @@ class MetadataUtils(object):
     def get_pvr_artwork(self, title, channel="", genre="", manual_select=False, ignore_cache=False):
         '''get artwork and mediadetails for PVR entries'''
         return self.pvrart.get_pvr_artwork(
-            title, channel, genre, manual_select=manual_select, ignore_cache=ignore_cache)
+                title, channel, genre, manual_select=manual_select, ignore_cache=ignore_cache)
 
     def pvr_artwork_options(self, title, channel="", genre=""):
         '''options for pvr metadata for specific item'''
@@ -172,7 +177,7 @@ class MetadataUtils(object):
     def get_animated_artwork(self, imdb_id, manual_select=False, ignore_cache=False):
         '''get animated artwork, perform extra check if local version still exists'''
         artwork = self.animatedart.get_animated_artwork(
-            imdb_id, manual_select=manual_select, ignore_cache=ignore_cache)
+                imdb_id, manual_select=manual_select, ignore_cache=ignore_cache)
         if not (manual_select or ignore_cache):
             refresh_needed = False
             if artwork.get("animatedposter") and not xbmcvfs.exists(
@@ -191,7 +196,8 @@ class MetadataUtils(object):
         result = {}
         if imdb_id:
             result = self.omdb.get_details_by_imdbid(imdb_id)
-        elif title and content_type in ["seasons", "season", "episodes", "episode", "tvshows", "tvshow"]:
+        elif title and content_type in ["seasons", "season", "episodes", "episode", "tvshows",
+                                        "tvshow"]:
             result = self.omdb.get_details_by_title(title, "", "tvshows")
         elif title and year:
             result = self.omdb.get_details_by_title(title, year, content_type)
@@ -216,10 +222,10 @@ class MetadataUtils(object):
             if isinstance(duration, str) and ":" in duration:
                 dur_lst = duration.split(":")
                 return {
-                    "Duration": "%s:%s" % (dur_lst[0], dur_lst[1]),
-                    "Duration.Hours": dur_lst[0],
-                    "Duration.Minutes": dur_lst[1],
-                    "Runtime": int(dur_lst[0]) * 60 + int(dur_lst[1]),
+                        "Duration": "%s:%s" % (dur_lst[0], dur_lst[1]),
+                        "Duration.Hours": dur_lst[0],
+                        "Duration.Minutes": dur_lst[1],
+                        "Runtime": int(dur_lst[0]) * 60 + int(dur_lst[1]),
                 }
             else:
                 return self._get_duration(duration)
@@ -227,10 +233,10 @@ class MetadataUtils(object):
             if isinstance(duration, (str, unicode)) and ":" in duration:
                 dur_lst = duration.split(":")
                 return {
-                    "Duration": "%s:%s" % (dur_lst[0], dur_lst[1]),
-                    "Duration.Hours": dur_lst[0],
-                    "Duration.Minutes": dur_lst[1],
-                    "Runtime": str((int(dur_lst[0]) * 60) + int(dur_lst[1])),
+                        "Duration": "%s:%s" % (dur_lst[0], dur_lst[1]),
+                        "Duration.Hours": dur_lst[0],
+                        "Duration.Minutes": dur_lst[1],
+                        "Runtime": str((int(dur_lst[0]) * 60) + int(dur_lst[1])),
                 }
             else:
                 return self._get_duration(duration)

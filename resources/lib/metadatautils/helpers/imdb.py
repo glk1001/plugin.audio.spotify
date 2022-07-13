@@ -8,6 +8,7 @@
 """
 
 import os, sys
+
 if sys.version_info.major == 3:
     from .utils import requests, try_parse_int
 else:
@@ -49,9 +50,9 @@ class Imdb(object):
         results = {}
         for listing in [("top", "chttp_tt_"), ("toptv", "chttvtp_tt_")]:
             html = requests.get(
-                "http://www.imdb.com/chart/%s" %
-                listing[0], headers={
-                    'User-agent': 'Mozilla/5.0'}, timeout=20)
+                    "http://www.imdb.com/chart/%s" %
+                    listing[0], headers={
+                            'User-agent': 'Mozilla/5.0'}, timeout=20)
             soup = BeautifulSoup.BeautifulSoup(html.text, features="html.parser")
             for table in soup.findAll('table'):
                 if not table.get("class") == "chart full-width":
@@ -72,7 +73,7 @@ class Imdb(object):
             kodi_movie = self.kodidb.movie_by_imdbid(imdb_id)
             if kodi_movie:
                 params = {
-                    "movieid": kodi_movie["movieid"],
-                    "top250": results[imdb_id]
+                        "movieid": kodi_movie["movieid"],
+                        "top250": results[imdb_id]
                 }
                 self.kodidb.set_json('VideoLibrary.SetMovieDetails', params)

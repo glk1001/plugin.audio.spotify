@@ -136,13 +136,11 @@ from cherrypy.lib import httputil as _httputil
 
 
 class CherryPyException(Exception):
-
     """A base class for CherryPy exceptions."""
     pass
 
 
 class InternalRedirect(CherryPyException):
-
     """Exception raised to switch to the handler for a different URL.
 
     This exception will redirect processing to another path within the site
@@ -173,7 +171,6 @@ class InternalRedirect(CherryPyException):
 
 
 class HTTPRedirect(CherryPyException):
-
     """Exception raised when the request should be redirected.
 
     This exception will force a HTTP redirect to the URL or URL's you give it.
@@ -206,22 +203,22 @@ class HTTPRedirect(CherryPyException):
 
     def __init__(self, urls, status=None, encoding=None):
         self.urls = abs_urls = [
-            # Note that urljoin will "do the right thing" whether url is:
-            #  1. a complete URL with host (e.g. "http://www.example.com/test")
-            #  2. a URL relative to root (e.g. "/dummy")
-            #  3. a URL relative to the current path
-            # Note that any query string in cherrypy.request is discarded.
-            urllib.parse.urljoin(
-                cherrypy.url(),
-                tonative(url, encoding or self.encoding),
-            )
-            for url in always_iterable(urls)
+                # Note that urljoin will "do the right thing" whether url is:
+                #  1. a complete URL with host (e.g. "http://www.example.com/test")
+                #  2. a URL relative to root (e.g. "/dummy")
+                #  3. a URL relative to the current path
+                # Note that any query string in cherrypy.request is discarded.
+                urllib.parse.urljoin(
+                        cherrypy.url(),
+                        tonative(url, encoding or self.encoding),
+                )
+                for url in always_iterable(urls)
         ]
 
         status = (
-            int(status)
-            if status is not None
-            else self.default_status
+                int(status)
+                if status is not None
+                else self.default_status
         )
         if not 300 <= status <= 399:
             raise ValueError('status must be between 300 and 399.')
@@ -265,17 +262,17 @@ class HTTPRedirect(CherryPyException):
             # SHOULD contain a short hypertext note with a hyperlink to the
             # new URI(s)."
             msg = {
-                300: 'This resource can be found at ',
-                301: 'This resource has permanently moved to ',
-                302: 'This resource resides temporarily at ',
-                303: 'This resource can be found at ',
-                307: 'This resource has moved temporarily to ',
-                308: 'This resource has been moved to ',
+                    300: 'This resource can be found at ',
+                    301: 'This resource has permanently moved to ',
+                    302: 'This resource resides temporarily at ',
+                    303: 'This resource can be found at ',
+                    307: 'This resource has moved temporarily to ',
+                    308: 'This resource has been moved to ',
             }[status]
             msg += '<a href=%s>%s</a>.'
             msgs = [
-                msg % (saxutils.quoteattr(u), html.escape(u, quote=False))
-                for u in self.urls
+                    msg % (saxutils.quoteattr(u), html.escape(u, quote=False))
+                    for u in self.urls
             ]
             response.body = ntob('<br />\n'.join(msgs), 'utf-8')
             # Previous code may have set C-L, so we have to reset it
@@ -339,7 +336,6 @@ def clean_headers(status):
 
 
 class HTTPError(CherryPyException):
-
     """Exception used to return an HTTP error code (4xx-5xx) to the client.
 
     This exception can be used to automatically send a response using a
@@ -426,7 +422,6 @@ class HTTPError(CherryPyException):
 
 
 class NotFound(HTTPError):
-
     """Exception raised when a URL could not be mapped to any handler (404).
 
     This is equivalent to raising
@@ -525,10 +520,10 @@ def get_error_page(status, **kwargs):
                 else:
                     if not isinstance(result, bytes):
                         raise ValueError(
-                            'error page function did not '
-                            'return a bytestring, str or an '
-                            'iterator - returned object of type %s.'
-                            % (type(result).__name__))
+                                'error page function did not '
+                                'return a bytestring, str or an '
+                                'iterator - returned object of type %s.'
+                                % (type(result).__name__))
                     return result
             else:
                 # Load the template from this path.
@@ -548,9 +543,9 @@ def get_error_page(status, **kwargs):
 
 
 _ie_friendly_error_sizes = {
-    400: 512, 403: 256, 404: 512, 405: 256,
-    406: 512, 408: 512, 409: 512, 410: 256,
-    500: 512, 501: 512, 505: 512,
+        400: 512, 403: 256, 404: 512, 405: 256,
+        406: 512, 408: 512, 409: 512, 410: 256,
+        500: 512, 501: 512, 505: 512,
 }
 
 

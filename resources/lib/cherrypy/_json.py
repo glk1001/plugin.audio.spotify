@@ -11,9 +11,7 @@ try:
 except ImportError:
     import json
 
-
 __all__ = ['json', 'encode', 'decode']
-
 
 decode = json.JSONDecoder().decode
 _encode = json.JSONEncoder().iterencode

@@ -4,6 +4,7 @@
 """get metadata from the lastfm"""
 
 import os, sys
+
 if sys.version_info.major == 3:
     from .utils import get_json, strip_newlines, get_compare_string
 else:
@@ -40,7 +41,8 @@ class LastFM(object):
                 if lfmdetails.get("tracks") and lfmdetails["tracks"].get("track"):
                     for track in lfmdetails.get("tracks")["track"]:
                         found_artist = get_compare_string(track["artist"]["name"])
-                        if found_artist == get_compare_string(artist) and track["artist"].get("mbid"):
+                        if found_artist == get_compare_string(artist) and track["artist"].get(
+                                "mbid"):
                             artistid = track["artist"]["mbid"]
                             break
         if not (artistid or albumid) and artist and track:
@@ -52,7 +54,8 @@ class LastFM(object):
                     albumid = lfmdetails['album position="1"'].get("mbid")
                 if lfmdetails.get("artist") and lfmdetails["artist"].get("name"):
                     found_artist = get_compare_string(lfmdetails["artist"]["name"])
-                    if found_artist == get_compare_string(artist) and lfmdetails["artist"].get("mbid"):
+                    if found_artist == get_compare_string(artist) and lfmdetails["artist"].get(
+                            "mbid"):
                         artistid = lfmdetails["artist"]["mbid"]
         return artistid, albumid
 
@@ -71,7 +74,7 @@ class LastFM(object):
         data = self.get_data(params)
         if data and data.get("artist"):
             lfmdetails = data["artist"]
-            #if lfmdetails.get("image"):
+            # if lfmdetails.get("image"):
             #    for image in lfmdetails["image"]:
             #        if image["size"] in ["mega", "extralarge"] and xbmcvfs.exists(image["#text"]):
             #            details["art"]["thumbs"] = [image["#text"]]
@@ -89,7 +92,7 @@ class LastFM(object):
                 for count, item in enumerate(lfmdetails["similar"]["artist"]):
                     similar_artists.append(item["name"])
                     details["lastfm.similarartists.%s.name" % count] = item["name"]
-                    #if item.get("image"):
+                    # if item.get("image"):
                     #    for image in item["image"]:
                     #        if image["size"] in ["mega", "extralarge", "large"] and xbmcvfs.exists(image["#text"]):
                     #            details["lastfm.similarartists.%s.thumb" % count] = image["#text"]
@@ -108,7 +111,7 @@ class LastFM(object):
                 lfmdetails = data["album"][0]
             else:
                 lfmdetails = data["album"]
-            #if lfmdetails.get("image"):
+            # if lfmdetails.get("image"):
             #    for image in lfmdetails["image"]:
             #        if image["size"] in ["mega", "extralarge"] and xbmcvfs.exists(image["#text"]):
             #            details["art"]["thumbs"] = [image["#text"]]
@@ -120,7 +123,8 @@ class LastFM(object):
             if lfmdetails.get("tags") and lfmdetails["tags"].get("tag"):
                 details["lastfm.tags"] = [tag["name"] for tag in lfmdetails["tags"]["tag"]]
             if lfmdetails.get("wiki"):
-                details["plot"] = strip_newlines(lfmdetails["wiki"].get("content", "").split(' <a')[0])
+                details["plot"] = strip_newlines(
+                        lfmdetails["wiki"].get("content", "").split(' <a')[0])
 
     @use_cache(30)
     def get_data(self, params):

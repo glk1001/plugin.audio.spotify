@@ -43,8 +43,8 @@ def _make_content_disposition(disposition, file_name):
     # searching, and may be substituted for each other.
     # See: https://en.wikipedia.org/wiki/Unicode_equivalence.
     ascii_name = (
-        unicodedata.normalize('NFKC', file_name).
-        encode('ascii', errors='ignore').decode()
+            unicodedata.normalize('NFKC', file_name).
+            encode('ascii', errors='ignore').decode()
     )
     header = '{}; filename="{}"'.format(disposition, ascii_name)
     if ascii_name != file_name:
@@ -210,11 +210,11 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                 r_len = stop - start
                 if debug:
                     cherrypy.log(
-                        'Single part; start: %r, stop: %r' % (start, stop),
-                        'TOOLS.STATIC')
+                            'Single part; start: %r, stop: %r' % (start, stop),
+                            'TOOLS.STATIC')
                 response.status = '206 Partial Content'
                 response.headers['Content-Range'] = (
-                    'bytes %s-%s/%s' % (start, stop - 1, content_length))
+                        'bytes %s-%s/%s' % (start, stop - 1, content_length))
                 response.headers['Content-Length'] = r_len
                 fileobj.seek(start)
                 response.body = file_generator_limited(fileobj, r_len)
@@ -235,16 +235,16 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
                     for start, stop in r:
                         if debug:
                             cherrypy.log(
-                                'Multipart; start: %r, stop: %r' % (
-                                    start, stop),
-                                'TOOLS.STATIC')
+                                    'Multipart; start: %r, stop: %r' % (
+                                            start, stop),
+                                    'TOOLS.STATIC')
                         yield ntob('--' + boundary, 'ascii')
                         yield ntob('\r\nContent-type: %s' % content_type,
                                    'ascii')
                         yield ntob(
-                            '\r\nContent-range: bytes %s-%s/%s\r\n\r\n' % (
-                                start, stop - 1, content_length),
-                            'ascii')
+                                '\r\nContent-range: bytes %s-%s/%s\r\n\r\n' % (
+                                        start, stop - 1, content_length),
+                                'ascii')
                         fileobj.seek(start)
                         gen = file_generator_limited(fileobj, stop - start)
                         for chunk in gen:
@@ -255,6 +255,7 @@ def _serve_fileobj(fileobj, content_type, content_length, debug=False):
 
                     # Apache compatibility:
                     yield b'\r\n'
+
                 response.body = file_ranges()
             return response.body
         else:
@@ -407,7 +408,7 @@ def staticfile(filename, root=None, match='', content_types=None, debug=False):
     if not os.path.isabs(filename):
         if not root:
             msg = "Static tool requires an absolute filename (got '%s')." % (
-                filename,)
+                    filename,)
             if debug:
                 cherrypy.log(msg, 'TOOLS.STATICFILE')
             raise ValueError(msg)

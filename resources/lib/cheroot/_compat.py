@@ -2,6 +2,7 @@
 """Compatibility code for using Cheroot with various versions of Python."""
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import os
@@ -17,6 +18,7 @@ except ImportError:
 
 try:
     import ssl
+
     IS_ABOVE_OPENSSL10 = ssl.OPENSSL_VERSION_INFO >= (1, 1)
     del ssl
 except ImportError:
@@ -28,6 +30,7 @@ try:
 except ImportError:
     from contextlib import contextmanager
 
+
     @contextmanager
     def suppress(*exceptions):
         """Return a context manager that suppresses the `exceptions`."""
@@ -36,13 +39,10 @@ except ImportError:
         except exceptions:
             pass
 
-
 IS_CI = bool(os.getenv('CI'))
 IS_GITHUB_ACTIONS_WORKFLOW = bool(os.getenv('GITHUB_WORKFLOW'))
 
-
 IS_PYPY = platform.python_implementation() == 'PyPy'
-
 
 SYS_PLATFORM = platform.system()
 IS_WINDOWS = SYS_PLATFORM == 'Windows'
@@ -52,7 +52,6 @@ IS_MACOS = SYS_PLATFORM == 'Darwin'
 PLATFORM_ARCH = platform.machine()
 IS_PPC = PLATFORM_ARCH.startswith('ppc')
 
-
 if not six.PY2:
     def ntob(n, encoding='ISO-8859-1'):
         """Return the native string as bytes in the given encoding."""
@@ -60,11 +59,13 @@ if not six.PY2:
         # In Python 3, the native string type is unicode
         return n.encode(encoding)
 
+
     def ntou(n, encoding='ISO-8859-1'):
         """Return the native string as Unicode with the given encoding."""
         assert_native(n)
         # In Python 3, the native string type is unicode
         return n
+
 
     def bton(b, encoding='ISO-8859-1'):
         """Return the byte string as native string in the given encoding."""
@@ -79,6 +80,7 @@ else:
         # was intended.
         return n
 
+
     def ntou(n, encoding='ISO-8859-1'):
         """Return the native string as Unicode with the given encoding."""
         assert_native(n)
@@ -89,13 +91,14 @@ else:
         # but no prefix for Python 3.
         if encoding == 'escape':
             return re.sub(
-                r'\\u([0-9a-zA-Z]{4})',
-                lambda m: six.unichr(int(m.group(1), 16)),
-                n.decode('ISO-8859-1'),
+                    r'\\u([0-9a-zA-Z]{4})',
+                    lambda m: six.unichr(int(m.group(1), 16)),
+                    n.decode('ISO-8859-1'),
             )
         # Assume it's already in the given encoding, which for ISO-8859-1
         # is almost always what was intended.
         return n.decode(encoding)
+
 
     def bton(b, encoding='ISO-8859-1'):
         """Return the byte string as native string in the given encoding."""
@@ -144,5 +147,5 @@ def extract_bytes(mv):
         return mv
 
     raise ValueError(
-        'extract_bytes() only accepts bytes and memoryview/buffer',
+            'extract_bytes() only accepts bytes and memoryview/buffer',
     )

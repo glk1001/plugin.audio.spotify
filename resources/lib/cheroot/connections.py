@@ -1,6 +1,7 @@
 """Utilities to manage open connections."""
 
 from __future__ import absolute_import, division, print_function
+
 __metaclass__ = type
 
 import io
@@ -22,11 +23,12 @@ except ImportError:
     try:
         from ctypes import windll, WinError
         import ctypes.wintypes
+
         _SetHandleInformation = windll.kernel32.SetHandleInformation
         _SetHandleInformation.argtypes = [
-            ctypes.wintypes.HANDLE,
-            ctypes.wintypes.DWORD,
-            ctypes.wintypes.DWORD,
+                ctypes.wintypes.HANDLE,
+                ctypes.wintypes.DWORD,
+                ctypes.wintypes.DWORD,
         ]
         _SetHandleInformation.restype = ctypes.wintypes.BOOL
     except ImportError:
@@ -102,8 +104,8 @@ class _ThreadsafeSelector:
             (socket_file_descriptor, connection)
         """
         return (
-            (key.fd, key.data)
-            for key, _ in self._selector.select(timeout=timeout)
+                (key.fd, key.data)
+                for key, _ in self._selector.select(timeout=timeout)
         )
 
     def close(self):
@@ -132,8 +134,8 @@ class ConnectionManager:
         self._selector = _ThreadsafeSelector()
 
         self._selector.register(
-            server.socket.fileno(),
-            selectors.EVENT_READ, data=server,
+                server.socket.fileno(),
+                selectors.EVENT_READ, data=server,
         )
 
     def put(self, conn):
@@ -149,7 +151,7 @@ class ConnectionManager:
             self.server.process_conn(conn)
         else:
             self._selector.register(
-                conn.socket.fileno(), selectors.EVENT_READ, data=conn,
+                    conn.socket.fileno(), selectors.EVENT_READ, data=conn,
             )
 
     def _expire(self):
@@ -164,9 +166,9 @@ class ConnectionManager:
         # that have not been active recently enough.
         threshold = time.time() - self.server.timeout
         timed_out_connections = [
-            (sock_fd, conn)
-            for (sock_fd, conn) in self._selector.connections
-            if conn != self.server and conn.last_used < threshold
+                (sock_fd, conn)
+                for (sock_fd, conn) in self._selector.connections
+                if conn != self.server and conn.last_used < threshold
         ]
         for sock_fd, conn in timed_out_connections:
             self._selector.unregister(sock_fd)
@@ -272,14 +274,14 @@ class ConnectionManager:
                     s, ssl_env = self.server.ssl_adapter.wrap(s)
                 except errors.NoSSLError:
                     msg = (
-                        'The client sent a plain HTTP request, but '
-                        'this server only speaks HTTPS on this port.'
+                            'The client sent a plain HTTP request, but '
+                            'this server only speaks HTTPS on this port.'
                     )
                     buf = [
-                        '%s 400 Bad Request\r\n' % self.server.protocol,
-                        'Content-Length: %s\r\n' % len(msg),
-                        'Content-Type: text/plain\r\n\r\n',
-                        msg,
+                            '%s 400 Bad Request\r\n' % self.server.protocol,
+                            'Content-Length: %s\r\n' % len(msg),
+                            'Content-Type: text/plain\r\n\r\n',
+                            msg,
                     ]
 
                     sock_to_make = s if not six.PY2 else s._sock

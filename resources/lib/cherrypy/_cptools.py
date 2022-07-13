@@ -42,13 +42,12 @@ def _getargs(func):
 
 
 _attr_error = (
-    'CherryPy Tools cannot be turned on directly. Instead, turn them '
-    'on via config, or use them as decorators on your page handlers.'
+        'CherryPy Tools cannot be turned on directly. Instead, turn them '
+        'on via config, or use them as decorators on your page handlers.'
 )
 
 
 class Tool(object):
-
     """A registered function for use with CherryPy request-processing hooks.
 
     help(tool.callable) should give you more information about this Tool.
@@ -130,6 +129,7 @@ class Tool(object):
             for k, v in kwargs.items():
                 f._cp_config[subspace + k] = v
             return f
+
         return tool_decorator
 
     def _setup(self):
@@ -147,7 +147,6 @@ class Tool(object):
 
 
 class HandlerTool(Tool):
-
     """Tool which is called 'before main', that may skip normal handlers.
 
     If the tool successfully handles the request (by setting response.body),
@@ -170,12 +169,14 @@ class HandlerTool(Tool):
                 nav = tools.staticdir.handler(section="/nav", dir="nav",
                                               root=absDir)
         """
+
         @expose
         def handle_func(*a, **kw):
             handled = self.callable(*args, **self._merged_args(kwargs))
             if not handled:
                 raise cherrypy.NotFound()
             return cherrypy.serving.response.body
+
         return handle_func
 
     def _wrapper(self, **kwargs):
@@ -197,7 +198,6 @@ class HandlerTool(Tool):
 
 
 class HandlerWrapperTool(Tool):
-
     """Tool which wraps request.handler in a provided wrapper function.
 
     The 'newhandler' arg must be a handler wrapper function that takes a
@@ -228,11 +228,11 @@ class HandlerWrapperTool(Tool):
 
         def wrap(*args, **kwargs):
             return self.newhandler(innerfunc, *args, **kwargs)
+
         cherrypy.serving.request.handler = wrap
 
 
 class ErrorTool(Tool):
-
     """Tool which is used to replace the default request.error_response."""
 
     def __init__(self, callable, name=None):
@@ -254,7 +254,6 @@ class ErrorTool(Tool):
 
 
 class SessionTool(Tool):
-
     """Session Tool for CherryPy.
 
     sessions.locking
@@ -317,15 +316,14 @@ class SessionTool(Tool):
         # Grab cookie-relevant tool args
         relevant = 'path', 'path_header', 'name', 'timeout', 'domain', 'secure'
         conf = dict(
-            (k, v)
-            for k, v in self._merged_args().items()
-            if k in relevant
+                (k, v)
+                for k, v in self._merged_args().items()
+                if k in relevant
         )
         _sessions.set_response_cookie(**conf)
 
 
 class XMLRPCController(object):
-
     """A Controller (page handler collection) for XML-RPC.
 
     To use it, have your controllers subclass this base class (it will
@@ -392,7 +390,6 @@ class SessionAuthTool(HandlerTool):
 
 
 class CachingTool(Tool):
-
     """Caching Tool for CherryPy."""
 
     def _wrapper(self, **kwargs):
@@ -404,6 +401,7 @@ class CachingTool(Tool):
                 # Note the devious technique here of adding hooks on the fly
                 request.hooks.attach('before_finalize', _caching.tee_output,
                                      priority=100)
+
     _wrapper.priority = 90
 
     def _setup(self):
@@ -416,7 +414,6 @@ class CachingTool(Tool):
 
 
 class Toolbox(object):
-
     """A collection of Tools.
 
     This object also functions as a config namespace handler for itself.
@@ -442,6 +439,7 @@ class Toolbox(object):
             toolname, arg = k.split('.', 1)
             bucket = map.setdefault(toolname, {})
             bucket[arg] = v
+
         return populate
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -458,11 +456,13 @@ class Toolbox(object):
         Return a decorator which registers the function
         at the given hook point.
         """
+
         def decorator(func):
             attr_name = kwargs.get('name', func.__name__)
             tool = Tool(point, func, **kwargs)
             setattr(self, attr_name, tool)
             return func
+
         return decorator
 
 

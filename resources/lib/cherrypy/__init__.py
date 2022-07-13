@@ -81,8 +81,10 @@ from ._cptree import Application
 from . import _cpwsgi as wsgi
 
 from . import process
+
 try:
     from .process import win32
+
     engine = win32.Win32Bus()
     engine.console_control_handler = win32.ConsoleCtrlHandler(engine)
     del win32
@@ -92,31 +94,26 @@ except ImportError:
 from . import _cpchecker
 
 __all__ = (
-    'HTTPError', 'HTTPRedirect', 'InternalRedirect',
-    'NotFound', 'CherryPyException',
-    'dispatch', 'tools', 'Tool', 'Application',
-    'wsgi', 'process', 'tree', 'engine',
-    'quickstart', 'serving', 'request', 'response', 'thread_data',
-    'log', 'expose', 'popargs', 'url', 'config',
+        'HTTPError', 'HTTPRedirect', 'InternalRedirect',
+        'NotFound', 'CherryPyException',
+        'dispatch', 'tools', 'Tool', 'Application',
+        'wsgi', 'process', 'tree', 'engine',
+        'quickstart', 'serving', 'request', 'response', 'thread_data',
+        'log', 'expose', 'popargs', 'url', 'config',
 )
-
 
 __import__('cherrypy._cptools')
 __import__('cherrypy._cprequest')
 
-
 tree = _cptree.Tree()
-
 
 try:
     __version__ = pkg_resources.require('cherrypy')[0].version
 except Exception:
     __version__ = '18.6.0'
 
-
 engine.listeners['before_request'] = set()
 engine.listeners['after_request'] = set()
-
 
 engine.autoreload = process.plugins.Autoreloader(engine)
 engine.autoreload.subscribe()
@@ -145,7 +142,6 @@ class _HandleSignalsPlugin(object):
 
 
 engine.signals = _HandleSignalsPlugin(engine)
-
 
 server = _cpserver.Server()
 server.subscribe()
@@ -213,7 +209,6 @@ serving = _Serving()
 
 
 class _ThreadLocalProxy(object):
-
     __slots__ = ['__attrname__', '__dict__']
 
     def __init__(self, attrname):
@@ -224,7 +219,7 @@ class _ThreadLocalProxy(object):
         return getattr(child, name)
 
     def __setattr__(self, name, value):
-        if name in ('__attrname__', ):
+        if name in ('__attrname__',):
             object.__setattr__(self, name, value)
         else:
             child = getattr(serving, self.__attrname__)
@@ -264,6 +259,7 @@ class _ThreadLocalProxy(object):
     def __nonzero__(self):
         child = getattr(serving, self.__attrname__)
         return bool(child)
+
     # Python 3
     __bool__ = __nonzero__
 
@@ -273,6 +269,7 @@ class _ThreadLocalProxy(object):
 #   to the "serving" object)
 request = _ThreadLocalProxy('request')
 response = _ThreadLocalProxy('response')
+
 
 # Create thread_data object as a thread-specific all-purpose storage
 
@@ -297,6 +294,7 @@ def _cherrypy_pydoc_resolve(thing, forceload=0):
 
 try:
     import pydoc as _pydoc
+
     _pydoc._builtin_resolve = _pydoc.resolve
     _pydoc.resolve = _cherrypy_pydoc_resolve
 except ImportError:
@@ -356,10 +354,10 @@ def _buslog(msg, level):
 # without shadowing cherrypy.config.
 config = _global_conf_alias = _cpconfig.Config()
 config.defaults = {
-    'tools.log_tracebacks.on': True,
-    'tools.log_headers.on': True,
-    'tools.trailing_slash.on': True,
-    'tools.encode.on': True
+        'tools.log_tracebacks.on': True,
+        'tools.log_headers.on': True,
+        'tools.trailing_slash.on': True,
+        'tools.encode.on': True
 }
 config.namespaces['log'] = lambda k, v: setattr(log, k, v)
 config.namespaces['checker'] = lambda k, v: setattr(checker, k, v)

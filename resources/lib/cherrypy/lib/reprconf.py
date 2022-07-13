@@ -27,7 +27,6 @@ from cherrypy._cpcompat import text_or_bytes
 
 
 class NamespaceSet(dict):
-
     """A dict of config namespace names and handlers.
 
     Each config entry should begin with a namespace name; the corresponding
@@ -99,11 +98,11 @@ class NamespaceSet(dict):
         newobj = self.__class__()
         newobj.update(self)
         return newobj
+
     copy = __copy__
 
 
 class Config(dict):
-
     """A dict-like set of configuration data, with defaults and namespaces.
 
     May take a file, filename, or dict.
@@ -147,7 +146,6 @@ class Config(dict):
 
 
 class Parser(configparser.ConfigParser):
-
     """Sub-class of ConfigParser that keeps the case of options and that
     raises an exception if the file cannot be read.
     """
@@ -200,10 +198,10 @@ class Parser(configparser.ConfigParser):
     def load(self, input):
         """Resolve 'input' to dict from a dict, file, or filename."""
         is_file = (
-            # Filename
-            isinstance(input, text_or_bytes)
-            # Open file object
-            or hasattr(input, 'read')
+                # Filename
+                isinstance(input, text_or_bytes)
+                # Open file object
+                or hasattr(input, 'read')
         )
         return Parser().dict_from_file(input) if is_file else input.copy()
 

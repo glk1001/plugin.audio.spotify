@@ -288,6 +288,7 @@ def sorted_items(d, key=__identity, reverse=False):
     >>> tuple(sorted_items(sample, reverse=True))
     (('foo', 20), ('baz', 10), ('bar', 42))
     """
+
     # wrap the key func so it operates on the first element of each item
     def pairkey_key(item):
         return key(item[0])
@@ -670,10 +671,10 @@ class BijectiveMap(dict):
         if item == value:
             raise ValueError("Key cannot map to itself")
         overlap = (
-            item in self
-            and self[item] != value
-            or value in self
-            and self[value] != item
+                item in self
+                and self[item] != value
+                or value in self
+                and self[value] != item
         )
         if overlap:
             raise ValueError("Key/Value pairs may not overlap")

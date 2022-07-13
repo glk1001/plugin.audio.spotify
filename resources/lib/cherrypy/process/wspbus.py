@@ -83,7 +83,6 @@ import functools
 
 from more_itertools import always_iterable
 
-
 # Here I save the value of os.getcwd(), which, if I am imported early enough,
 # will be the directory from which the startup script was run.  This is needed
 # by _do_execv(), to change back to the original directory before execv()ing a
@@ -121,13 +120,14 @@ class ChannelFailures(Exception):
     def __bool__(self):
         """Determine whether any error happened in channel."""
         return bool(self._exceptions)
+
     __nonzero__ = __bool__
+
 
 # Use a flag to indicate the state of the bus.
 
 
 class _StateEnum(object):
-
     class State(object):
         name = None
 
@@ -146,7 +146,6 @@ states.STARTING = states.State()
 states.STARTED = states.State()
 states.STOPPING = states.State()
 states.EXITING = states.State()
-
 
 try:
     import fcntl
@@ -180,8 +179,8 @@ class Bus(object):
         self.state = states.STOPPED
         channels = 'start', 'stop', 'exit', 'graceful', 'log', 'main'
         self.listeners = dict(
-            (channel, set())
-            for channel in channels
+                (channel, set())
+                for channel in channels
         )
         self._priorities = {}
 
@@ -193,9 +192,9 @@ class Bus(object):
         """
         if callback is None:
             return functools.partial(
-                self.subscribe,
-                channel,
-                priority=priority,
+                    self.subscribe,
+                    channel,
+                    priority=priority,
             )
 
         ch_listeners = self.listeners.setdefault(channel, set())
@@ -221,8 +220,8 @@ class Bus(object):
         output = []
 
         raw_items = (
-            (self._priorities[(channel, listener)], listener)
-            for listener in self.listeners[channel]
+                (self._priorities[(channel, listener)], listener)
+                for listener in self.listeners[channel]
         )
         items = sorted(raw_items, key=operator.itemgetter(0))
         for priority, listener in items:
@@ -252,10 +251,10 @@ class Bus(object):
         """Assert that the Bus is not running in atexit handler callback."""
         if self.state != states.EXITING:
             warnings.warn(
-                'The main thread is exiting, but the Bus is in the %r state; '
-                'shutting it down automatically now. You must either call '
-                'bus.block() after start(), or call bus.exit() before the '
-                'main thread exits.' % self.state, RuntimeWarning)
+                    'The main thread is exiting, but the Bus is in the %r state; '
+                    'shutting it down automatically now. You must either call '
+                    'bus.block() after start(), or call bus.exit() before the '
+                    'main thread exits.' % self.state, RuntimeWarning)
             self.exit()
 
     def start(self):
@@ -439,8 +438,8 @@ class Bus(object):
             argc = ctypes.c_int()
 
             ctypes.pythonapi.Py_GetArgcArgv(
-                ctypes.byref(argc),
-                ctypes.byref(argv),
+                    ctypes.byref(argc),
+                    ctypes.byref(argv),
             )
 
             _argv = argv[:argc.value]
@@ -476,23 +475,23 @@ class Bus(object):
                 if is_command and c_ind < m_ind:
                     """There's `-c -c` before `-m`"""
                     raise RuntimeError(
-                        "Cannot reconstruct command from '-c'. Ref: "
-                        'https://github.com/cherrypy/cherrypy/issues/1545')
+                            "Cannot reconstruct command from '-c'. Ref: "
+                            'https://github.com/cherrypy/cherrypy/issues/1545')
                 # Survive module argument here
                 original_module = sys.argv[0]
                 if not os.access(original_module, os.R_OK):
                     """There's no such module exist"""
                     raise AttributeError(
-                        "{} doesn't seem to be a module "
-                        'accessible by current user'.format(original_module))
+                            "{} doesn't seem to be a module "
+                            'accessible by current user'.format(original_module))
                 del _argv[m_ind:m_ind + 2]  # remove `-m -m`
                 # ... and substitute it with the original module path:
                 _argv.insert(m_ind, original_module)
             elif is_command:
                 """It's containing just `-c -c` sequence of arguments"""
                 raise RuntimeError(
-                    "Cannot reconstruct command from '-c'. "
-                    'Ref: https://github.com/cherrypy/cherrypy/issues/1545')
+                        "Cannot reconstruct command from '-c'. "
+                        'Ref: https://github.com/cherrypy/cherrypy/issues/1545')
         except AttributeError:
             """It looks Py_GetArgcArgv is completely absent in some environments
 
@@ -525,8 +524,8 @@ class Bus(object):
         path_prefix = '.' + os.pathsep
         existing_path = env.get('PYTHONPATH', '')
         needs_patch = (
-            sys.path[0] == '' and
-            not existing_path.startswith(path_prefix)
+                sys.path[0] == '' and
+                not existing_path.startswith(path_prefix)
         )
 
         if needs_patch:
@@ -569,6 +568,7 @@ class Bus(object):
         def _callback(func, *a, **kw):
             self.wait(states.STARTED)
             func(*a, **kw)
+
         t = threading.Thread(target=_callback, args=args, kwargs=kwargs)
         t.setName('Bus Callback ' + t.getName())
         t.start()

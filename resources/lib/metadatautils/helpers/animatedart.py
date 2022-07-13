@@ -4,6 +4,7 @@
 """Retrieve animated artwork for kodi movies"""
 
 import os, sys
+
 if sys.version_info.major == 3:
     from .utils import get_json, DialogSelect, log_msg, ADDON_ID
 else:
@@ -45,14 +46,14 @@ class AnimatedArt(object):
         kodi_movie = self.kodidb.movie_by_imdbid(imdb_id)
         if not manual_select and kodi_movie and kodi_movie["art"].get("animatedposter"):
             result = {
-                "animatedposter": kodi_movie["art"].get("animatedposter"),
-                "animatedfanart": kodi_movie["art"].get("animatedfanart")
+                    "animatedposter": kodi_movie["art"].get("animatedposter"),
+                    "animatedfanart": kodi_movie["art"].get("animatedfanart")
             }
         else:
             result = {
-                "animatedposter": self.poster(imdb_id, manual_select),
-                "animatedfanart": self.fanart(imdb_id, manual_select),
-                "imdb_id": imdb_id
+                    "animatedposter": self.poster(imdb_id, manual_select),
+                    "animatedfanart": self.fanart(imdb_id, manual_select),
+                    "imdb_id": imdb_id
             }
             self.write_kodidb(result)
         log_msg("get_animated_artwork for imdbid: %s - result: %s" % (imdb_id, result))
@@ -100,12 +101,13 @@ class AnimatedArt(object):
                     art_db[key] = {"posters": [], "fanarts": []}
                     for entry in item['entries']:
                         entry_new = {
-                            "contributedby": entry["contributedBy"],
-                            "dateadded": entry["dateAdded"],
-                            "language": entry["language"],
-                            "source": entry["source"],
-                            "image": "%s/%s" % (base_url, entry["image"].replace(".gif", "_original.gif")),
-                            "thumb": "%s/%s" % (base_url, entry["image"])}
+                                "contributedby": entry["contributedBy"],
+                                "dateadded": entry["dateAdded"],
+                                "language": entry["language"],
+                                "source": entry["source"],
+                                "image": "%s/%s" % (
+                                base_url, entry["image"].replace(".gif", "_original.gif")),
+                                "thumb": "%s/%s" % (base_url, entry["image"])}
                         if entry['type'] == 'poster':
                             art_db[key]["posters"].append(entry_new)
                         elif entry['type'] == 'background':
@@ -128,13 +130,15 @@ class AnimatedArt(object):
             listitem.setArt({'icon': "DefaultFolder.png"})
             results_list.append(listitem)
             for item in items:
-                labels = [item["contributedby"], item["dateadded"], item["language"], item["source"]]
+                labels = [item["contributedby"], item["dateadded"], item["language"],
+                          item["source"]]
                 label = " / ".join(labels)
                 listitem = xbmcgui.ListItem(label=label)
                 listitem.setArt({'icon': item["thumb"]})
                 results_list.append(listitem)
             if manual_select and results_list:
-                dialog = DialogSelect("DialogSelect.xml", "", listing=results_list, window_title=art_type)
+                dialog = DialogSelect("DialogSelect.xml", "", listing=results_list,
+                                      window_title=art_type)
                 dialog.doModal()
                 selected_item = dialog.result
                 del dialog
@@ -144,9 +148,11 @@ class AnimatedArt(object):
                     # browse for image
                     dialog = xbmcgui.Dialog()
                     if sys.version_info.major == 3:
-                        image = dialog.browse(2, xbmc.getLocalizedString(1030), 'files', mask='.gif')
+                        image = dialog.browse(2, xbmc.getLocalizedString(1030), 'files',
+                                              mask='.gif')
                     else:
-                        image = dialog.browse(2, xbmc.getLocalizedString(1030), 'files', mask='.gif').decode("utf-8")
+                        image = dialog.browse(2, xbmc.getLocalizedString(1030), 'files',
+                                              mask='.gif').decode("utf-8")
                     del dialog
                 elif selected_item > 1:
                     # user has selected an image from online results
@@ -186,7 +192,8 @@ class AnimatedArt(object):
         kodi_movie = self.kodidb.movie_by_imdbid(artwork["imdb_id"])
         if kodi_movie:
             params = {
-                "movieid": kodi_movie["movieid"],
-                "art": {"animatedfanart": artwork["animatedfanart"], "animatedposter": artwork["animatedposter"]}
+                    "movieid": kodi_movie["movieid"],
+                    "art": {"animatedfanart": artwork["animatedfanart"],
+                            "animatedposter": artwork["animatedposter"]}
             }
             self.kodidb.set_json('VideoLibrary.SetMovieDetails', params)

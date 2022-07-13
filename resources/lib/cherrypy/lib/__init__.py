@@ -68,6 +68,7 @@ class file_generator(object):
             if hasattr(self.input, 'close'):
                 self.input.close()
             raise StopIteration()
+
     next = __next__
 
 

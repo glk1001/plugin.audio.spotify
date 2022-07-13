@@ -8,12 +8,15 @@
 """
 
 import os, sys
+
 if sys.version_info.major == 3:
-    from .utils import log_msg, extend_dict, ADDON_ID, strip_newlines, download_artwork, try_decode, manual_set_artwork
+    from .utils import log_msg, extend_dict, ADDON_ID, strip_newlines, download_artwork, try_decode, \
+        manual_set_artwork
     from .mbrainz import MusicBrainz
     from urllib.parse import quote_plus
 else:
-    from utils import log_msg, extend_dict, ADDON_ID, strip_newlines, download_artwork, try_decode, manual_set_artwork
+    from utils import log_msg, extend_dict, ADDON_ID, strip_newlines, download_artwork, try_decode, \
+        manual_set_artwork
     from mbrainz import MusicBrainz
     from urllib import quote_plus
 import xbmc
@@ -34,7 +37,8 @@ class MusicArtwork(object):
         self.mbrainz = MusicBrainz()
         self.audiodb = self._mutils.audiodb
 
-    def get_music_artwork(self, artist, album, track, disc, ignore_cache=False, flush_cache=False, manual=False):
+    def get_music_artwork(self, artist, album, track, disc, ignore_cache=False, flush_cache=False,
+                          manual=False):
         """
             get music metadata by providing artist and/or album/track
             returns combined result of artist and album metadata
@@ -47,11 +51,13 @@ class MusicArtwork(object):
 
         # retrieve artist and album details
         artist_details = self.get_artists_metadata(artists, album, track,
-                                                   ignore_cache=ignore_cache, flush_cache=flush_cache, manual=manual)
+                                                   ignore_cache=ignore_cache,
+                                                   flush_cache=flush_cache, manual=manual)
         album_artist = artist_details.get("albumartist", artists[0])
         if album or track:
             album_details = self.get_album_metadata(album_artist, album, track, disc,
-                                                    ignore_cache=ignore_cache, flush_cache=flush_cache, manual=manual)
+                                                    ignore_cache=ignore_cache,
+                                                    flush_cache=flush_cache, manual=manual)
         else:
             album_details = {"art": {}}
 
@@ -60,7 +66,8 @@ class MusicArtwork(object):
 
         # combine artist plot and album plot as extended plot
         if artist_details.get("plot") and album_details.get("plot"):
-            details["extendedplot"] = "%s  --  %s" % try_decode((album_details["plot"], artist_details["plot"]))
+            details["extendedplot"] = "%s  --  %s" % try_decode(
+                    (album_details["plot"], artist_details["plot"]))
         else:
             details["extendedplot"] = details.get("plot", "")
 
@@ -91,14 +98,16 @@ class MusicArtwork(object):
             # Open addon settings
             xbmc.executebuiltin("Addon.OpenSettings(%s)" % ADDON_ID)
 
-    def get_artists_metadata(self, artists, album, track, ignore_cache=False, flush_cache=False, manual=False):
+    def get_artists_metadata(self, artists, album, track, ignore_cache=False, flush_cache=False,
+                             manual=False):
         """collect artist metadata for all artists"""
         artist_details = {"art": {}}
         # for multi artist songs/albums we grab details from all artists
         if len(artists) == 1:
             # single artist
             artist_details = self.get_artist_metadata(
-                artists[0], album, track, ignore_cache=ignore_cache, flush_cache=flush_cache, manual=manual)
+                    artists[0], album, track, ignore_cache=ignore_cache, flush_cache=flush_cache,
+                    manual=manual)
             artist_details["albumartist"] = artists[0]
         else:
             # multi-artist track
@@ -111,11 +120,11 @@ class MusicArtwork(object):
                     # get main artist details
                     artist_details["albumartist"] = artist
                     artist_details = self.get_artist_metadata(
-                        artist, album, track, ignore_cache=ignore_cache, manual=manual)
+                            artist, album, track, ignore_cache=ignore_cache, manual=manual)
                 else:
                     # assume featuring artist
                     feat_artist_details.append(self.get_artist_metadata(
-                        artist, album, track, ignore_cache=ignore_cache, manual=manual))
+                            artist, album, track, ignore_cache=ignore_cache, manual=manual))
 
             # combined images to use as multiimage (for all artists)
             # append featuring artist details
@@ -133,8 +142,9 @@ class MusicArtwork(object):
                                 combined_art.append(item["file"])
                 if combined_art:
                     # use the extrafanart plugin entry to display multi images
-                    artist_details["art"][arttype] = "plugin://script.skin.helper.service/"\
-                        "?action=extrafanart&fanarts=%s" % quote_plus(repr(combined_art))
+                    artist_details["art"][arttype] = "plugin://script.skin.helper.service/" \
+                                                     "?action=extrafanart&fanarts=%s" % quote_plus(
+                        repr(combined_art))
                     # also set extrafanart path
                     if arttype == "fanarts":
                         artist_details["art"]["extrafanart"] = artist_details["art"][arttype]
@@ -142,7 +152,8 @@ class MusicArtwork(object):
         return artist_details
 
     # pylint: disable-msg=too-many-local-variables
-    def get_artist_metadata(self, artist, album, track, ignore_cache=False, flush_cache=False, manual=False):
+    def get_artist_metadata(self, artist, album, track, ignore_cache=False, flush_cache=False,
+                            manual=False):
         """collect artist metadata for given artist"""
         details = {"art": {}}
         cache_str = "music_artwork.artist.%s" % artist.lower()
@@ -162,15 +173,18 @@ class MusicArtwork(object):
             details = self.manual_set_music_artwork(cache, "artist")
         else:
             # nothing in cache - start metadata retrieval
-            log_msg("get_artist_metadata --> artist: %s - album: %s - track: %s" % (artist, album, track))
+            log_msg("get_artist_metadata --> artist: %s - album: %s - track: %s" % (
+            artist, album, track))
             details["cachestr"] = cache_str
             local_path = ""
             local_path_custom = ""
             # get metadata from kodi db
             details = extend_dict(details, self.get_artist_kodi_metadata(artist))
             # get artwork from songlevel path
-            if details.get("diskpath") and self._mutils.addon.getSetting("music_art_musicfolders") == "true":
-                details["art"] = extend_dict(details["art"], self.lookup_artistart_in_folder(details["diskpath"]))
+            if details.get("diskpath") and self._mutils.addon.getSetting(
+                    "music_art_musicfolders") == "true":
+                details["art"] = extend_dict(details["art"],
+                                             self.lookup_artistart_in_folder(details["diskpath"]))
                 local_path = details["diskpath"]
             # get artwork from custom folder
             custom_path = None
@@ -178,10 +192,12 @@ class MusicArtwork(object):
                 if sys.version_info.major == 3:
                     custom_path = self._mutils.addon.getSetting("music_art_custom_path")
                 else:
-                    custom_path = self._mutils.addon.getSetting("music_art_custom_path").decode("utf-8")
+                    custom_path = self._mutils.addon.getSetting("music_art_custom_path").decode(
+                        "utf-8")
                 local_path_custom = self.get_customfolder_path(custom_path, artist)
-                #log_msg("custom path on disk for artist: %s --> %s" % (artist, local_path_custom))
-                details["art"] = extend_dict(details["art"], self.lookup_artistart_in_folder(local_path_custom))
+                # log_msg("custom path on disk for artist: %s --> %s" % (artist, local_path_custom))
+                details["art"] = extend_dict(details["art"],
+                                             self.lookup_artistart_in_folder(local_path_custom))
                 details["customartpath"] = local_path_custom
             # lookup online metadata
             if self._mutils.addon.getSetting("music_art_scraper") == "true":
@@ -189,12 +205,14 @@ class MusicArtwork(object):
                     album = details.get("ref_album")
                     track = details.get("ref_track")
                 # prefer the musicbrainzid that is already in the kodi database - only perform lookup if missing
-                mb_artistid = details.get("musicbrainzartistid", self.get_mb_artist_id(artist, album, track))
+                mb_artistid = details.get("musicbrainzartistid",
+                                          self.get_mb_artist_id(artist, album, track))
                 details["musicbrainzartistid"] = mb_artistid
                 if mb_artistid:
                     # get artwork from fanarttv
                     if self._mutils.addon.getSetting("music_art_scraper_fatv") == "true":
-                        details["art"] = extend_dict(details["art"], self._mutils.fanarttv.artist(mb_artistid))
+                        details["art"] = extend_dict(details["art"],
+                                                     self._mutils.fanarttv.artist(mb_artistid))
                     # get metadata from theaudiodb
                     if self._mutils.addon.getSetting("music_art_scraper_adb") == "true":
                         details = extend_dict(details, self.audiodb.artist_info(artist))
@@ -205,22 +223,26 @@ class MusicArtwork(object):
                     if local_path and self._mutils.addon.getSetting("music_art_download") == "true":
                         details["art"] = download_artwork(local_path, details["art"])
                     # download artwork to custom folder
-                    if local_path_custom and self._mutils.addon.getSetting("music_art_download_custom") == "true":
+                    if local_path_custom and self._mutils.addon.getSetting(
+                            "music_art_download_custom") == "true":
                         details["art"] = download_artwork(local_path_custom, details["art"])
                     # fix extrafanart
                     if details["art"].get("fanarts"):
                         for count, item in enumerate(details["art"]["fanarts"]):
                             details["art"]["fanart.%s" % count] = item
-                        if not details["art"].get("extrafanart") and len(details["art"]["fanarts"]) > 1:
-                            details["art"]["extrafanart"] = "plugin://script.skin.helper.service/"\
-                                "?action=extrafanart&fanarts=%s" % quote_plus(repr(details["art"]["fanarts"]))
+                        if not details["art"].get("extrafanart") and len(
+                                details["art"]["fanarts"]) > 1:
+                            details["art"]["extrafanart"] = "plugin://script.skin.helper.service/" \
+                                                            "?action=extrafanart&fanarts=%s" % quote_plus(
+                                repr(details["art"]["fanarts"]))
                     # multi-image path for all images for each arttype
                     for arttype in ["banners", "clearlogos", "thumbs"]:
                         art = details["art"].get(arttype, [])
                         if len(art) > 1:
                             # use the extrafanart plugin entry to display multi images
-                            details["art"][arttype] = "plugin://script.skin.helper.service/"\
-                                "?action=extrafanart&fanarts=%s" % quote_plus(repr(art))
+                            details["art"][arttype] = "plugin://script.skin.helper.service/" \
+                                                      "?action=extrafanart&fanarts=%s" % quote_plus(
+                                repr(art))
         # set default details
         if not details.get("artist"):
             details["artist"] = artist
@@ -231,14 +253,16 @@ class MusicArtwork(object):
         self._mutils.cache.set(cache_str, details)
         return details
 
-    def get_album_metadata(self, artist, album, track, disc, ignore_cache=False, flush_cache=False, manual=False):
+    def get_album_metadata(self, artist, album, track, disc, ignore_cache=False, flush_cache=False,
+                           manual=False):
         """collect all album metadata"""
         cache_str = "music_artwork.album.%s.%s.%s" % (artist.lower(), album.lower(), disc.lower())
         if not album:
             cache_str = "music_artwork.album.%s.%s" % (artist.lower(), track.lower())
         details = {"art": {}, "cachestr": cache_str}
 
-        log_msg("get_album_metadata --> artist: %s - album: %s - track: %s" % (artist, album, track))
+        log_msg(
+            "get_album_metadata --> artist: %s - album: %s - track: %s" % (artist, album, track))
         # retrieve details from cache
         cache = self._mutils.cache.get(cache_str)
         if not cache and flush_cache:
@@ -262,8 +286,10 @@ class MusicArtwork(object):
             if not album and details.get("title"):
                 album = details["title"]
             # get artwork from songlevel path
-            if details.get("local_path_custom") and self._mutils.addon.getSetting("music_art_musicfolders") == "true":
-                details["art"] = extend_dict(details["art"], self.lookup_albumart_in_folder(details["local_path_custom"]))
+            if details.get("local_path_custom") and self._mutils.addon.getSetting(
+                    "music_art_musicfolders") == "true":
+                details["art"] = extend_dict(details["art"], self.lookup_albumart_in_folder(
+                        details["local_path_custom"]))
                 local_path = details["local_path_custom"]
             # get artwork from custom folder
             custom_path = None
@@ -271,9 +297,11 @@ class MusicArtwork(object):
                 if sys.version_info.major == 3:
                     custom_path = self._mutils.addon.getSetting("music_art_custom_path")
                 else:
-                    custom_path = self._mutils.addon.getSetting("music_art_custom_path").decode("utf-8")
+                    custom_path = self._mutils.addon.getSetting("music_art_custom_path").decode(
+                        "utf-8")
                 local_path_custom = self.get_custom_album_path(custom_path, artist, album, disc)
-                details["art"] = extend_dict(details["art"], self.lookup_albumart_in_folder(local_path_custom))
+                details["art"] = extend_dict(details["art"],
+                                             self.lookup_albumart_in_folder(local_path_custom))
                 details["customartpath"] = local_path_custom
             # lookup online metadata
             if self._mutils.addon.getSetting("music_art_scraper") == "true":
@@ -285,7 +313,8 @@ class MusicArtwork(object):
                 if mb_albumid:
                     # get artwork from fanarttv
                     if self._mutils.addon.getSetting("music_art_scraper_fatv") == "true":
-                        details["art"] = extend_dict(details["art"], self._mutils.fanarttv.album(mb_albumid))
+                        details["art"] = extend_dict(details["art"],
+                                                     self._mutils.fanarttv.album(mb_albumid))
                     # get metadata from theaudiodb
                     if self._mutils.addon.getSetting("music_art_scraper_adb") == "true":
                         details = extend_dict(details, self.audiodb.album_info(artist, adb_album))
@@ -305,11 +334,13 @@ class MusicArtwork(object):
                         album = details["title"]
                         diskpath = self.get_custom_album_path(custom_path, artist, album, disc)
                         if diskpath:
-                            details["art"] = extend_dict(details["art"], self.lookup_albumart_in_folder(diskpath))
+                            details["art"] = extend_dict(details["art"],
+                                                         self.lookup_albumart_in_folder(diskpath))
                             local_path_custom = diskpath
                             details["customartpath"] = diskpath
                     # download artwork to custom folder
-                    if custom_path and self._mutils.addon.getSetting("music_art_download_custom") == "true":
+                    if custom_path and self._mutils.addon.getSetting(
+                            "music_art_download_custom") == "true":
                         if local_path_custom:
                             # allow folder creation if we enabled downloads and the folder does not exist
                             artist_path = self.get_customfolder_path(custom_path, artist)
@@ -327,7 +358,7 @@ class MusicArtwork(object):
 
         # store results in cache and return results
         self._mutils.cache.set(cache_str, details)
-#        self.write_kodidb(details)
+        #        self.write_kodidb(details)
         return details
 
     # pylint: enable-msg=too-many-local-variables
@@ -364,10 +395,12 @@ class MusicArtwork(object):
                 details["albums.formatted"] += u"%s %s [CR]" % (bullet, artist_album["label"])
                 if artist in artist_album["displayartist"]:
                     details["albumsartist"].append(artist_album["label"])
-                    details["albumsartist.formatted"] += u"%s %s [CR]" % (bullet, artist_album["label"])
+                    details["albumsartist.formatted"] += u"%s %s [CR]" % (
+                    bullet, artist_album["label"])
                 else:
                     details["albumscompilations"].append(artist_album["label"])
-                    details["albumscompilations.formatted"] += u"%s %s [CR]" % (bullet, artist_album["label"])
+                    details["albumscompilations.formatted"] += u"%s %s [CR]" % (
+                    bullet, artist_album["label"])
                 # enumerate songs for this album
                 filters = [{"albumid": artist_album["albumid"]}]
                 album_tracks = self._mutils.kodidb.songs(filters=filters)
@@ -389,7 +422,8 @@ class MusicArtwork(object):
                         minutes = total_seconds // 60 % 60
                         seconds = total_seconds - (minutes * 60)
                         duration = "%s:%s" % (minutes, str(seconds).zfill(2))
-                        details["tracks.formatted2"] += u"%s %s (%s)[CR]" % (bullet, tr_title, duration)
+                        details["tracks.formatted2"] += u"%s %s (%s)[CR]" % (
+                        bullet, tr_title, duration)
             details["albumcount"] = len(details["albums"])
             details["albumsartistcount"] = len(details["albumsartist"])
             details["albumscompilationscount"] = len(details["albumscompilations"])
@@ -434,7 +468,8 @@ class MusicArtwork(object):
                     seconds = total_seconds - (minutes * 60)
                     duration = "%s:%s" % (minutes, str(seconds).zfill(2))
                     details["runtime"] += item["duration"]
-                    details["tracks.formatted2"] += u"%s %s (%s)[CR]" % (bullet, item["title"], duration)
+                    details["tracks.formatted2"] += u"%s %s (%s)[CR]" % (
+                    bullet, item["title"], duration)
                     if not details.get("diskpath"):
                         if not disc or item["disc"] == int(disc):
                             details["diskpath"] = self.get_albumpath_by_songpath(item["file"])
@@ -479,7 +514,8 @@ class MusicArtwork(object):
             details["art"] = artwork
             refresh_needed = False
             download_art = self._mutils.addon.getSetting("music_art_download") == "true"
-            download_art_custom = self._mutils.addon.getSetting("music_art_download_custom") == "true"
+            download_art_custom = self._mutils.addon.getSetting(
+                "music_art_download_custom") == "true"
             # download artwork to music folder if needed
             if details.get("custom_path") and download_art:
                 details["art"] = download_artwork(details["custom_path"], details["art"])
@@ -606,7 +642,8 @@ class MusicArtwork(object):
         if sys.version_info.major == 3:
             artistcustom_path = self._mutils.addon.getSetting("music_art_custom_path")
         else:
-            artistcustom_path = self._mutils.addon.getSetting("music_art_custom_path").decode("utf-8")
+            artistcustom_path = self._mutils.addon.getSetting("music_art_custom_path").decode(
+                "utf-8")
         cachestr = "customfolder_path.%s%s" % (customfolder, foldername)
         folder_path = self.cache.get(cachestr)
         if not folder_path:
@@ -632,11 +669,13 @@ class MusicArtwork(object):
                 if folder_path:
                     break
             if not sublevel:
-                if not folder_path and self._mutils.addon.getSetting("music_art_download_custom") == "true":
+                if not folder_path and self._mutils.addon.getSetting(
+                        "music_art_download_custom") == "true":
                     # allow creation of folder if downloading is enabled
                     folder_path = os.path.join(customfolder, foldername) + delim
                 self.cache.set(cachestr, folder_path)
-            if not folder_path and self._mutils.addon.getSetting("music_art_download_custom") == "true":
+            if not folder_path and self._mutils.addon.getSetting(
+                    "music_art_download_custom") == "true":
                 folder_path = os.path.join(artistcustom_path, foldername) + delim
         return folder_path
 
@@ -678,7 +717,9 @@ class MusicArtwork(object):
             if special in artist:
                 artist = artist.replace(special, special.replace("/", ""))
 
-        for splitter in ["ft.", " ft ", "feat.", "Now On Air: ", " and ", "feat", "featuring", "Ft.", "Feat.", "F.", "F/", "f/", " Ft ", "Featuring", " x ", " & ", "vs.", ","]:
+        for splitter in ["ft.", " ft ", "feat.", "Now On Air: ", " and ", "feat", "featuring",
+                         "Ft.", "Feat.", "F.", "F/", "f/", " Ft ", "Featuring", " x ", " & ", "vs.",
+                         ","]:
             # replace splitter by kodi default splitter for easier split all later
             artist = artist.replace(splitter, u"/")
 

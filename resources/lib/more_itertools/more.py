@@ -26,76 +26,76 @@ from time import monotonic
 from .recipes import consume, flatten, powerset, take, unique_everseen
 
 __all__ = [
-    'adjacent',
-    'always_iterable',
-    'always_reversible',
-    'bucket',
-    'chunked',
-    'circular_shifts',
-    'collapse',
-    'collate',
-    'consecutive_groups',
-    'consumer',
-    'count_cycle',
-    'difference',
-    'distinct_combinations',
-    'distinct_permutations',
-    'distribute',
-    'divide',
-    'exactly_n',
-    'filter_except',
-    'first',
-    'groupby_transform',
-    'ilen',
-    'interleave_longest',
-    'interleave',
-    'intersperse',
-    'islice_extended',
-    'iterate',
-    'ichunked',
-    'last',
-    'locate',
-    'lstrip',
-    'make_decorator',
-    'map_except',
-    'map_reduce',
-    'nth_or_last',
-    'numeric_range',
-    'one',
-    'only',
-    'padded',
-    'partitions',
-    'set_partitions',
-    'peekable',
-    'repeat_last',
-    'replace',
-    'rlocate',
-    'rstrip',
-    'run_length',
-    'sample',
-    'seekable',
-    'SequenceView',
-    'side_effect',
-    'sliced',
-    'sort_together',
-    'split_at',
-    'split_after',
-    'split_before',
-    'split_when',
-    'split_into',
-    'spy',
-    'stagger',
-    'strip',
-    'substrings',
-    'substrings_indexes',
-    'time_limited',
-    'unique_to_each',
-    'unzip',
-    'windowed',
-    'with_iter',
-    'UnequalIterablesError',
-    'zip_equal',
-    'zip_offset',
+        'adjacent',
+        'always_iterable',
+        'always_reversible',
+        'bucket',
+        'chunked',
+        'circular_shifts',
+        'collapse',
+        'collate',
+        'consecutive_groups',
+        'consumer',
+        'count_cycle',
+        'difference',
+        'distinct_combinations',
+        'distinct_permutations',
+        'distribute',
+        'divide',
+        'exactly_n',
+        'filter_except',
+        'first',
+        'groupby_transform',
+        'ilen',
+        'interleave_longest',
+        'interleave',
+        'intersperse',
+        'islice_extended',
+        'iterate',
+        'ichunked',
+        'last',
+        'locate',
+        'lstrip',
+        'make_decorator',
+        'map_except',
+        'map_reduce',
+        'nth_or_last',
+        'numeric_range',
+        'one',
+        'only',
+        'padded',
+        'partitions',
+        'set_partitions',
+        'peekable',
+        'repeat_last',
+        'replace',
+        'rlocate',
+        'rstrip',
+        'run_length',
+        'sample',
+        'seekable',
+        'SequenceView',
+        'side_effect',
+        'sliced',
+        'sort_together',
+        'split_at',
+        'split_after',
+        'split_before',
+        'split_when',
+        'split_into',
+        'spy',
+        'stagger',
+        'strip',
+        'substrings',
+        'substrings_indexes',
+        'time_limited',
+        'unique_to_each',
+        'unzip',
+        'windowed',
+        'with_iter',
+        'UnequalIterablesError',
+        'zip_equal',
+        'zip_offset',
 ]
 
 _marker = object()
@@ -151,8 +151,8 @@ def first(iterable, default=_marker):
         # exception, and it's weird to explicitly catch StopIteration.
         if default is _marker:
             raise ValueError(
-                'first() was called on an empty iterable, and no '
-                'default value was provided.'
+                    'first() was called on an empty iterable, and no '
+                    'default value was provided.'
             )
         return default
 
@@ -179,8 +179,8 @@ def last(iterable, default=_marker):
     except IndexError:  # If the iterable was empty
         if default is _marker:
             raise ValueError(
-                'last() was called on an empty iterable, and no '
-                'default value was provided.'
+                    'last() was called on an empty iterable, and no '
+                    'default value was provided.'
             )
         return default
 
@@ -399,8 +399,8 @@ def collate(*iterables, **kwargs):
 
     """
     warnings.warn(
-        "collate is no longer part of more_itertools, use heapq.merge",
-        DeprecationWarning,
+            "collate is no longer part of more_itertools, use heapq.merge",
+            DeprecationWarning,
     )
     return merge(*iterables, **kwargs)
 
@@ -539,8 +539,8 @@ def one(iterable, too_short=None, too_long=None):
         pass
     else:
         msg = (
-            'Expected exactly one item in iterable, but got {!r}, {!r}, '
-            'and perhaps more.'.format(first_value, second_value)
+                'Expected exactly one item in iterable, but got {!r}, {!r}, '
+                'and perhaps more.'.format(first_value, second_value)
         )
         raise too_long or ValueError(msg)
 
@@ -569,6 +569,7 @@ def distinct_permutations(iterable, r=None):
         [(0, 1, 1), (1, 0, 1), (1, 1, 0)]
 
     """
+
     # Algorithm: https://w.wiki/Qai
     def _full(A):
         while True:
@@ -778,7 +779,7 @@ def substrings(iterable):
     # And the rest
     for n in range(2, item_count + 1):
         for i in range(item_count - n + 1):
-            yield seq[i : i + n]
+            yield seq[i: i + n]
 
 
 def substrings_indexes(seq, reverse=False):
@@ -811,7 +812,7 @@ def substrings_indexes(seq, reverse=False):
     if reverse:
         r = reversed(r)
     return (
-        (seq[i : i + L], i, i + L) for L in r for i in range(len(seq) - L + 1)
+            (seq[i: i + L], i, i + L) for L in r for i in range(len(seq) - L + 1)
     )
 
 
@@ -1013,9 +1014,9 @@ def collapse(iterable, base_type=None, levels=None):
 
     def walk(node, level):
         if (
-            ((levels is not None) and (level > levels))
-            or isinstance(node, (str, bytes))
-            or ((base_type is not None) and isinstance(node, base_type))
+                ((levels is not None) and (level > levels))
+                or isinstance(node, (str, bytes))
+                or ((base_type is not None) and isinstance(node, base_type))
         ):
             yield node
             return
@@ -1109,7 +1110,7 @@ def sliced(seq, n):
     For non-sliceable iterables, see :func:`chunked`.
 
     """
-    return takewhile(len, (seq[i : i + n] for i in count(0, n)))
+    return takewhile(len, (seq[i: i + n] for i in count(0, n)))
 
 
 def split_at(iterable, pred, maxsplit=-1, keep_separator=False):
@@ -1426,7 +1427,7 @@ def stagger(iterable, offsets=(-1, 0, 1), longest=False, fillvalue=None):
     children = tee(iterable, len(offsets))
 
     return zip_offset(
-        *children, offsets=offsets, longest=longest, fillvalue=fillvalue
+            *children, offsets=offsets, longest=longest, fillvalue=fillvalue
     )
 
 
@@ -1435,7 +1436,7 @@ class UnequalIterablesError(ValueError):
         msg = 'Iterables have different lengths'
         if details is not None:
             msg += (
-                ': index 0 has length {}; index {} has length {}'
+                    ': index 0 has length {}; index {} has length {}'
             ).format(*details)
 
         super().__init__(msg)
@@ -1554,11 +1555,11 @@ def sort_together(iterables, key_list=(0,), reverse=False):
 
     """
     return list(
-        zip(
-            *sorted(
-                zip(*iterables), key=itemgetter(*key_list), reverse=reverse
+            zip(
+                    *sorted(
+                            zip(*iterables), key=itemgetter(*key_list), reverse=reverse
+                    )
             )
-        )
     )
 
 
@@ -1921,8 +1922,8 @@ class numeric_range(abc.Sequence, abc.Hashable):
             return numeric_range(start, stop, step)
         else:
             raise TypeError(
-                'numeric range indices must be '
-                'integers or slices, not {}'.format(type(key).__name__))
+                    'numeric range indices must be '
+                    'integers or slices, not {}'.format(type(key).__name__))
 
     def __hash__(self):
         if self:
@@ -2299,7 +2300,7 @@ def consecutive_groups(iterable, ordering=lambda x: x):
 
     """
     for k, g in groupby(
-        enumerate(iterable), key=lambda x: x[0] - ordering(x[1])
+            enumerate(iterable), key=lambda x: x[0] - ordering(x[1])
     ):
         yield map(itemgetter(1), g)
 
@@ -2605,6 +2606,7 @@ def make_decorator(wrapping_func, result_index=0):
         '7'
 
     """
+
     # See https://sites.google.com/site/bbayles/index/decorator_factory for
     # notes on how this works.
     def decorator(*wrapping_args, **wrapping_kwargs):
@@ -2843,7 +2845,7 @@ def set_partitions(iterable, k=None):
     if k is not None:
         if k < 1:
             raise ValueError(
-                "Can't partition in a negative or zero number of groups"
+                    "Can't partition in a negative or zero number of groups"
             )
         elif k > n:
             return
@@ -2860,7 +2862,7 @@ def set_partitions(iterable, k=None):
                 yield [[e], *p]
             for p in set_partitions_helper(M, k):
                 for i in range(len(p)):
-                    yield p[:i] + [[e] + p[i]] + p[i + 1 :]
+                    yield p[:i] + [[e] + p[i]] + p[i + 1:]
 
     if k is None:
         for k in range(1, n + 1):
@@ -2932,8 +2934,8 @@ def only(iterable, default=None, too_long=None):
         pass
     else:
         msg = (
-            'Expected exactly one item in iterable, but got {!r}, {!r}, '
-            'and perhaps more.'.format(first_value, second_value)
+                'Expected exactly one item in iterable, but got {!r}, {!r}, '
+                'and perhaps more.'.format(first_value, second_value)
         )
         raise too_long or ValueError(msg)
 
@@ -2995,7 +2997,7 @@ def distinct_combinations(iterable, r):
     else:
         pool = tuple(iterable)
         for i, prefix in unique_everseen(enumerate(pool), key=itemgetter(1)):
-            for suffix in distinct_combinations(pool[i + 1 :], r - 1):
+            for suffix in distinct_combinations(pool[i + 1:], r - 1):
                 yield (prefix,) + suffix
 
 

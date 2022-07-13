@@ -42,7 +42,6 @@ from cherrypy.lib import cptools, httputil
 
 
 class Cache(object):
-
     """Base class for Cache implementations."""
 
     def get(self):
@@ -64,7 +63,6 @@ class Cache(object):
 
 # ------------------------------ Memory Cache ------------------------------- #
 class AntiStampedeCache(dict):
-
     """A storage system for cached items which reduces stampede collisions."""
 
     def wait(self, key, timeout=5, debug=False):
@@ -127,7 +125,6 @@ class AntiStampedeCache(dict):
 
 
 class MemoryCache(Cache):
-
     """An in-memory cache for varying response content.
 
     Each key in self.store is a URI, and each value is an AntiStampedeCache.
@@ -238,7 +235,7 @@ class MemoryCache(Cache):
         if uricache is None:
             uricache = AntiStampedeCache()
             uricache.selecting_headers = [
-                e.value for e in response.headers.elements('Vary')]
+                    e.value for e in response.headers.elements('Vary')]
             self.store[uri] = uricache
 
         if len(self.store) < self.maxobjects:
@@ -327,14 +324,14 @@ def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
             if directive == 'max-age':
                 if len(atoms) != 1 or not atoms[0].isdigit():
                     raise cherrypy.HTTPError(
-                        400, 'Invalid Cache-Control header')
+                            400, 'Invalid Cache-Control header')
                 max_age = int(atoms[0])
                 break
             elif directive == 'no-cache':
                 if debug:
                     cherrypy.log(
-                        'Ignoring cache due to Cache-Control: no-cache',
-                        'TOOLS.CACHING')
+                            'Ignoring cache due to Cache-Control: no-cache',
+                            'TOOLS.CACHING')
                 request.cached = False
                 request.cacheable = True
                 return False

@@ -119,6 +119,7 @@ def setup(req):
 
     def cherrypy_cleanup(data):
         engine.exit()
+
     try:
         # apache.register_cleanup wasn't available until 3.1.4.
         apache.register_cleanup(cherrypy_cleanup)
@@ -150,10 +151,10 @@ def handler(req):
         # Obtain a Request object from CherryPy
         local = req.connection.local_addr
         local = httputil.Host(
-            local[0], local[1], req.connection.local_host or '')
+                local[0], local[1], req.connection.local_host or '')
         remote = req.connection.remote_addr
         remote = httputil.Host(
-            remote[0], remote[1], req.connection.remote_host or '')
+                remote[0], remote[1], req.connection.remote_host or '')
 
         scheme = req.parsed_uri[0] or 'http'
         req.get_basic_auth_pw()
@@ -222,8 +223,8 @@ def handler(req):
                         if not recursive:
                             if ir.path in redirections:
                                 raise RuntimeError(
-                                    'InternalRedirector visited the same URL '
-                                    'twice: %r' % ir.path)
+                                        'InternalRedirector visited the same URL '
+                                        'twice: %r' % ir.path)
                             else:
                                 # Add the *previous* path_info + qs to
                                 # redirections.
@@ -238,8 +239,8 @@ def handler(req):
                         rfile = io.BytesIO()
 
                 send_response(
-                    req, response.output_status, response.header_list,
-                    response.body, response.stream)
+                        req, response.output_status, response.header_list,
+                        response.body, response.stream)
             finally:
                 app.release_serving()
     except Exception:
@@ -275,6 +276,7 @@ def send_response(req, status, headers, body, stream=False):
 try:
     import subprocess
 
+
     def popen(fullcmd):
         p = subprocess.Popen(fullcmd, shell=True,
                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -292,9 +294,9 @@ def read_process(cmd, args=''):
     try:
         firstline = pipeout.readline()
         cmd_not_found = re.search(
-            b'(not recognized|No such file|not found)',
-            firstline,
-            re.IGNORECASE
+                b'(not recognized|No such file|not found)',
+                firstline,
+                re.IGNORECASE
         )
         if cmd_not_found:
             raise IOError('%s must be on your system path.' % cmd)
@@ -305,7 +307,6 @@ def read_process(cmd, args=''):
 
 
 class ModPythonServer(object):
-
     template = """
 # Apache2 server configuration file for running CherryPy with mod_python.
 
