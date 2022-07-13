@@ -1,36 +1,26 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-'''
+"""
     plugin.audio.spotify
     Spotify Player for Kodi
     main_service.py
     Background service which launches the spotty binary and monitors the player
-'''
+"""
 
-from utils import log_msg, ADDON_ID, log_exception, get_token, Spotty, PROXY_PORT, \
-    parse_spotify_track
+from utils import log_msg, ADDON_ID, get_token, Spotty
 from player_monitor import ConnectPlayer
 from connect_daemon import ConnectDaemon
 from httpproxy import ProxyRunner
 import xbmc
 import xbmcaddon
 import xbmcgui
-import xbmcvfs
-import subprocess
-import os
-import sys
-import xbmcvfs
-import stat
 import spotipy
 import time
-import threading
-import _thread
-import io
 
 
 class MainService:
-    '''our main background service running the various threads'''
+    """our main background service running the various threads"""
     sp = None
     addon = None
     connect_player = None
@@ -64,7 +54,7 @@ class MainService:
         self.main_loop()
 
     def main_loop(self):
-        '''main loop which keeps our threads alive and refreshes the token'''
+        """main loop which keeps our threads alive and refreshes the token"""
         loop_timer = 5
         while not self.kodimonitor.waitForAbort(loop_timer):
             # monitor logged in user
@@ -75,13 +65,13 @@ class MainService:
                 self.win.clearProperty("spotify-cmd")
                 self.current_user = None
                 self.auth_token = None
-                self.switch_user(True)
+                self.switch_user()
             elif not self.auth_token:
                 # we do not yet have a token
                 log_msg("retrieving token...")
                 if self.renew_token():
                     xbmc.executebuiltin("Container.Refresh")
-            elif self.auth_token and self.auth_token['expires_at'] - 60 <= (int(time.time())):
+            elif self.auth_token and (self.auth_token['expires_at'] - 60) <= (int(time.time())):
                 # token needs refreshing !
                 log_msg("token needs to be refreshed")
                 self.renew_token()
@@ -99,7 +89,7 @@ class MainService:
         self.close()
 
     def close(self):
-        '''shutdown, perform cleanup'''
+        """shutdown, perform cleanup"""
         log_msg('Shutdown requested !', xbmc.LOGINFO)
         self.spotty.kill_spotty()
         self.proxy_runner.stop()
@@ -111,14 +101,14 @@ class MainService:
         del self.win
         log_msg('stopped', xbmc.LOGINFO)
 
-    def switch_user(self, restart_daemon=False):
-        '''called whenever we switch to a different user/credentials'''
+    def switch_user(self):
+        """called whenever we switch to a different user/credentials"""
         log_msg("login credentials changed")
         if self.renew_token():
             xbmc.executebuiltin("Container.Refresh")
 
     def get_username(self):
-        ''' get the current configured/setup username'''
+        """ get the current configured/setup username"""
         username = self.spotty.get_username()
         if not username:
             username = self.addon.getSetting("username")
@@ -132,14 +122,14 @@ class MainService:
         return username
 
     def stop_connect_daemon(self):
-        ''' stop spotty connect daemon if needed '''
+        """ stop spotty connect daemon if needed """
         if self.connect_daemon and self.connect_daemon.daemon_active:
             self.connect_daemon.stop()
             del self.connect_daemon
 
     def start_connect_daemon(self):
-        '''start experimental spotify connect daemon'''
-        if (not self.connect_daemon or not self.connect_daemon.daemon_active):
+        """start experimental spotify connect daemon"""
+        if not self.connect_daemon or not self.connect_daemon.daemon_active:
             if self.addon.getSetting("connect_player") == "true" and self.spotty.playback_supported:
                 if not self.connect_daemon:
                     self.connect_daemon = ConnectDaemon(self.spotty)
@@ -147,7 +137,7 @@ class MainService:
                     self.connect_daemon.start()
 
     def renew_token(self):
-        '''refresh/retrieve the token'''
+        """refresh/retrieve the token"""
         result = False
         auth_token = None
         username = self.get_username()
