@@ -200,10 +200,14 @@ class HostPort(str):
 
 def _main():
     parser = argparse.ArgumentParser()
-    global_lookup = lambda key: globals()[key]
+
+    def global_lookup(key):
+        return globals()[key]
+
     parser.add_argument('target', metavar='host:port', type=HostPort)
     parser.add_argument('func', metavar='state', type=global_lookup)
     parser.add_argument('-t', '--timeout', default=None, type=float)
+
     args = parser.parse_args()
     try:
         args.func(args.target.host, args.target.port, timeout=args.timeout)
