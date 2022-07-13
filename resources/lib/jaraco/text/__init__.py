@@ -116,7 +116,7 @@ class FoldedCase(six.text_type):
         return super(FoldedCase, self).lower().__contains__(other.lower())
 
     def in_(self, other):
-        "Does self appear in other?"
+        """Does self appear in other?"""
         return self in FoldedCase(other)
 
     # cache lower since it's likely to be called frequently.
@@ -321,9 +321,9 @@ class WordSet(tuple):
         return ''.join(self.capitalized())
 
     def headless_camel_case(self):
-        words = iter(self)
-        first = next(words).lower()
-        new_words = itertools.chain((first,), WordSet(words).camel_case())
+        wrds = iter(self)
+        first = next(wrds).lower()
+        new_words = itertools.chain((first,), WordSet(wrds).camel_case())
         return ''.join(new_words)
 
     def underscore_separated(self):

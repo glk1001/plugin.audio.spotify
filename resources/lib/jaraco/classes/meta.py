@@ -5,36 +5,6 @@ Some useful metaclasses.
 """
 
 
-class LeafClassesMeta(type):
-    """
-    A metaclass for classes that keeps track of all of them that
-    aren't base classes.
-
-    >>> Parent = LeafClassesMeta('MyParentClass', (), {})
-    >>> Parent in Parent._leaf_classes
-    True
-    >>> Child = LeafClassesMeta('MyChildClass', (Parent,), {})
-    >>> Child in Parent._leaf_classes
-    True
-    >>> Parent in Parent._leaf_classes
-    False
-
-    >>> Other = LeafClassesMeta('OtherClass', (), {})
-    >>> Parent in Other._leaf_classes
-    False
-    >>> len(Other._leaf_classes)
-    1
-    """
-
-    def __init__(cls, name, bases, attrs):
-        if not hasattr(cls, '_leaf_classes'):
-            cls._leaf_classes = set()
-        leaf_classes = getattr(cls, '_leaf_classes')
-        leaf_classes.add(cls)
-        # remove any base classes
-        leaf_classes -= set(bases)
-
-
 class TagRegistered(type):
     """
     As classes of this metaclass are created, they keep a registry in the

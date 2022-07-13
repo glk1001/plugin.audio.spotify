@@ -102,8 +102,10 @@ class DictFilter(object):
     False
     """
 
-    def __init__(self, dict, include_keys=[], include_pattern=None):
-        self.dict = dict
+    def __init__(self, dct, include_keys=None, include_pattern=None):
+        if include_keys is None:
+            include_keys = []
+        self.dict = dct
         self.specified_keys = set(include_keys)
         if include_pattern is not None:
             self.include_pattern = re.compile(include_pattern)
@@ -221,8 +223,10 @@ class RangeMap(dict):
     'not found'
     """
 
-    def __init__(self, source, sort_params={}, key_match_comparator=operator.le):
+    def __init__(self, source, sort_params=None, key_match_comparator=operator.le):
         dict.__init__(self, source)
+        if sort_params is None:
+            sort_params = {}
         self.sort_params = sort_params
         self.match = key_match_comparator
 
@@ -257,13 +261,13 @@ class RangeMap(dict):
 
     def bounds(self):
         sorted_keys = sorted(self.keys(), **self.sort_params)
-        return (sorted_keys[RangeMap.first_item], sorted_keys[RangeMap.last_item])
+        return sorted_keys[RangeMap.first_item], sorted_keys[RangeMap.last_item]
 
     # some special values for the RangeMap
     undefined_value = type(str('RangeValueUndefined'), (object,), {})()
 
     class Item(int):
-        "RangeMap Item"
+        """RangeMap Item"""
 
     first_item = Item(0)
     last_item = Item(-1)
@@ -505,9 +509,9 @@ class ItemsAsAttributes(object):
             #  but be careful not to lose the original exception context.
             noval = object()
 
-            def _safe_getitem(cont, key, missing_result):
+            def _safe_getitem(cont, ky, missing_result):
                 try:
-                    return cont[key]
+                    return cont[ky]
                 except KeyError:
                     return missing_result
 
@@ -522,7 +526,7 @@ class ItemsAsAttributes(object):
             raise
 
 
-def invert_map(map):
+def invert_map(mp):
     """
     Given a dictionary, return another dictionary with keys and values
     switched. If any of the values resolve to the same key, raises
@@ -538,8 +542,8 @@ def invert_map(map):
     ...
     ValueError: Key conflict in inverted mapping
     """
-    res = dict((v, k) for k, v in map.items())
-    if not len(res) == len(map):
+    res = dict((v, k) for k, v in mp.items())
+    if not len(res) == len(mp):
         raise ValueError('Key conflict in inverted mapping')
     return res
 
@@ -789,7 +793,7 @@ class FrozenDict(collections.abc.Mapping, collections.abc.Hashable):
         return self.__data.__eq__(other)
 
     def copy(self):
-        "Return a shallow copy of self"
+        """Return a shallow copy of self"""
         return copy.copy(self)
 
 

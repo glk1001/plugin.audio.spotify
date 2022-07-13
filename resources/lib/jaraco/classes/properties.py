@@ -30,14 +30,14 @@ class NonDataProperty:
         return self.fget(obj)
 
 
-class classproperty:
+class ClassProperty:
     """
     Like @property but applies at the class level.
 
 
-    >>> class X(metaclass=classproperty.Meta):
+    >>> class X(metaclass=ClassProperty.Meta):
     ...   val = None
-    ...   @classproperty
+    ...   @ClassProperty
     ...   def foo(cls):
     ...     return cls.val
     ...   @foo.setter
@@ -69,8 +69,8 @@ class classproperty:
     Attempting to set an attribute where no setter was defined
     results in an AttributeError:
 
-    >>> class GetOnly(metaclass=classproperty.Meta):
-    ...   @classproperty
+    >>> class GetOnly(metaclass=ClassProperty.Meta):
+    ...   @ClassProperty
     ...   def foo(cls):
     ...     return 'bar'
     >>> GetOnly.foo = 3
@@ -81,12 +81,12 @@ class classproperty:
     It is also possible to wrap a classmethod or staticmethod in
     a classproperty.
 
-    >>> class Static(metaclass=classproperty.Meta):
-    ...   @classproperty
+    >>> class Static(metaclass=ClassProperty.Meta):
+    ...   @ClassProperty
     ...   @classmethod
     ...   def foo(cls):
     ...     return 'foo'
-    ...   @classproperty
+    ...   @ClassProperty
     ...   @staticmethod
     ...   def bar():
     ...     return 'bar'
@@ -102,7 +102,7 @@ class classproperty:
 
     >>> class X:
     ...   val = None
-    ...   @classproperty
+    ...   @ClassProperty
     ...   def foo(cls):
     ...     return cls.val
     ...   @foo.setter
@@ -136,7 +136,7 @@ class classproperty:
     class Meta(type):
         def __setattr__(self, key, value):
             obj = self.__dict__.get(key, None)
-            if type(obj) is classproperty:
+            if type(obj) is ClassProperty:
                 return obj.__set__(self, value)
             return super().__setattr__(key, value)
 
@@ -151,7 +151,7 @@ class classproperty:
     def __set__(self, owner, value):
         if not self.fset:
             raise AttributeError("can't set attribute")
-        if type(owner) is not classproperty.Meta:
+        if type(owner) is not ClassProperty.Meta:
             owner = type(owner)
         return self.fset.__get__(None, owner)(value)
 

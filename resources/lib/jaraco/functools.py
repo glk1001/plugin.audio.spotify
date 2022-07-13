@@ -269,6 +269,7 @@ class Throttler:
             func = func.func
         self.func = func
         self.max_rate = max_rate
+        self.last_called = 0
         self.reset()
 
     def reset(self):
@@ -279,13 +280,13 @@ class Throttler:
         return self.func(*args, **kwargs)
 
     def _wait(self):
-        "ensure at least 1/max_rate seconds from last call"
+        """ensure at least 1/max_rate seconds from last call"""
         elapsed = time.time() - self.last_called
         must_wait = 1 / self.max_rate - elapsed
         time.sleep(max(0, must_wait))
         self.last_called = time.time()
 
-    def __get__(self, obj, type=None):
+    def __get__(self, obj, type_str=None):
         return first_invoke(self._wait, functools.partial(self.func, obj))
 
 
@@ -401,7 +402,8 @@ def assign_params(func, namespace):
     It even works on methods:
 
     >>> class Handler:
-    ...     def meth(self, arg):
+    ...     @staticmethod
+def meth( arg):
     ...         print(arg)
     >>> assign_params(Handler().meth, dict(arg='crystal', foo='clear'))()
     crystal
