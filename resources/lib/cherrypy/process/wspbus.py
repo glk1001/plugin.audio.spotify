@@ -112,7 +112,7 @@ class ChannelFailures(Exception):
 
     def __str__(self):
         """Render the list of errors, which happened in channel."""
-        exception_strings = map(repr, self.get_instances())
+        exception_strings = list(map(repr, self.get_instances()))
         return self.delimiter.join(exception_strings)
 
     __repr__ = __str__

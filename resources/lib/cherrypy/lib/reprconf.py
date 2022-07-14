@@ -61,18 +61,18 @@ class NamespaceSet(dict):
 
         # I chose __enter__ and __exit__ so someday this could be
         # rewritten using 'with' statement:
-        # for ns, handler in self.items():
+        # for ns, handler in list(self.items()):
         #     with handler as callable:
-        #         for k, v in ns_confs.get(ns, {}).items():
+        #         for k, v in list(ns_confs.get(ns, {}).items()):
         #             callable(k, v)
-        for ns, handler in self.items():
+        for ns, handler in list(self.items()):
             exit = getattr(handler, '__exit__', None)
             if exit:
                 callable = handler.__enter__()
                 no_exc = True
                 try:
                     try:
-                        for k, v in ns_confs.get(ns, {}).items():
+                        for k, v in list(ns_confs.get(ns, {}).items()):
                             callable(k, v)
                     except Exception:
                         # The exceptional case is handled here
@@ -87,7 +87,7 @@ class NamespaceSet(dict):
                     if no_exc and exit:
                         exit(None, None, None)
             else:
-                for k, v in ns_confs.get(ns, {}).items():
+                for k, v in list(ns_confs.get(ns, {}).items()):
                     handler(k, v)
 
     def __repr__(self):
@@ -258,7 +258,7 @@ class _Builder:
                     raise TypeError('Invalid argument for call.'
                                     'Must be a mapping object.')
                 # give preference to the keys set directly from arg=value
-                for k, v in rst.items():
+                for k, v in list(rst.items()):
                     if k not in kwargs:
                         kwargs[k] = v
             else:  # defined on the call as: arg=value
@@ -336,11 +336,11 @@ class _Builder:
     build_Constant = build_NameConstant  # Python 3.8 change
 
     def build_UnaryOp(self, o):
-        op, operand = map(self.build, [o.op, o.operand])
+        op, operand = list(map(self.build, [o.op, o.operand]))
         return op(operand)
 
     def build_BinOp(self, o):
-        left, op, right = map(self.build, [o.left, o.op, o.right])
+        left, op, right = list(map(self.build, [o.left, o.op, o.right]))
         return op(left, right)
 
     def build_Add(self, o):

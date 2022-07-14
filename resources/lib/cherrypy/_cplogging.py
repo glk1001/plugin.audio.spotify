@@ -260,7 +260,7 @@ class LogManager(object):
                  'i': request.unique_id,
                  'z': LazyRfc3339UtcTime(),
                  }
-        for k, v in atoms.items():
+        for k, v in list(atoms.items()):
             if not isinstance(v, str):
                 v = str(v)
             v = v.replace('"', '\\"').encode('utf8')

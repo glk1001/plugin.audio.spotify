@@ -138,7 +138,7 @@ def merge(base, other):
     _if_filename_register_autoreload(other)
 
     # Load other into base
-    for section, value_map in reprconf.Parser.load(other).items():
+    for section, value_map in list(reprconf.Parser.load(other).items()):
         if not isinstance(value_map, dict):
             raise ValueError(
                     'Application config must include section headers, but the '
@@ -288,7 +288,7 @@ Config.namespaces['engine'] = _engine_namespace_handler
 def _tree_namespace_handler(k, v):
     """Namespace handler for the 'tree' config namespace."""
     if isinstance(v, dict):
-        for script_name, app in v.items():
+        for script_name, app in list(v.items()):
             cherrypy.tree.graft(app, script_name)
             msg = 'Mounted: %s on %s' % (app, script_name or '/')
             cherrypy.engine.log(msg)

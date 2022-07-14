@@ -414,7 +414,7 @@ def session_auth(**kwargs):
             if not k.startswith('__')
     )
     sa = SessionAuth()
-    for k, v in kwargs.items():
+    for k, v in list(kwargs.items()):
         setattr(sa, k, v)
     return sa.run()
 
@@ -438,7 +438,7 @@ def log_hooks(debug=False):
     # Sort by the standard points if possible.
     from cherrypy import _cprequest
     points = _cprequest.hookpoints
-    for k in request.hooks.keys():
+    for k in list(request.hooks.keys()):
         if k not in points:
             points.append(k)
 

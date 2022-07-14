@@ -39,7 +39,7 @@ class NativeGateway(cheroot.server.Gateway):
                 qs = tonative(req.qs or '')
                 headers = (
                         (tonative(h), tonative(v))
-                        for h, v in req.inheaders.items()
+                        for h, v in list(req.inheaders.items())
                 )
                 rfile = req.rfile
                 prev = None

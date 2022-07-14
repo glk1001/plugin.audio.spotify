@@ -205,7 +205,7 @@ if not hasattr(logging, 'statistics'):
 def extrapolate_statistics(scope):
     """Return an extrapolated copy of the given scope."""
     c = {}
-    for k, v in scope.copy().items():
+    for k, v in list(scope.copy().items()):
         if isinstance(v, dict):
             v = extrapolate_statistics(v)
         elif isinstance(v, (list, tuple)):
@@ -289,8 +289,8 @@ class ByteCountWrapper(object):
     def __iter__(self):
         return self
 
-    def next(self):
-        data = self.rfile.next()
+    def __next__(self):
+        data = self.rfile.get_next()
         self.bytes_read += len(data)
         return data
 
@@ -608,7 +608,7 @@ table.stats2 th {
         """Return ([headers], [rows]) for the given collection."""
         # E.g., the 'Requests' dict.
         headers = []
-        vals = v.values()
+        vals = list(v.values())
         for record in vals:
             for k3 in record:
                 format = formatting.get(k3, missing)

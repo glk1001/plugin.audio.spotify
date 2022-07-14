@@ -491,7 +491,7 @@ def get_error_page(status, **kwargs):
     if kwargs.get('version') is None:
         kwargs['version'] = cherrypy.__version__
 
-    for k, v in kwargs.items():
+    for k, v in list(kwargs.items()):
         if v is None:
             kwargs[k] = ''
         else:

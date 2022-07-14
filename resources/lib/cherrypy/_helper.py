@@ -145,7 +145,7 @@ def popargs(*args, **kwargs):
 
     handler = None
     handler_call = False
-    for k, v in kwargs.items():
+    for k, v in list(kwargs.items()):
         if k == 'handler':
             handler = v
         else:

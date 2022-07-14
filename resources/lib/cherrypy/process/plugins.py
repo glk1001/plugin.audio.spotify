@@ -87,7 +87,7 @@ class SignalHandler(object):
     signals = {}
     """A map from signal numbers to names."""
 
-    for k, v in vars(_signal).items():
+    for k, v in list(vars(_signal).items()):
         if k.startswith('SIG') and not k.startswith('SIG_'):
             signals[v] = k
     del k, v
@@ -136,7 +136,7 @@ class SignalHandler(object):
 
     def subscribe(self):
         """Subscribe self.handlers to signals."""
-        for sig, func in self.handlers.items():
+        for sig, func in list(self.handlers.items()):
             try:
                 self.set_handler(sig, func)
             except ValueError:
@@ -144,7 +144,7 @@ class SignalHandler(object):
 
     def unsubscribe(self):
         """Unsubscribe self.handlers from signals."""
-        for signum, handler in self._previous_handlers.items():
+        for signum, handler in list(self._previous_handlers.items()):
             signame = self.signals[signum]
 
             if handler is None:
@@ -622,12 +622,12 @@ class Autoreloader(Monitor):
 
     def sysfiles(self):
         """Return a Set of sys.modules filenames to monitor."""
-        search_mod_names = filter(
+        search_mod_names = list(filter(
                 re.compile(self.match).match,
                 list(sys.modules.keys()),
-        )
-        mods = map(sys.modules.get, search_mod_names)
-        return set(filter(None, map(self._file_for_module, mods)))
+        ))
+        mods = list(map(sys.modules.get, search_mod_names))
+        return set([f for f in map(self._file_for_module, mods) if f])
 
     @classmethod
     def _file_for_module(cls, module):
@@ -743,7 +743,7 @@ class ThreadManager(SimplePlugin):
 
     def stop(self):
         """Release all threads and run all 'stop_thread' listeners."""
-        for thread_ident, i in self.threads.items():
+        for thread_ident, i in list(self.threads.items()):
             self.bus.publish('stop_thread', i)
         self.threads.clear()
 

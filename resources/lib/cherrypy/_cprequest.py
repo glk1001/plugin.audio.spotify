@@ -69,7 +69,7 @@ class Hook(object):
                 % (cls.__module__, cls.__name__, self.callback,
                    self.failsafe, self.priority,
                    ', '.join(['%s=%r' % (k, v)
-                              for k, v in self.kwargs.items()])))
+                              for k, v in list(self.kwargs.items())])))
 
 
 class HookMap(dict):
@@ -109,7 +109,7 @@ class HookMap(dict):
                 cherrypy.HTTPRedirect,
                 cherrypy.InternalRedirect,
         )
-        safe = filter(operator.attrgetter('failsafe'), hooks)
+        safe = list(filter(operator.attrgetter('failsafe'), hooks))
         for hook in hooks:
             try:
                 hook()
@@ -125,7 +125,7 @@ class HookMap(dict):
         newmap = self.__class__()
         # We can't just use 'update' because we want copies of the
         # mutable values (each is a list) as well.
-        for k, v in self.items():
+        for k, v in list(self.items()):
             newmap[k] = v[:]
         return newmap
 

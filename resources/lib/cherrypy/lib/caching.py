@@ -193,7 +193,7 @@ class MemoryCache(Cache):
             now = time.time()
             # Must make a copy of expirations so it doesn't change size
             # during iteration
-            for expiration_time, objects in self.expirations.copy().items():
+            for expiration_time, objects in list(self.expirations.copy().items()):
                 if expiration_time <= now:
                     for obj_size, uri, sel_header_values in objects:
                         try:
@@ -292,7 +292,7 @@ def get(invalid_methods=('POST', 'PUT', 'DELETE'), debug=False, **kwargs):
         cherrypy._cache = kwargs.pop('cache_class', MemoryCache)()
 
         # Take all remaining kwargs and set them on the Cache object.
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             setattr(cherrypy._cache, k, v)
         cherrypy._cache.debug = debug
 

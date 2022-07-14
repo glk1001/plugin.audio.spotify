@@ -141,7 +141,7 @@ class HeaderElement(object):
         return self.value < other.value
 
     def __str__(self):
-        p = [';%s=%s' % (k, v) for k, v in self.params.items()]
+        p = [';%s=%s' % (k, v) for k, v in list(self.params.items())]
         return str('%s%s' % (self.value, ''.join(p)))
 
     def __bytes__(self):
@@ -409,7 +409,7 @@ if str == bytes:
             [chr(i) for i in range(32)]) + chr(127)
 else:
     header_translate_table = None
-    header_translate_deletechars = bytes(range(32)) + bytes([127])
+    header_translate_deletechars = bytes(list(range(32))) + bytes([127])
 
 
 class HeaderMap(CaseInsensitiveDict):
@@ -441,7 +441,7 @@ class HeaderMap(CaseInsensitiveDict):
 
     def output(self):
         """Transform self into a list of (name, value) tuples."""
-        return list(self.encode_header_items(self.items()))
+        return list(self.encode_header_items(list(self.items())))
 
     @classmethod
     def encode_header_items(cls, header_items):

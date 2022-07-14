@@ -43,7 +43,7 @@ def json_in(content_type=[ntou('application/json'), ntou('text/javascript')],
     if force:
         if debug:
             cherrypy.log('Removing body processors %s' %
-                         repr(request.body.processors.keys()), 'TOOLS.JSON_IN')
+                         repr(list(request.body.processors.keys())), 'TOOLS.JSON_IN')
         request.body.processors.clear()
         request.body.default_proc = cherrypy.HTTPError(
                 415, 'Expected an entity of content type %s' %

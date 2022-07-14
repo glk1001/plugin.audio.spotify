@@ -43,9 +43,6 @@ class UTF8StreamEncoder:
     def __iter__(self):
         return self
 
-    def next(self):
-        return self.__next__()
-
     def __next__(self):
         res = next(self._iterator)
         if isinstance(res, str):
@@ -72,7 +69,7 @@ class ResponseEncoder:
     debug = False
 
     def __init__(self, **kwargs):
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             setattr(self, k, v)
 
         self.attempted_charsets = set()

@@ -72,7 +72,7 @@ class ReferrerTree(object):
         if isinstance(obj, dict):
             return '{' + ', '.join(['%s: %s' % (self._format(k, descend=False),
                                                 self._format(v, descend=False))
-                                    for k, v in obj.items()]) + '}'
+                                    for k, v in list(obj.items())]) + '}'
         elif isinstance(obj, list):
             return '[' + ', '.join([self._format(item, descend=False)
                                     for item in obj]) + ']'
@@ -175,7 +175,7 @@ class GCRoot(object):
                 trash[type(x)] = trash.get(type(x), 0) + 1
             if trash:
                 output.insert(0, '\n%s unreachable objects:' % unreachable)
-                trash = [(v, k) for k, v in trash.items()]
+                trash = [(v, k) for k, v in list(trash.items())]
                 trash.sort()
                 for pair in trash:
                     output.append('    ' + repr(pair))

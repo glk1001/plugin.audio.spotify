@@ -176,7 +176,7 @@ def process_urlencoded(entity):
 
     # Now that all values have been successfully parsed and decoded,
     # apply them to the entity.params dict.
-    for key, value in params.items():
+    for key, value in list(params.items()):
         if key in entity.params:
             if not isinstance(entity.params[key], list):
                 entity.params[key] = [entity.params[key]]
@@ -491,7 +491,7 @@ class Entity(object):
             raise StopIteration
         return line
 
-    def next(self):
+    def get_next(self):
         return self.__next__()
 
     def read_into_file(self, fp_out=None):
@@ -981,7 +981,7 @@ class RequestBody(Entity):
         # Body params should also be a part of the request_params
         # add them in here.
         request_params = self.request_params
-        for key, value in self.params.items():
+        for key, value in list(self.params.items()):
             if key in request_params:
                 if not isinstance(request_params[key], list):
                     request_params[key] = [request_params[key]]
