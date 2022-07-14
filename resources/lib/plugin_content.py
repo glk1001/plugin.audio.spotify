@@ -145,7 +145,7 @@ class PluginContent:
 
     def build_url(self, query):
         query_encoded = {}
-        for key, value in query.items():
+        for key, value in list(query.items()):
             if isinstance(key, str):
                 key = key.encode("utf-8")
             if isinstance(value, str):
@@ -1664,7 +1664,7 @@ class PluginContent:
         if listtotal > self.offset + self.limit:
             params["offset"] = self.offset + self.limit
             url = "plugin://plugin.audio.spotify/"
-            for key, value in params.items():
+            for key, value in list(params.items()):
                 if key == "action":
                     url += "?%s=%s" % (key, value[0])
                 elif key == "offset":
@@ -1815,6 +1815,6 @@ class SpotifyRadioPlayer(xbmc.Player):
         xbmc.Player.onPlayBackStopped(self)
 
     def _add_to_playlist(self):
-        track = self._source.next()
+        track = next(self._source)
         url, li = parse_spotify_track(track)
         self._pl.add(url, li)
