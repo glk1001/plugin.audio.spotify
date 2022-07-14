@@ -55,7 +55,7 @@ class Parser:
 
     def parse(self, target):
         self.target = target
-        results = tuple(filter(None, map(self._parse, self.formats)))
+        results = tuple([f for f in map(self._parse, self.formats) if f])
         del self.target
         if not results:
             tmpl = "No format strings matched the target {target}."
@@ -162,7 +162,7 @@ class DatetimeConstructor:
             except KeyError:
                 pass
             if kwargs:
-                first_key = kwargs.keys()[0]
+                first_key = list(kwargs.keys())[0]
                 tmpl = (
                         "{first_key} is an invalid keyword "
                         "argument for this function."
@@ -190,7 +190,7 @@ class DatetimeConstructor:
                 'year', 'month', 'day', 'hour', 'minute', 'second',
                 'microsecond', 'tzinfo',
         )
-        attrs = map(lambda a: getattr(source, a), dtattrs)
+        attrs = [getattr(source, a) for a in dtattrs]
         return datetime.datetime(*attrs)
 
     @staticmethod
@@ -256,7 +256,7 @@ def datetime_mod(dt, period, start=None):
     def get_time_delta_microseconds(td):
         return (td.days * seconds_per_day + td.seconds) * 1000000 + td.microseconds
 
-    delta, period = map(get_time_delta_microseconds, (delta, period))
+    delta, period = list(map(get_time_delta_microseconds, (delta, period)))
     offset = datetime.timedelta(microseconds=delta % period)
     # the result is the original specified time minus the offset
     result = dt - offset
@@ -379,7 +379,7 @@ def get_date_format_string(period):
             seconds_per_minute,
             secs_per_second,
     )
-    mods = list(map(lambda interval: file_period_secs % interval, intervals))
+    mods = list([file_period_secs % interval for interval in intervals])
     format_pieces = format_pieces[: mods.index(0) + 1]
     return ''.join(format_pieces)
 
@@ -397,7 +397,7 @@ def divide_timedelta_float(td, divisor):
     """
     # td is comprised of days, seconds, microseconds
     dsm = [getattr(td, attr) for attr in ('days', 'seconds', 'microseconds')]
-    dsm = map(lambda elem: elem / divisor, dsm)
+    dsm = [elem / divisor for elem in dsm]
     return datetime.timedelta(*dsm)
 
 
