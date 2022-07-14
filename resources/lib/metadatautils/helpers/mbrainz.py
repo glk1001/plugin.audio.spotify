@@ -7,16 +7,13 @@
     Get metadata from musicbrainz
 """
 
-import os, sys
+import sys
 
-if sys.version_info.major == 3:
-    from .utils import ADDON_ID, get_compare_string, log_msg
-else:
-    from utils import ADDON_ID, get_compare_string, log_msg
-from simplecache import use_cache
 import xbmcvfs
 import xbmcaddon
 import xbmc
+from .utils import ADDON_ID, get_compare_string, log_msg
+from simplecache import use_cache
 
 
 class MusicBrainz(object):

@@ -7,23 +7,19 @@
     Get metadata for Kodi PVR programs
 """
 
-import os, sys
+import os
+import sys
+import re
+from difflib import SequenceMatcher as SM
+from datetime import timedelta
+from operator import itemgetter
 
-if sys.version_info.major == 3:
-    from .utils import get_clean_image, DialogSelect, log_msg, extend_dict, ADDON_ID, \
-        download_artwork, normalize_string
-    from urllib.parse import quote_plus
-else:
-    from utils import get_clean_image, DialogSelect, log_msg, extend_dict, ADDON_ID, \
-        download_artwork, normalize_string
-    from urllib import quote_plus
 import xbmc
 import xbmcgui
 import xbmcvfs
-from difflib import SequenceMatcher as SM
-from operator import itemgetter
-import re
-from datetime import timedelta
+from .utils import get_clean_image, DialogSelect, log_msg, extend_dict, ADDON_ID, \
+    download_artwork, normalize_string
+from urllib.parse import quote_plus
 
 
 class PvrArtwork(object):
@@ -571,11 +567,7 @@ class PvrArtwork(object):
                 details = kodi_items[0]
                 details["media_type"] = "movie"
         if details:
-            if sys.version_info.major == 3:
-                for artkey, artvalue in details["art"].items():
-                    details["art"][artkey] = get_clean_image(artvalue)
-            else:
-                for artkey, artvalue in details["art"].iteritems():
-                    details["art"][artkey] = get_clean_image(artvalue)
+            for artkey, artvalue in list(details["art"].items()):
+                details["art"][artkey] = get_clean_image(artvalue)
             # todo: check extrafanart ?
         return details

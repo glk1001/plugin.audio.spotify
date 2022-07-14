@@ -7,21 +7,17 @@
     Get metadata from The Movie Database
 """
 
-import os, sys
-
-if sys.version_info.major == 3:
-    from .utils import get_json, KODI_LANGUAGE, try_parse_int, DialogSelect, get_compare_string, \
-        int_with_commas, ADDON_ID
-else:
-    from utils import get_json, KODI_LANGUAGE, try_parse_int, DialogSelect, get_compare_string, \
-        int_with_commas, ADDON_ID
-from difflib import SequenceMatcher as SM
-from simplecache import use_cache
+import sys
+import datetime
 from operator import itemgetter
+from difflib import SequenceMatcher as SM
+
 import xbmc
 import xbmcgui
 import xbmcaddon
-import datetime
+from .utils import get_json, KODI_LANGUAGE, try_parse_int, DialogSelect, get_compare_string, \
+    int_with_commas, ADDON_ID
+from simplecache import use_cache
 
 
 class Tmdb(object):
@@ -225,10 +221,7 @@ class Tmdb(object):
             # without personal (or addon specific) api key = rate limiting and older info from cache
             rate_limit = ("themoviedb.org", 5)
             expiration = datetime.timedelta(days=60)
-        if sys.version_info.major == 3:
-            cachestr = "tmdb.%s" % params.values()
-        else:
-            cachestr = "tmdb.%s" % params.itervalues()
+        cachestr = "tmdb.%s" % list(params.values())
         cache = self.cache.get(cachestr)
         if cache:
             # data obtained from cache

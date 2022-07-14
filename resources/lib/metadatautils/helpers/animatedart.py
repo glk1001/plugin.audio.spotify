@@ -3,18 +3,15 @@
 
 """Retrieve animated artwork for kodi movies"""
 
-import os, sys
+import sys
+from datetime import timedelta
 
-if sys.version_info.major == 3:
-    from .utils import get_json, DialogSelect, log_msg, ADDON_ID
-else:
-    from utils import get_json, DialogSelect, log_msg, ADDON_ID
+from .utils import get_json, DialogSelect, log_msg, ADDON_ID
 import xbmc
 import xbmcvfs
 import xbmcgui
 import xbmcaddon
 from simplecache import use_cache
-from datetime import timedelta
 
 
 class AnimatedArt(object):
@@ -25,10 +22,7 @@ class AnimatedArt(object):
         """Initialize - optionaly provide SimpleCache and KodiDb object"""
 
         if not kodidb:
-            if sys.version_info.major == 3:
-                from .kodidb import KodiDb
-            else:
-                from kodidb import KodiDb
+            from .kodidb import KodiDb
             self.kodidb = KodiDb()
         else:
             self.kodidb = kodidb

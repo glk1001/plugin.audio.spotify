@@ -7,14 +7,11 @@
     Get channellogos from kodidb or logosdb
 """
 
-import os, sys
+import sys
 
-if sys.version_info.major == 3:
-    from .utils import get_json, get_clean_image
-else:
-    from utils import get_json, get_clean_image
 import xbmc
 import xbmcvfs
+from .utils import get_clean_image
 
 
 class ChannelLogos(object):
@@ -23,10 +20,7 @@ class ChannelLogos(object):
     def __init__(self, kodidb=None):
         """Initialize - optionaly provide KodiDb object"""
         if not kodidb:
-            if sys.version_info.major == 3:
-                from .kodidb import KodiDb
-            else:
-                from kodidb import KodiDb
+            from .kodidb import KodiDb
             self.kodidb = KodiDb()
         else:
             self.kodidb = kodidb
