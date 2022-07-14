@@ -86,7 +86,7 @@ def tabulate(function, start=0):
         [9, 4, 1, 0]
 
     """
-    return map(function, count(start))
+    return list(map(function, count(start)))
 
 
 def tail(n, iterable):
@@ -259,7 +259,7 @@ def pairwise(iterable):
     """
     a, b = tee(iterable)
     next(b, None)
-    return zip(a, b)
+    return list(zip(a, b))
 
 
 def grouper(iterable, n, fillvalue=None):
@@ -387,7 +387,7 @@ def unique_everseen(iterable, key=None):
     seenlist = []
     seenlist_add = seenlist.append
     iterable, keys = tee(iterable)
-    for element, k in zip(iterable, map(key, keys) if key else keys):
+    for element, k in zip(iterable, list(map(key, keys)) if key else keys):
         try:
             if k not in seenset:
                 seenset_add(k)
@@ -407,7 +407,7 @@ def unique_justseen(iterable, key=None):
         ['A', 'B', 'C', 'A', 'D']
 
     """
-    return map(next, map(operator.itemgetter(1), groupby(iterable, key)))
+    return list(map(next, list(map(operator.itemgetter(1), groupby(iterable, key)))))
 
 
 def iter_except(func, exception, first=None):
@@ -448,7 +448,7 @@ def first_true(iterable, default=None, pred=None):
         'missing'
 
     """
-    return next(filter(pred, iterable), default)
+    return next(list(filter(pred, iterable), default))
 
 
 def random_product(*args, repeat=1):
@@ -501,7 +501,7 @@ def random_combination(iterable, r):
     """
     pool = tuple(iterable)
     n = len(pool)
-    indices = sorted(sample(range(n), r))
+    indices = sorted(sample(list(range(n)), r))
     return tuple(pool[i] for i in indices)
 
 

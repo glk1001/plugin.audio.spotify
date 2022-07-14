@@ -41,24 +41,24 @@ class TakeTests(TestCase):
 
     def test_simple_take(self):
         """Test basic usage"""
-        t = mi.take(5, range(10))
+        t = mi.take(5, list(range(10)))
         self.assertEqual(t, [0, 1, 2, 3, 4])
 
     def test_null_take(self):
         """Check the null case"""
-        t = mi.take(0, range(10))
+        t = mi.take(0, list(range(10)))
         self.assertEqual(t, [])
 
     def test_negative_take(self):
         """Make sure taking negative items results in a ValueError"""
-        self.assertRaises(ValueError, lambda: mi.take(-3, range(10)))
+        self.assertRaises(ValueError, lambda: mi.take(-3, list(range(10))))
 
     def test_take_too_much(self):
         """Taking more than an iterator has remaining should return what the
         iterator has remaining.
 
         """
-        t = mi.take(10, range(5))
+        t = mi.take(10, list(range(5)))
         self.assertEqual(t, [0, 1, 2, 3, 4])
 
 
@@ -68,7 +68,7 @@ class TabulateTests(TestCase):
     def test_simple_tabulate(self):
         """Test the happy path"""
         t = mi.tabulate(lambda x: x)
-        f = tuple([next(t) for _ in range(3)])
+        f = tuple([next(t) for _ in list(range(3))])
         self.assertEqual(f, (0, 1, 2))
 
     def test_count(self):
@@ -103,24 +103,24 @@ class ConsumeTests(TestCase):
 
     def test_sanity(self):
         """Test basic functionality"""
-        r = (x for x in range(10))
+        r = (x for x in list(range(10)))
         mi.consume(r, 3)
         self.assertEqual(3, next(r))
 
     def test_null_consume(self):
         """Check the null case"""
-        r = (x for x in range(10))
+        r = (x for x in list(range(10)))
         mi.consume(r, 0)
         self.assertEqual(0, next(r))
 
     def test_negative_consume(self):
         """Check that negative consumsion throws an error"""
-        r = (x for x in range(10))
+        r = (x for x in list(range(10)))
         self.assertRaises(ValueError, lambda: mi.consume(r, -1))
 
     def test_total_consume(self):
         """Check that iterator is totally consumed by default"""
-        r = (x for x in range(10))
+        r = (x for x in list(range(10)))
         mi.consume(r)
         self.assertRaises(StopIteration, lambda: next(r))
 
@@ -130,18 +130,18 @@ class NthTests(TestCase):
 
     def test_basic(self):
         """Make sure the nth item is returned"""
-        rng = range(10)
+        rng = list(range(10))
         for i, v in enumerate(rng):
             self.assertEqual(mi.nth(rng, i), v)
 
     def test_default(self):
         """Ensure a default value is returned when nth item not found"""
-        rng = range(3)
+        rng = list(range(3))
         self.assertEqual(mi.nth(rng, 100, "zebra"), "zebra")
 
     def test_negative_item_raises(self):
         """Ensure asking for a negative item raises an exception"""
-        self.assertRaises(ValueError, lambda: mi.nth(range(10), -3))
+        self.assertRaises(ValueError, lambda: mi.nth(list(range(10)), -3))
 
 
 class AllEqualTests(TestCase):
@@ -183,7 +183,7 @@ class QuantifyTests(TestCase):
 
     def test_custom_predicate(self):
         """Ensure non-default predicates return as expected"""
-        q = range(10)
+        q = list(range(10))
         self.assertEqual(mi.quantify(q, lambda x: x % 2 == 0), 5)
 
 
@@ -192,7 +192,7 @@ class PadnoneTests(TestCase):
 
     def test_happy_path(self):
         """wrapper iterator should return None indefinitely"""
-        r = range(2)
+        r = list(range(2))
         p = mi.padnone(r)
         self.assertEqual([0, 1, None, None], [next(p) for _ in range(4)])
 
@@ -211,12 +211,12 @@ class NcyclesTests(TestCase):
 
     def test_null_case(self):
         """asking for 0 cycles should return an empty iterator"""
-        n = mi.ncycles(range(100), 0)
+        n = mi.ncycles(list(range(100)), 0)
         self.assertRaises(StopIteration, lambda: next(n))
 
     def test_pathalogical_case(self):
         """asking for negative cycles should return an empty iterator"""
-        n = mi.ncycles(range(100), -10)
+        n = mi.ncycles(list(range(100)), -10)
         self.assertRaises(StopIteration, lambda: next(n))
 
 
@@ -315,14 +315,14 @@ class RoundrobinTests(TestCase):
     def test_even_groups(self):
         """Ensure ordered output from evenly populated iterables"""
         self.assertEqual(
-                list(mi.roundrobin('ABC', [1, 2, 3], range(3))),
+                list(mi.roundrobin('ABC', [1, 2, 3], list(range(3)))),
                 ['A', 1, 0, 'B', 2, 1, 'C', 3, 2]
         )
 
     def test_uneven_groups(self):
         """Ensure ordered output from unevenly populated iterables"""
         self.assertEqual(
-                list(mi.roundrobin('ABCD', [1, 2], range(0))),
+                list(mi.roundrobin('ABCD', [1, 2], list(range(0)))),
                 ['A', 1, 'B', 2, 'C', 'D']
         )
 
@@ -332,13 +332,13 @@ class PartitionTests(TestCase):
 
     def test_bool(self):
         """Test when pred() returns a boolean"""
-        lesser, greater = mi.partition(lambda x: x > 5, range(10))
+        lesser, greater = mi.partition(lambda x: x > 5, list(range(10)))
         self.assertEqual(list(lesser), [0, 1, 2, 3, 4, 5])
         self.assertEqual(list(greater), [6, 7, 8, 9])
 
     def test_arbitrary(self):
         """Test when pred() returns an integer"""
-        divisibles, remainders = mi.partition(lambda x: x % 3, range(10))
+        divisibles, remainders = mi.partition(lambda x: x % 3, list(range(10)))
         self.assertEqual(list(divisibles), [0, 3, 6, 9])
         self.assertEqual(list(remainders), [1, 2, 4, 5, 7, 8])
 
@@ -432,7 +432,7 @@ class FirstTrueTests(TestCase):
 
     def test_something_true(self):
         """Test with no keywords"""
-        self.assertEqual(mi.first_true(range(10)), 1)
+        self.assertEqual(mi.first_true(list(range(10))), 1)
 
     def test_nothing_true(self):
         """Test default return value."""
@@ -469,7 +469,7 @@ class RandomProductTests(TestCase):
         """
         nums = [1, 2, 3]
         lets = ['a', 'b', 'c']
-        n, m = zip(*[mi.random_product(nums, lets) for _ in range(100)])
+        n, m = list(zip(*[mi.random_product(nums, lets) for _ in list(range(100))]))
         n, m = set(n), set(m)
         self.assertEqual(n, set(nums))
         self.assertEqual(m, set(lets))
@@ -502,7 +502,7 @@ class RandomPermutationTests(TestCase):
         we fix a seed value just to be sure.
 
         """
-        i = range(15)
+        i = list(range(15))
         r = mi.random_permutation(i)
         self.assertEqual(set(i), set(r))
         if i == r:
@@ -519,10 +519,10 @@ class RandomPermutationTests(TestCase):
         show up in the resulting output. Using a random seed will fix that.
 
         """
-        items = range(15)
+        items = list(range(15))
         item_set = set(items)
         all_items = set()
-        for _ in range(100):
+        for _ in list(range(100)):
             permutation = mi.random_permutation(items, 5)
             self.assertEqual(len(permutation), 5)
             permutation_set = set(permutation)
@@ -537,17 +537,17 @@ class RandomCombinationTests(TestCase):
     def test_psuedorandomness(self):
         """ensure different subsets of the iterable get returned over many
         samplings of random combinations"""
-        items = range(15)
+        items = list(range(15))
         all_items = set()
-        for _ in range(50):
+        for _ in list(range(50)):
             combination = mi.random_combination(items, 5)
             all_items |= set(combination)
         self.assertEqual(all_items, set(items))
 
     def test_no_replacement(self):
         """ensure that elements are sampled without replacement"""
-        items = range(15)
-        for _ in range(50):
+        items = list(range(15))
+        for _ in list(range(50)):
             combination = mi.random_combination(items, len(items))
             self.assertEqual(len(combination), len(set(combination)))
         self.assertRaises(
@@ -560,7 +560,7 @@ class RandomCombinationWithReplacementTests(TestCase):
 
     def test_replacement(self):
         """ensure that elements are sampled with replacement"""
-        items = range(5)
+        items = list(range(5))
         combo = mi.random_combination_with_replacement(items, len(items) * 2)
         self.assertEqual(2 * len(items), len(combo))
         if len(set(combo)) == len(combo):
@@ -569,9 +569,9 @@ class RandomCombinationWithReplacementTests(TestCase):
     def test_pseudorandomness(self):
         """ensure different subsets of the iterable get returned over many
         samplings of random combinations"""
-        items = range(15)
+        items = list(range(15))
         all_items = set()
-        for _ in range(50):
+        for _ in list(range(50)):
             combination = mi.random_combination_with_replacement(items, 5)
             all_items |= set(combination)
         self.assertEqual(all_items, set(items))
@@ -586,7 +586,7 @@ class NthCombinationTests(TestCase):
             self.assertEqual(actual, expected)
 
     def test_long(self):
-        actual = mi.nth_combination(range(180), 4, 2000000)
+        actual = mi.nth_combination(list(range(180)), 4, 2000000)
         expected = (2, 12, 35, 126)
         self.assertEqual(actual, expected)
 

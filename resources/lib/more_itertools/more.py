@@ -450,7 +450,7 @@ def ilen(iterable):
     # fastest of the known implementations at the time of writing.
     # See GitHub tracker: #236, #230.
     counter = count()
-    deque(zip(iterable, counter), maxlen=0)
+    deque(list(zip(iterable, counter)), maxlen=0)
     return next(counter)
 
 
@@ -598,8 +598,8 @@ def distinct_permutations(iterable, r=None):
     def _partial(A, r):
         # Split A into the first r items and the last r items
         head, tail = A[:r], A[r:]
-        right_head_indexes = range(r - 1, -1, -1)
-        left_tail_indexes = range(len(tail))
+        right_head_indexes = list(range(r - 1, -1, -1))
+        left_tail_indexes = list(range(len(tail)))
 
         while True:
             # Yield the permutation we have
@@ -700,7 +700,7 @@ def unique_to_each(*iterables):
 
     """
     pool = [list(it) for it in iterables]
-    counts = Counter(chain.from_iterable(map(set, pool)))
+    counts = Counter(chain.from_iterable(list(map(set, pool))))
     uniques = {element for element in counts if counts[element] == 1}
     return [list(filter(uniques.__contains__, it)) for it in pool]
 
@@ -808,7 +808,7 @@ def substrings_indexes(seq, reverse=False):
 
 
     """
-    r = range(1, len(seq) + 1)
+    r = list(range(1, len(seq) + 1))
     if reverse:
         r = reversed(r)
     return (
@@ -903,7 +903,7 @@ class Bucket:
             if self._validator(item_value):
                 self._cache[item_value].append(item)
 
-        yield from self._cache.keys()
+        yield from list(self._cache.keys())
 
     def __getitem__(self, value):
         if not self._validator(value):
@@ -966,7 +966,7 @@ def interleave(*iterables):
     exhausted, see :func:`interleave_longest`.
 
     """
-    return chain.from_iterable(zip(*iterables))
+    return chain.from_iterable(list(zip(*iterables)))
 
 
 def interleave_longest(*iterables):
@@ -1469,7 +1469,7 @@ def zip_equal(*iterables):
                 break
         else:
             # If we didn't break out, we can use the built-in zip.
-            return zip(*iterables)
+            return list(zip(*iterables))
 
         # If we did break out, there was a mismatch.
         raise UnequalIterablesError(details=(first_size, i, size))
@@ -1523,7 +1523,7 @@ def zip_offset(*iterables, offsets, longest=False, fillvalue=None):
     if longest:
         return zip_longest(*staggered, fillvalue=fillvalue)
 
-    return zip(*staggered)
+    return list(zip(*staggered))
 
 
 def sort_together(iterables, key_list=(0,), reverse=False):
@@ -1609,7 +1609,7 @@ def unzip(iterable):
 
         return getter
 
-    return tuple(map(itemgetter(i), it) for i, it in enumerate(iterables))
+    return tuple(list(map(itemgetter(i), it)) for i, it in enumerate(iterables))
 
 
 def divide(n, iterable):
@@ -1750,9 +1750,9 @@ def adjacent(predicate, iterable, distance=1):
 
     i1, i2 = tee(iterable)
     padding = [False] * distance
-    selected = chain(padding, map(predicate, i1), padding)
-    adjacent_to_selected = map(any, windowed(selected, 2 * distance + 1))
-    return zip(adjacent_to_selected, i2)
+    selected = chain(padding, list(map(predicate, i1)), padding)
+    adjacent_to_selected = list(map(any, windowed(selected, 2 * distance + 1)))
+    return list(zip(adjacent_to_selected, i2))
 
 
 def groupby_transform(iterable, keyfunc=None, valuefunc=None):
@@ -1790,7 +1790,7 @@ def groupby_transform(iterable, keyfunc=None, valuefunc=None):
 
     """
     res = groupby(iterable, keyfunc)
-    return ((k, map(valuefunc, g)) for k, g in res) if valuefunc else res
+    return ((k, list(map(valuefunc, g))) for k, g in res) if valuefunc else res
 
 
 class NumericRange(abc.Sequence, abc.Hashable):
@@ -2010,7 +2010,7 @@ def count_cycle(iterable, n=None):
     iterable = tuple(iterable)
     if not iterable:
         return iter(())
-    counter = count() if n is None else range(n)
+    counter = count() if n is None else list(range(n))
     return ((i, item) for i in counter for item in iterable)
 
 
@@ -2053,7 +2053,7 @@ def locate(iterable, pred=bool, window_size=None):
 
     """
     if window_size is None:
-        return compress(count(), map(pred, iterable))
+        return compress(count(), list(map(pred, iterable)))
 
     if window_size < 1:
         raise ValueError('window size must be at least 1')
@@ -2302,7 +2302,7 @@ def consecutive_groups(iterable, ordering=lambda x: x):
     for k, g in groupby(
             enumerate(iterable), key=lambda x: x[0] - ordering(x[1])
     ):
-        yield map(itemgetter(1), g)
+        yield list(map(itemgetter(1), g))
 
 
 def difference(iterable, func=sub, *, initial=None):
@@ -2353,7 +2353,7 @@ def difference(iterable, func=sub, *, initial=None):
     if initial is not None:
         first = []
 
-    return chain(first, starmap(func, zip(b, a)))
+    return chain(first, starmap(func, list(zip(b, a))))
 
 
 class SequenceView(Sequence):
@@ -2545,7 +2545,7 @@ def exactly_n(iterable, n, predicate=bool):
     so avoid calling it on infinite iterables.
 
     """
-    return len(take(n + 1, filter(predicate, iterable))) == n
+    return len(take(n + 1, list(filter(predicate, iterable)))) == n
 
 
 def circular_shifts(iterable):
@@ -2684,7 +2684,7 @@ def map_reduce(iterable, keyfunc, valuefunc=None, reducefunc=None):
         ret[key].append(value)
 
     if reducefunc is not None:
-        for key, value_list in ret.items():
+        for key, value_list in list(ret.items()):
             ret[key] = reducefunc(value_list)
 
     ret.default_factory = None
@@ -2811,7 +2811,7 @@ def partitions(iterable):
     """
     sequence = list(iterable)
     n = len(sequence)
-    for i in powerset(range(1, n)):
+    for i in powerset(list(range(1, n))):
         yield [sequence[i:j] for i, j in zip((0,) + i, i + (n,))]
 
 
@@ -3083,7 +3083,7 @@ def _sample_weighted(iterable, k, weights):
 
     # Fill up the reservoir (collection of samples) with the first `k`
     # weight-keys and elements, then heapify the list.
-    reservoir = take(k, zip(weight_keys, iterable))
+    reservoir = take(k, list(zip(weight_keys, iterable)))
     heapify(reservoir)
 
     # The number of jumps before changing the reservoir is a random variable

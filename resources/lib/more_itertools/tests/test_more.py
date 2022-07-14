@@ -37,7 +37,7 @@ class CollateTests(TestCase):
 
     def test_default(self):
         """Test with the default `key` function."""
-        iterables = [range(4), range(7), range(3, 6)]
+        iterables = [list(range(4)), list(range(7)), list(range(3, 6))]
         self.assertEqual(
                 sorted(reduce(list.__add__, [list(it) for it in iterables])),
                 list(mi.collate(*iterables))
@@ -45,7 +45,7 @@ class CollateTests(TestCase):
 
     def test_key(self):
         """Test using a custom `key` function."""
-        iterables = [range(5, 0, -1), range(4, 0, -1)]
+        iterables = [list(range(5, 0, -1)), list(range(4, 0, -1))]
         actual = sorted(
                 reduce(list.__add__, [list(it) for it in iterables]), reverse=True
         )
@@ -58,11 +58,11 @@ class CollateTests(TestCase):
 
     def test_one(self):
         """Work when only 1 iterable is passed."""
-        self.assertEqual([0, 1], list(mi.collate(range(2))))
+        self.assertEqual([0, 1], list(mi.collate(list(range(2)))))
 
     def test_reverse(self):
         """Test the `reverse` kwarg."""
-        iterables = [range(4, 0, -1), range(7, 0, -1), range(3, 6, -1)]
+        iterables = [list(range(4, 0, -1)), list(range(7, 0, -1)), list(range(3, 6, -1))]
 
         actual = sorted(
                 reduce(list.__add__, [list(it) for it in iterables]), reverse=True
@@ -139,7 +139,7 @@ class IterOnlyRange:
 
     def __iter__(self):
         """Works same as range()."""
-        return iter(range(self.n))
+        return iter(list(range(self.n)))
 
 
 class LastTests(TestCase):
@@ -186,7 +186,7 @@ class LastTests(TestCase):
     def test_dict(self):
         """last(dic) and last(dic.keys()) should return same result."""
         dic = {'a': 1, 'b': 2, 'c': 3}
-        self.assertEqual(mi.last(dic), mi.last(dic.keys()))
+        self.assertEqual(mi.last(dic), mi.last(list(dic.keys())))
 
     def test_ordereddict(self):
         """last(dic) should return the last key."""
@@ -220,7 +220,7 @@ class PeekableTests(TestCase):
         p = mi.peekable([])
         self.assertFalse(p)
 
-        p = mi.peekable(range(3))
+        p = mi.peekable(list(range(3)))
         self.assertTrue(p)
 
     def test_simple_peeking(self):
@@ -228,7 +228,7 @@ class PeekableTests(TestCase):
         iterator, respectively.
 
         """
-        p = mi.peekable(range(10))
+        p = mi.peekable(list(range(10)))
         self.assertEqual(next(p), 0)
         self.assertEqual(p.peek(), 1)
         self.assertEqual(next(p), 1)
@@ -324,7 +324,7 @@ class PeekableTests(TestCase):
 
     def test_prepend(self):
         """Tests intersperesed ``prepend()`` and ``next()`` calls"""
-        it = mi.peekable(range(2))
+        it = mi.peekable(list(range(2)))
         actual = []
 
         # Test prepend() before next()
@@ -344,7 +344,7 @@ class PeekableTests(TestCase):
 
     def test_multi_prepend(self):
         """Tests prepending multiple items and getting them in proper order"""
-        it = mi.peekable(range(5))
+        it = mi.peekable(list(range(5)))
         actual = [next(it), next(it)]
         it.prepend(10, 11, 12)
         it.prepend(20, 21)
@@ -363,7 +363,7 @@ class PeekableTests(TestCase):
     def test_prepend_truthiness(self):
         """Tests that ``__bool__()`` or ``__nonzero__()`` works properly
         with ``prepend()``"""
-        it = mi.peekable(range(5))
+        it = mi.peekable(list(range(5)))
         self.assertTrue(it)
         actual = list(it)
         self.assertFalse(it)
@@ -377,7 +377,7 @@ class PeekableTests(TestCase):
     def test_multi_prepend_peek(self):
         """Tests prepending multiple elements and getting them in reverse order
         while peeking"""
-        it = mi.peekable(range(5))
+        it = mi.peekable(list(range(5)))
         actual = [next(it), next(it)]
         self.assertEqual(it.peek(), 2)
         it.prepend(10, 11, 12)
@@ -391,7 +391,7 @@ class PeekableTests(TestCase):
 
     def test_prepend_after_stop(self):
         """Test resuming iteration after a previous exhaustion"""
-        it = mi.peekable(range(3))
+        it = mi.peekable(list(range(3)))
         self.assertEqual(list(it), [0, 1, 2])
         self.assertRaises(StopIteration, lambda: next(it))
         it.prepend(10)
@@ -437,27 +437,27 @@ class PeekableTests(TestCase):
 
     def test_prepend_iterable(self):
         """Tests prepending from an iterable"""
-        it = mi.peekable(range(5))
+        it = mi.peekable(list(range(5)))
         # Don't directly use the range() object to avoid any range-specific
         # optimizations
         it.prepend(*(x for x in range(5)))
         actual = list(it)
-        expected = list(chain(range(5), range(5)))
+        expected = list(chain(list(range(5)), list(range(5))))
         self.assertEqual(actual, expected)
 
     def test_prepend_many(self):
         """Tests that prepending a huge number of elements works"""
-        it = mi.peekable(range(5))
+        it = mi.peekable(list(range(5)))
         # Don't directly use the range() object to avoid any range-specific
         # optimizations
         it.prepend(*(x for x in range(20000)))
         actual = list(it)
-        expected = list(chain(range(20000), range(5)))
+        expected = list(chain(list(range(20000)), list(range(5))))
         self.assertEqual(actual, expected)
 
     def test_prepend_reversed(self):
         """Tests prepending from a reversed iterable"""
-        it = mi.peekable(range(3))
+        it = mi.peekable(list(range(3)))
         it.prepend(*reversed((10, 11, 12)))
         actual = list(it)
         expected = [12, 11, 10, 0, 1, 2]
@@ -516,7 +516,7 @@ class IlenTests(TestCase):
         """Sanity-checks for ``ilen()``."""
         # Non-empty
         self.assertEqual(
-                mi.ilen(filter(lambda x: x % 10 == 0, range(101))), 11
+                mi.ilen([x for x in range(101) if x % 10 == 0]), 11
         )
 
         # Empty
@@ -840,7 +840,7 @@ class SideEffectTests(TestCase):
         def func(arg):
             counter[0] += 1
 
-        result = list(mi.side_effect(func, range(10)))
+        result = list(mi.side_effect(func, list(range(10))))
         self.assertEqual(result, list(range(10)))
         self.assertEqual(counter[0], 10)
 
@@ -851,7 +851,7 @@ class SideEffectTests(TestCase):
         def func(arg):
             counter[0] += 1
 
-        result = list(mi.side_effect(func, range(10), 2))
+        result = list(mi.side_effect(func, list(range(10)), 2))
         self.assertEqual(result, list(range(10)))
         self.assertEqual(counter[0], 5)
 
@@ -1316,7 +1316,7 @@ class TestAlwaysIterable(TestCase):
 
 class AdjacentTests(TestCase):
     def test_typical(self):
-        actual = list(mi.adjacent(lambda x: x % 5 == 0, range(10)))
+        actual = list(mi.adjacent(lambda x: x % 5 == 0, list(range(10))))
         expected = [(True, 0), (True, 1), (False, 2), (False, 3), (True, 4),
                     (True, 5), (True, 6), (False, 7), (False, 8), (False, 9)]
         self.assertEqual(actual, expected)
@@ -1338,25 +1338,25 @@ class AdjacentTests(TestCase):
     def test_consecutive_true(self):
         """Test that when the predicate matches multiple consecutive elements
         it doesn't repeat elements in the output"""
-        actual = list(mi.adjacent(lambda x: x % 5 < 2, range(10)))
+        actual = list(mi.adjacent(lambda x: x % 5 < 2, list(range(10))))
         expected = [(True, 0), (True, 1), (True, 2), (False, 3), (True, 4),
                     (True, 5), (True, 6), (True, 7), (False, 8), (False, 9)]
         self.assertEqual(actual, expected)
 
     def test_distance(self):
-        actual = list(mi.adjacent(lambda x: x % 5 == 0, range(10), distance=2))
+        actual = list(mi.adjacent(lambda x: x % 5 == 0, list(range(10)), distance=2))
         expected = [(True, 0), (True, 1), (True, 2), (True, 3), (True, 4),
                     (True, 5), (True, 6), (True, 7), (False, 8), (False, 9)]
         self.assertEqual(actual, expected)
 
-        actual = list(mi.adjacent(lambda x: x % 5 == 0, range(10), distance=3))
+        actual = list(mi.adjacent(lambda x: x % 5 == 0, list(range(10)), distance=3))
         expected = [(True, 0), (True, 1), (True, 2), (True, 3), (True, 4),
                     (True, 5), (True, 6), (True, 7), (True, 8), (False, 9)]
         self.assertEqual(actual, expected)
 
     def test_large_distance(self):
         """Test distance larger than the length of the iterable"""
-        iterable = range(10)
+        iterable = list(range(10))
         actual = list(mi.adjacent(lambda x: x % 5 == 4, iterable, distance=20))
         expected = list(zip(repeat(True), iterable))
         self.assertEqual(actual, expected)
@@ -1367,25 +1367,25 @@ class AdjacentTests(TestCase):
 
     def test_zero_distance(self):
         """Test that adjacent() reduces to zip+map when distance is 0"""
-        iterable = range(1000)
+        iterable = list(range(1000))
         predicate = lambda x: x % 4 == 2
         actual = mi.adjacent(predicate, iterable, 0)
-        expected = zip(map(predicate, iterable), iterable)
+        expected = list(zip(list(map(predicate, iterable)), iterable))
         self.assertTrue(all(a == e for a, e in zip(actual, expected)))
 
     def test_negative_distance(self):
         """Test that adjacent() raises an error with negative distance"""
         pred = lambda x: x
         self.assertRaises(
-                ValueError, lambda: mi.adjacent(pred, range(1000), -1)
+                ValueError, lambda: mi.adjacent(pred, list(range(1000)), -1)
         )
         self.assertRaises(
-                ValueError, lambda: mi.adjacent(pred, range(10), -10)
+                ValueError, lambda: mi.adjacent(pred, list(range(10)), -10)
         )
 
     def test_grouping(self):
         """Test interaction of adjacent() with groupby_transform()"""
-        iterable = mi.adjacent(lambda x: x % 5 == 0, range(10))
+        iterable = mi.adjacent(lambda x: x % 5 == 0, list(range(10)))
         grouper = mi.groupby_transform(iterable, itemgetter(0), itemgetter(1))
         actual = [(k, list(g)) for k, g in grouper]
         expected = [
@@ -1399,7 +1399,7 @@ class AdjacentTests(TestCase):
     def test_call_once(self):
         """Test that the predicate is only called once per item."""
         already_seen = set()
-        iterable = range(10)
+        iterable = list(range(10))
 
         def predicate(item):
             self.assertNotIn(item, already_seen)
@@ -1448,16 +1448,16 @@ class GroupByTransformTests(TestCase):
         self.assertEqual(actual, expected)
 
         # and now for something a little different
-        d = dict(zip(range(10), 'abcdefghij'))
+        d = dict(list(zip(list(range(10)), 'abcdefghij')))
         grouper = mi.groupby_transform(
-                range(10), keyfunc=lambda x: x // 5, valuefunc=d.get
+                list(range(10)), keyfunc=lambda x: x // 5, valuefunc=d.get
         )
         actual = [(k, ''.join(g)) for k, g in grouper]
         expected = [(0, 'abcde'), (1, 'fghij')]
         self.assertEqual(actual, expected)
 
     def test_no_valuefunc(self):
-        iterable = range(1000)
+        iterable = list(range(1000))
 
         def key(x):
             return x // 5
@@ -1724,7 +1724,7 @@ class SeekableTest(TestCase):
         self.assertEqual(list(s), iterable)  # No difference in result
 
     def test_elements(self):
-        iterable = map(str, count())
+        iterable = list(map(str, count()))
 
         s = mi.seekable(iterable)
         mi.take(10, s)
@@ -1816,7 +1816,7 @@ class ExactlyNTests(TestCase):
         self.assertTrue(mi.exactly_n([True, False, True], 2))
         self.assertTrue(mi.exactly_n([1, 1, 1, 0], 3))
         self.assertTrue(mi.exactly_n([False, False], 0))
-        self.assertTrue(mi.exactly_n(range(100), 10, lambda x: x < 10))
+        self.assertTrue(mi.exactly_n(list(range(100)), 10, lambda x: x < 10))
 
     def test_false(self):
         """Iterable does not have ``n`` ``True`` elements"""
@@ -1836,8 +1836,8 @@ class AlwaysReversibleTests(TestCase):
     """Tests for ``always_reversible()``"""
 
     def test_regular_reversed(self):
-        self.assertEqual(list(reversed(range(10))),
-                         list(mi.always_reversible(range(10))))
+        self.assertEqual(list(reversed(list(range(10)))),
+                         list(mi.always_reversible(list(range(10)))))
         self.assertEqual(list(reversed([1, 2, 3])),
                          list(mi.always_reversible([1, 2, 3])))
         self.assertEqual(reversed([1, 2, 3]).__class__,
@@ -1846,10 +1846,10 @@ class AlwaysReversibleTests(TestCase):
     def test_nonseq_reversed(self):
         # Create a non-reversible generator from a sequence
         with self.assertRaises(TypeError):
-            reversed(x for x in range(10))
+            reversed(x for x in list(range(10)))
 
-        self.assertEqual(list(reversed(range(10))),
-                         list(mi.always_reversible(x for x in range(10))))
+        self.assertEqual(list(reversed(list(range(10)))),
+                         list(mi.always_reversible(x for x in list(range(10)))))
         self.assertEqual(list(reversed([1, 2, 3])),
                          list(mi.always_reversible(x for x in [1, 2, 3])))
         self.assertNotEqual(reversed((1, 2)).__class__,
@@ -1864,7 +1864,7 @@ class CircularShiftsTests(TestCase):
     def test_simple_circular_shifts(self):
         # test the a simple iterator case
         self.assertEqual(
-                mi.circular_shifts(range(4)),
+                mi.circular_shifts(list(range(4))),
                 [(0, 1, 2, 3), (1, 2, 3, 0), (2, 3, 0, 1), (3, 0, 1, 2)]
         )
 
@@ -1885,7 +1885,7 @@ class MakeDecoratorTests(TestCase):
             self.assertEqual(arg_1, 'arg_1')
             self.assertEqual(arg_2, 'arg_2')
             self.assertEqual(kwarg_1, 'kwarg_1')
-            return map(str, count())
+            return list(map(str, count()))
 
         it = user_function('arg_1', 'arg_2', kwarg_1='kwarg_1')
         actual = list(it)
@@ -1898,7 +1898,7 @@ class MakeDecoratorTests(TestCase):
             iterable = args[1]
             self.assertEqual(args[2], 'arg_2')
             self.assertEqual(kwargs['kwarg_1'], 'kwarg_1')
-            return map(str, iterable)
+            return list(map(str, iterable))
 
         stringifier = mi.make_decorator(stringify, result_index=1)
 
@@ -1916,7 +1916,7 @@ class MakeDecoratorTests(TestCase):
 
         @seeker()
         def user_function(n):
-            return map(str, range(n))
+            return list(map(str, list(range(n))))
 
         it = user_function(5)
         self.assertEqual(list(it), ['0', '1', '2', '3', '4'])
@@ -1927,7 +1927,7 @@ class MakeDecoratorTests(TestCase):
 
 class MapReduceTests(TestCase):
     def test_default(self):
-        iterable = (str(x) for x in range(5))
+        iterable = (str(x) for x in list(range(5)))
         keyfunc = lambda x: int(x) // 2
         actual = sorted(mi.map_reduce(iterable, keyfunc).items())
         expected = [(0, ['0', '1']), (1, ['2', '3']), (2, ['4'])]
@@ -1982,7 +1982,7 @@ class RlocateTests(TestCase):
             self.assertEqual(actual, expected)
 
     def test_efficient_reversal(self):
-        iterable = range(10 ** 10)  # Is efficiently reversible
+        iterable = list(range(10 ** 10))  # Is efficiently reversible
         target = 10 ** 10 - 2
         pred = lambda x: x == target  # Find-able from the right
         actual = next(mi.rlocate(iterable, pred))
@@ -2014,7 +2014,7 @@ class RlocateTests(TestCase):
 
 class ReplaceTests(TestCase):
     def test_basic(self):
-        iterable = range(10)
+        iterable = list(range(10))
         pred = lambda x: x % 2 == 0
         substitutes = []
         actual = list(mi.replace(iterable, pred, substitutes))
@@ -2022,7 +2022,7 @@ class ReplaceTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_count(self):
-        iterable = range(10)
+        iterable = list(range(10))
         pred = lambda x: x % 2 == 0
         substitutes = []
         actual = list(mi.replace(iterable, pred, substitutes, count=4))
@@ -2030,7 +2030,7 @@ class ReplaceTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_window_size(self):
-        iterable = range(10)
+        iterable = list(range(10))
         pred = lambda *args: args == (0, 1, 2)
         substitutes = []
         actual = list(mi.replace(iterable, pred, substitutes, window_size=3))
@@ -2038,7 +2038,7 @@ class ReplaceTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_window_size_end(self):
-        iterable = range(10)
+        iterable = list(range(10))
         pred = lambda *args: args == (7, 8, 9)
         substitutes = []
         actual = list(mi.replace(iterable, pred, substitutes, window_size=3))
@@ -2046,7 +2046,7 @@ class ReplaceTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_window_size_count(self):
-        iterable = range(10)
+        iterable = list(range(10))
         pred = lambda *args: (args == (0, 1, 2)) or (args == (7, 8, 9))
         substitutes = []
         actual = list(
@@ -2056,7 +2056,7 @@ class ReplaceTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_window_size_large(self):
-        iterable = range(4)
+        iterable = list(range(4))
         pred = lambda a, b, c, d, e: True
         substitutes = [5, 6, 7]
         actual = list(mi.replace(iterable, pred, substitutes, window_size=5))
@@ -2064,14 +2064,14 @@ class ReplaceTests(TestCase):
         self.assertEqual(actual, expected)
 
     def test_window_size_zero(self):
-        iterable = range(10)
+        iterable = list(range(10))
         pred = lambda *args: True
         substitutes = []
         with self.assertRaises(ValueError):
             list(mi.replace(iterable, pred, substitutes, window_size=0))
 
     def test_iterable_substitutes(self):
-        iterable = range(5)
+        iterable = list(range(5))
         pred = lambda x: x % 2 == 0
         substitutes = iter('__')
         actual = list(mi.replace(iterable, pred, substitutes))
