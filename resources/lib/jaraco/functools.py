@@ -311,7 +311,7 @@ def retry_call(func, cleanup=lambda: None, retries=0, trap=()):
     exception. On the final attempt, allow any exceptions
     to propagate.
     """
-    attempts = itertools.count() if retries == float('inf') else range(retries)
+    attempts = itertools.count() if retries == float('inf') else list(range(retries))
     for attempt in attempts:
         try:
             return func()
@@ -409,7 +409,7 @@ def meth( arg):
     crystal
     """
     sig = inspect.signature(func)
-    params = sig.parameters.keys()
+    params = list(sig.parameters.keys())
     call_ns = {k: namespace[k] for k in params if k in namespace}
     return functools.partial(func, **call_ns)
 

@@ -431,7 +431,7 @@ class Stripper:
 
     def __init__(self, prefix, lines):
         self.prefix = prefix
-        self.lines = map(self, lines)
+        self.lines = list(map(self, lines))
 
     @classmethod
     def strip_prefix(cls, lines):

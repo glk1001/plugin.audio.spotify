@@ -114,7 +114,7 @@ class DictFilter(object):
             self.pattern_keys = set()
 
     def get_pattern_keys(self):
-        keys = filter(self.include_pattern.match, self.dict.keys())
+        keys = list(filter(self.include_pattern.match, list(self.dict.keys())))
         return set(keys)
 
     pattern_keys = NonDataProperty(get_pattern_keys)
@@ -124,10 +124,10 @@ class DictFilter(object):
         return self.specified_keys.union(self.pattern_keys)
 
     def keys(self):
-        return self.include_keys.intersection(self.dict.keys())
+        return list(self.include_keys.intersection(list(self.dict.keys())))
 
     def values(self):
-        return map(self.dict.get, self.keys())
+        return list(map(self.dict.get, list(self.keys())))
 
     def __getitem__(self, i):
         if i not in self.include_keys:
@@ -135,9 +135,9 @@ class DictFilter(object):
         return self.dict[i]
 
     def items(self):
-        keys = self.keys()
-        values = map(self.dict.get, keys)
-        return zip(keys, values)
+        keys = list(self.keys())
+        values = list(map(self.dict.get, keys))
+        return list(zip(keys, values))
 
     def __eq__(self, other):
         return dict(self) == other
@@ -156,7 +156,7 @@ def dict_map(function, dictionary):
     >>> d == dict(a=2,b=3)
     True
     """
-    return dict((key, function(value)) for key, value in dictionary.items())
+    return dict((key, function(value)) for key, value in list(dictionary.items()))
 
 
 class RangeMap(dict):
@@ -231,7 +231,7 @@ class RangeMap(dict):
         self.match = key_match_comparator
 
     def __getitem__(self, item):
-        sorted_keys = sorted(self.keys(), **self.sort_params)
+        sorted_keys = sorted(list(self.keys()), **self.sort_params)
         if isinstance(item, RangeMap.Item):
             result = self.__getitem__(sorted_keys[item])
         else:
@@ -260,7 +260,7 @@ class RangeMap(dict):
         raise KeyError(item)
 
     def bounds(self):
-        sorted_keys = sorted(self.keys(), **self.sort_params)
+        sorted_keys = sorted(list(self.keys()), **self.sort_params)
         return sorted_keys[RangeMap.first_item], sorted_keys[RangeMap.last_item]
 
     # some special values for the RangeMap
@@ -297,7 +297,7 @@ def sorted_items(d, key=__identity, reverse=False):
     def pairkey_key(item):
         return key(item[0])
 
-    return sorted(d.items(), key=pairkey_key, reverse=reverse)
+    return sorted(list(d.items()), key=pairkey_key, reverse=reverse)
 
 
 class KeyTransformingDict(dict):
@@ -315,7 +315,7 @@ class KeyTransformingDict(dict):
         # build a dictionary using the default constructs
         d = dict(*args, **kargs)
         # build this dictionary using transformed keys.
-        for item in d.items():
+        for item in list(d.items()):
             self.__setitem__(*item)
 
     def __setitem__(self, key, val):
@@ -352,7 +352,7 @@ class KeyTransformingDict(dict):
         Raise KeyError if the key isn't found.
         """
         try:
-            return next(e_key for e_key in self.keys() if e_key == key)
+            return next(e_key for e_key in list(self.keys()) if e_key == key)
         except StopIteration:
             raise KeyError(key)
 
@@ -542,7 +542,7 @@ def invert_map(mp):
     ...
     ValueError: Key conflict in inverted mapping
     """
-    res = dict((v, k) for k, v in mp.items())
+    res = dict((v, k) for k, v in list(mp.items()))
     if not len(res) == len(mp):
         raise ValueError('Key conflict in inverted mapping')
     return res
@@ -594,7 +594,7 @@ class DictStack(list, collections.abc.Mapping):
     """
 
     def keys(self):
-        return list(set(itertools.chain.from_iterable(c.keys() for c in self)))
+        return list(set(itertools.chain.from_iterable(list(c.keys()) for c in self)))
 
     def __getitem__(self, key):
         for scope in reversed(self):
@@ -700,7 +700,7 @@ class BijectiveMap(dict):
         # build a dictionary using the default constructs
         d = dict(*args, **kwargs)
         # build this dictionary using transformed keys.
-        for item in d.items():
+        for item in list(d.items()):
             self.__setitem__(*item)
 
 
@@ -835,7 +835,7 @@ class Enumeration(ItemsAsAttributes, BijectiveMap):
             names = names.split()
         if codes is None:
             codes = itertools.count()
-        super(Enumeration, self).__init__(zip(names, codes))
+        super(Enumeration, self).__init__(list(zip(names, codes)))
 
     @property
     def names(self):
