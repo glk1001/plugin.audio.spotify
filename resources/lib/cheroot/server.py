@@ -1616,28 +1616,28 @@ class HTTPServer:
                 'Threads Idle': lambda s: getattr(self.requests, 'idle', None),
                 'Socket Errors': 0,
                 'Requests': lambda s: (not s['Enabled']) and -1 or sum(
-                        (w['Requests'](w) for w in s['Worker Threads'].values()), 0,
+                        (w['Requests'](w) for w in list(s['Worker Threads'].values())), 0,
                 ),
                 'Bytes Read': lambda s: (not s['Enabled']) and -1 or sum(
-                        (w['Bytes Read'](w) for w in s['Worker Threads'].values()), 0,
+                        (w['Bytes Read'](w) for w in list(s['Worker Threads'].values())), 0,
                 ),
                 'Bytes Written': lambda s: (not s['Enabled']) and -1 or sum(
-                        (w['Bytes Written'](w) for w in s['Worker Threads'].values()),
+                        (w['Bytes Written'](w) for w in list(s['Worker Threads'].values())),
                         0,
                 ),
                 'Work Time': lambda s: (not s['Enabled']) and -1 or sum(
-                        (w['Work Time'](w) for w in s['Worker Threads'].values()), 0,
+                        (w['Work Time'](w) for w in list(s['Worker Threads'].values())), 0,
                 ),
                 'Read Throughput': lambda s: (not s['Enabled']) and -1 or sum(
                         (
                                 w['Bytes Read'](w) / (w['Work Time'](w) or 1e-6)
-                                for w in s['Worker Threads'].values()
+                                for w in list(s['Worker Threads'].values())
                         ), 0,
                 ),
                 'Write Throughput': lambda s: (not s['Enabled']) and -1 or sum(
                         (
                                 w['Bytes Written'](w) / (w['Work Time'](w) or 1e-6)
-                                for w in s['Worker Threads'].values()
+                                for w in list(s['Worker Threads'].values())
                         ), 0,
                 ),
                 'Worker Threads': {},

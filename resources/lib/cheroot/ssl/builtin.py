@@ -403,7 +403,7 @@ class BuiltinSSLAdapter(Adapter):
             return {}
 
         env = {}
-        for cert_key, env_var in self.CERT_KEY_TO_ENV.items():
+        for cert_key, env_var in list(self.CERT_KEY_TO_ENV.items()):
             key = '%s_%s' % (env_prefix, env_var)
             value = parsed_cert.get(cert_key)
             if env_var == 'SAN':
@@ -472,7 +472,7 @@ class BuiltinSSLAdapter(Adapter):
         env = {
                 env_prefix: ','.join(dn),
         }
-        for attr_code, values in dn_attrs.items():
+        for attr_code, values in list(dn_attrs.items()):
             env['%s_%s' % (env_prefix, attr_code)] = ','.join(values)
             if len(values) == 1:
                 continue

@@ -84,7 +84,7 @@ class _ThreadsafeSelector:
         """Retrieve connections registered with the selector."""
         with self._lock:
             mapping = self._selector.get_map() or {}
-            for _, (_, sock_fd, _, conn) in mapping.items():
+            for _, (_, sock_fd, _, conn) in list(mapping.items()):
                 yield (sock_fd, conn)
 
     def register(self, fileobj, events, data=None):

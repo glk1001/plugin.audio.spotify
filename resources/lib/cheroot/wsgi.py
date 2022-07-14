@@ -140,7 +140,7 @@ class Gateway(server.Gateway):
         """
         response = self.req.server.wsgi_app(self.env, self.start_response)
         try:
-            for chunk in filter(None, response):
+            for chunk in [f for f in response if f]:
                 if not isinstance(chunk, six.binary_type):
                     raise ValueError('WSGI Applications must yield bytes')
                 self.write(chunk)
@@ -303,7 +303,7 @@ class Gateway_10(Gateway):
                         format(header_name=bton(k).upper().replace('-', '_')),
                         bton(v),
                 )
-                for k, v in req.inheaders.items()
+                for k, v in list(req.inheaders.items())
         )
 
         # CONTENT_TYPE/CONTENT_LENGTH
@@ -333,7 +333,7 @@ class Gateway_u0(Gateway_10):
         """Return a new environ dict targeting the given wsgi.version."""
         req = self.req
         env_10 = super(Gateway_u0, self).get_environ()
-        env = dict(map(self._decode_key, env_10.items()))
+        env = dict(list(map(self._decode_key, list(env_10.items()))))
 
         # Request-URI
         enc = env.setdefault(six.u('wsgi.url_encoding'), six.u('utf-8'))
@@ -346,7 +346,7 @@ class Gateway_u0(Gateway_10):
             env['PATH_INFO'] = env_10['PATH_INFO']
             env['QUERY_STRING'] = env_10['QUERY_STRING']
 
-        env.update(map(self._decode_value, env.items()))
+        env.update(list(map(self._decode_value, list(env.items()))))
 
         return env
 

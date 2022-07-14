@@ -103,7 +103,7 @@ class Application:
         """Return keyword args for Server class."""
         args = {
                 arg: value
-                for arg, value in vars(parsed_args).items()
+                for arg, value in list(vars(parsed_args).items())
                 if not arg.startswith('_') and value is not None
         }
         args.update(vars(self))
@@ -235,7 +235,7 @@ def main():
     parser = argparse.ArgumentParser(
             description='Start an instance of the Cheroot WSGI/HTTP server.',
     )
-    for arg, spec in _arg_spec.items():
+    for arg, spec in list(_arg_spec.items()):
         parser.add_argument(arg, **spec)
     raw_args = parser.parse_args()
 
