@@ -1,26 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<addon id="plugin.audio.spotify" version="1.2.3" name="Spotify" provider-name="GLK">
+<addon id="plugin.audio.spotify" version="1.2.0" name="Spotify" provider-name="glk1001">
     <requires>
-        <import addon="xbmc.python" version="3.0.1"/>
-        <import addon="xbmc.addon" version="19.90.101"/>
+        <import addon="xbmc.python" version="3.0.0"/>
+        <import addon="xbmc.addon" version="18.9.701"/>
         <import addon="script.module.requests" version="2.22.0"/>
         <import addon="script.module.simplejson" version="3.17.0"/>
         <import addon="script.module.simplecache" version="2.0.0"/>
-	<import addon="script.module.six" version="1.14.0"/>
+        <import addon="script.module.six" version="1.14.0"/>
     </requires>
     <extension point="xbmc.python.pluginsource" library="plugin.py">
         <provides>audio</provides>
     </extension>
-	<extension library="service.py" point="xbmc.service" />
+    <extension library="service.py" point="xbmc.service" />
     <extension point="xbmc.addon.metadata">
         <platform>all</platform>
         <summary lang="en_GB">Unofficial Spotify music plugin for Kodi</summary>
         <description lang="en_GB">Requires a Spotify premium account.</description>
-        <disclaimer lang="en_GB">
-            This product uses SPOTIFY(R) CORE but is not endorsed,
-            certified or otherwise approved in any way by Spotify.
-            Spotify is the registered trade mark of the Spotify Group.
-        </disclaimer>
+        <disclaimer lang="en_GB">This product uses the SPOTIFY WEB API but is not endorsed, certified or otherwise approved in any way by Spotify. Spotify is the registered trade mark of Spotify AB.</disclaimer>
+        <source>https://github.com/glk1001/plugin.audio.spotify</source>
+        <news>v1.2.0 (2022-07-17)
+            [new] The Unofficial Spotify for Kodi add-on by Marcelveldt is now working for Kodi 19 and 20.
+                  Thanks to Ldsz, Elkropac, and FernetMenta for getting it to work with Python 3.9. Code
+                  cleanup and general add-on cleaning by Glk1001. Tested and working with Kodi 19 and 20
+                  on Ubuntu 21.10.
+            [issue] Does not work with Python 3.10 (and therefore Ubuntu 22.04) - problem with 3.10 and sqlite3.
+        </news>
         <assets>
             <icon>resources/icon.png</icon>
             <fanart>resources/fanart.jpg</fanart>
