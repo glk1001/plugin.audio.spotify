@@ -988,7 +988,10 @@ class PluginContent:
                 artists.append(artist["name"])
             track["artist"] = " / ".join(artists)
             track["genre"] = " / ".join(track["album"].get("genres", []))
-            track["year"] = int(track["album"].get("release_date", "0").split("-")[0])
+			# Allow for 'release_date' being empty.
+            release_date = track["album"].get("release_date", "0")
+            track["year"] = 1900 if not release_date else int(
+                    track["album"].get("release_date", "0").split("-")[0])
             track["rating"] = str(get_track_rating(track["popularity"]))
             if playlistdetails:
                 track["playlistid"] = playlistdetails["id"]
