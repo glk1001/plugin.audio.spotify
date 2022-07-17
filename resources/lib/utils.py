@@ -147,8 +147,6 @@ def request_token_spotty(spotty, use_creds=True):
             if result:
                 token_info = {'access_token': result['accessToken'],
                               'expires_in': result['expiresIn'],
-                              'token_type': result['tokenType'],
-                              'scope': ' '.join(result['scope']),
                               'expires_at': int(time.time()) + result['expiresIn'],
                               'refresh_token': result['accessToken']
                               }
