@@ -1,12 +1,45 @@
 # -*- coding: utf-8 -*-
+import json
+import math
 import threading
 import time
+from io import BytesIO
+
 import cherrypy
 from cherrypy._cpnative_server import CPHTTPServer
-from io import BytesIO
-from utils import log_msg, log_exception, create_wave_header, PROXY_PORT
+from utils import log_msg, log_exception, create_wave_header, PROXY_PORT, ADDON_ID
+import xbmcaddon
 import xbmc
-import math
+
+
+def get_initial_volume():
+    initial_volume = xbmcaddon.Addon(id=ADDON_ID).getSetting("initial_volume")
+    if not initial_volume:
+        return -1
+    initial_volume = int(initial_volume)
+    if (initial_volume < -1) or (initial_volume > 100):
+        raise Exception(f'Invalid Spotify initial_volume "{initial_volume}".'
+                        f' Must in the range [-1, 100].')
+    return int(initial_volume)
+
+
+def get_playback_volume():
+    volume_query = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "Application.GetProperties",
+            "params": {"properties": ["volume", "muted"]}
+    }
+    result = xbmc.executeJSONRPC(json.dumps(volume_query))
+    result = json.loads(result)
+    result = result.get('result')
+    return result['volume']
+
+
+def set_volume(percent_value):
+    xbmc.executeJSONRPC(
+            f'{{"jsonrpc":"2.0","method":"Application.SetVolume",'
+            f'"id":1,"params":{{"volume": {percent_value}}}}}')
 
 
 class Root:
@@ -17,6 +50,9 @@ class Root:
 
     def __init__(self, spotty):
         self.__spotty = spotty
+        self.initial_volume = get_initial_volume()
+        self.volume_has_been_initialized = False
+        self.saved_volume = -1
 
     @staticmethod
     def _check_request():
@@ -113,6 +149,10 @@ class Root:
             cherrypy.response.headers['Accept-Ranges'] = 'bytes'
             cherrypy.response.headers['Content-Length'] = filesize
             log_msg("!! Full File. Size : %s " % filesize, xbmc.LOGDEBUG)
+            if self.volume_has_been_initialized:
+                set_volume(self.saved_volume)
+                self.volume_has_been_initialized = False
+                log_msg(f'Track ended? - reset volume to {self.saved_volume}%.', xbmc.LOGDEBUG)
 
         # If method was GET, write the file content
         if cherrypy.request.method.upper() == 'GET':
@@ -141,6 +181,14 @@ class Root:
         """chunked transfer of audio data from spotty binary"""
         bytes_written = 0
         try:
+            if not self.volume_has_been_initialized and self.initial_volume != -1:
+                self.saved_volume = get_playback_volume()
+                if self.initial_volume != self.saved_volume:
+                    set_volume(self.initial_volume)
+                    self.volume_has_been_initialized = True
+                    log_msg(f'Saved volume {self.saved_volume}%,'
+                            f' set new volume {self.initial_volume}%.', xbmc.LOGDEBUG)
+
             log_msg("start transfer for track %s - range: %s" % (track_id, range_l),
                     xbmc.LOGDEBUG)
 
@@ -160,7 +208,7 @@ class Root:
                 self.spotty_bin = self.__spotty.run_spotty(args, use_creds=True)
             self.spotty_trackid = track_id
             self.spotty_range_l = range_l
-            log_msg("Infos : Track : %s" % track_id)
+            log_msg("Info: Track: %s" % track_id)
 
             # ignore the first x bytes to match the range request
             if range_l:
@@ -211,7 +259,7 @@ class Root:
         code = kwargs.get("code")
         url = "http://localhost:%s/callback?code=%s" % (PROXY_PORT, code)
         if cherrypy.request.method.upper() in ['GET', 'POST']:
-            html = "<html><body><h1>Authentication succesfull</h1>"
+            html = "<html><body><h1>Authentication succesful</h1>"
             html += "<p>You can now close this browser window.</p>"
             html += "</body></html>"
             xbmc.executebuiltin("SetProperty(spotify-token-info,%s,Home)" % url)

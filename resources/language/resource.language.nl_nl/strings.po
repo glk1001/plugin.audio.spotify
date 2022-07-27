@@ -249,3 +249,7 @@ msgstr "UItloggen?"
 msgctxt "#11067"
 msgid "Are you sure you want to logoff ?"
 msgstr "Weet je zeker dat je wilt uitloggen?"
+
+msgctxt "#11068"
+msgid "Initial Spotify volume (%)"
+msgstr "Initial Spotify volume (%)"

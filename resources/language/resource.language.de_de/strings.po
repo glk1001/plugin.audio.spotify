@@ -267,3 +267,7 @@ msgstr "Lokale Wiedergabe mit entferntem Host %s"
 msgctxt "#11064"
 msgid "Use Kodi OSD for playback on (remote) Spotify Connect device"
 msgstr "Benutze Kodi OSD für Wiedergabe auf (entferntem) Spotify Connect Gerät"
+
+msgctxt "#11068"
+msgid "Initial Spotify volume (%)"
+msgstr "Initial Spotify volume (%)"

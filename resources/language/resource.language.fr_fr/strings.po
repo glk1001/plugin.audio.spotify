@@ -155,3 +155,7 @@ msgstr "Liste de chansons comme vue par défaut"
 msgctxt "#11035"
 msgid "Play song radio"
 msgstr "Jouer la radio"
+
+msgctxt "#11068"
+msgid "Initial Spotify volume (%)"
+msgstr "Initial Spotify volume (%)"

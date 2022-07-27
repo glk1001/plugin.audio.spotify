@@ -1,3 +1,5 @@
+# pycharm
+.idea/
 *.pyo
 *.pyc
 .DS_Store

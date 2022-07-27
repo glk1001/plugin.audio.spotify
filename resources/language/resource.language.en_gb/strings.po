@@ -283,3 +283,7 @@ msgstr ""
 msgctxt "#11067"
 msgid "Are you sure you want to logoff ?"
 msgstr ""
+
+msgctxt "#11068"
+msgid "Initial Spotify volume as a percent (disable with -1)"
+msgstr ""
