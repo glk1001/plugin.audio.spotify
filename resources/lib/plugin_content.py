@@ -973,14 +973,14 @@ class PluginContent:
                 track["album"] = albumdetails
             if track.get("images"):
                 thumb = track["images"][0]['url']
-            elif track['album'].get("images"):
+            elif track.get('album',{}).get("images"):
                 thumb = track['album']["images"][0]['url']
             else:
                 thumb = "DefaultMusicSongs.png"
             track['thumb'] = thumb
 
             # skip local tracks in playlists
-            if not track['id']:
+            if not track.get('id'):
                 continue
 
             artists = []
