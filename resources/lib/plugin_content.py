@@ -12,6 +12,7 @@ import xbmcgui
 import xbmcplugin
 from simplecache import SimpleCache
 
+import utils
 from deps import spotipy
 from utils import (
     ADDON_ID,
@@ -87,8 +88,8 @@ class PluginContent:
             self.default_view_category = self.addon.getSetting("categoryDefaultView")
             self.parse_params()
             self.sp = spotipy.Spotify(auth=auth_token)
-            self.userid = self.win.getProperty("spotify-username")
-            self.user_country = self.win.getProperty("spotify-country")
+            self.userid = self.win.getProperty(utils.KODI_PROPERTY_SPOTIFY_USERNAME)
+            self.user_country = self.win.getProperty(utils.KODI_PROPERTY_SPOTIFY_COUNTRY)
             self.playername = self.active_playback_device()
             if self.action:
                 log_msg(f"Evaluating action '{self.action}'.")
@@ -105,14 +106,7 @@ class PluginContent:
 
     def get_authkey(self):
         """get authentication key"""
-        auth_token = None
-
-        count = 10
-        while not auth_token and count:
-            auth_token = self.win.getProperty("spotify-token")
-            count -= 1
-            if not auth_token:
-                xbmc.sleep(500)
+        auth_token = utils.get_authkey_from_kodi()
 
         if not auth_token:
             if self.win.getProperty("spotify.supportsplayback"):
@@ -165,7 +159,10 @@ class PluginContent:
             saved_albums = self.get_savedalbumsids()
             followed_artists = self.get_followedartists()
             generic_checksum = self.addon.getSetting("cache_checksum")
-            result = f"{len(saved_tracks)}-{len(saved_albums)}-{len(followed_artists)}-{generic_checksum}"
+            result = (
+                f"{len(saved_tracks)}-{len(saved_albums)}-{len(followed_artists)}"
+                f"-{generic_checksum}"
+            )
             self._cache_checksum = result
 
         if opt_value:
@@ -192,10 +189,6 @@ class PluginContent:
         """set reconnect flag for main_loop"""
         if self.addon.getSetting("playback_device") == "connect":
             self.win.setProperty("spotify-cmd", "__RECONNECT__")
-
-    @staticmethod
-    def play_track_radio():
-        xbmcgui.Dialog().ok("Play Song Radio", "Spotify play song radio is not available yet.")
 
     def browse_main(self):
         # Main listing.
@@ -377,7 +370,8 @@ class PluginContent:
             items.append(
                 (
                     item["name"],
-                    f"plugin://plugin.audio.spotify/?action=browse_category&applyfilter={item['id']}",
+                    f"plugin://plugin.audio.spotify/"
+                    f"?action=browse_category&applyfilter={item['id']}",
                     thumb,
                 )
             )
@@ -592,13 +586,7 @@ class PluginContent:
         if not self.track_id and xbmc.getInfoLabel("MusicPlayer.(1).Property(spotifytrackid)"):
             self.track_id = xbmc.getInfoLabel("MusicPlayer.(1).Property(spotifytrackid)")
 
-        playlists = self.sp.user_playlists(self.userid, limit=50, offset=0)
-        own_playlists = []
-        own_playlist_names = []
-        for playlist in playlists["items"]:
-            if playlist["owner"]["id"] == self.userid:
-                own_playlists.append(playlist)
-                own_playlist_names.append(playlist["name"])
+        own_playlists, own_playlist_names = utils.get_user_playlists(self.sp, self.userid, 50)
         own_playlist_names.append(xbmc.getLocalizedString(525))
 
         xbmc.executebuiltin("Dialog.Close(busydialog)")
@@ -829,21 +817,24 @@ class PluginContent:
                 contextitems.append(
                     (
                         self.addon.getLocalizedString(REMOVE_TRACKS_FROM_MY_MUSIC_STR_ID),
-                        f"RunPlugin(plugin://plugin.audio.spotify/?action=remove_track&trackid={real_trackid})",
+                        f"RunPlugin(plugin://plugin.audio.spotify/"
+                        f"?action=remove_track&trackid={real_trackid})",
                     )
                 )
             else:
                 contextitems.append(
                     (
                         self.addon.getLocalizedString(SAVE_TRACKS_TO_MY_MUSIC_STR_ID),
-                        f"RunPlugin(plugin://plugin.audio.spotify/?action=save_track&trackid={real_trackid})",
+                        f"RunPlugin(plugin://plugin.audio.spotify/"
+                        f"?action=save_track&trackid={real_trackid})",
                     )
                 )
 
             if playlist_details and playlist_details["owner"]["id"] == self.userid:
                 contextitems.append(
                     (
-                        f"{self.addon.getLocalizedString(REMOVE_FROM_PLAYLIST_STR_ID)} {playlist_details['name']}",
+                        f"{self.addon.getLocalizedString(REMOVE_FROM_PLAYLIST_STR_ID)}"
+                        f" {playlist_details['name']}",
                         "RunPlugin(plugin://plugin.audio.spotify/"
                         "?action=remove_track_from_playlist&trackid="
                         f"{real_trackuri}&playlistid={playlist_details['id']})",
@@ -1185,7 +1176,8 @@ class PluginContent:
                     (
                         self.addon.getLocalizedString(UNFOLLOW_PLAYLIST_STR_ID),
                         "RunPlugin(plugin://plugin.audio.spotify/"
-                        f"?action=unfollow_playlist&playlistid={item['id']}&ownerid={item['owner']['id']})",
+                        f"?action=unfollow_playlist&playlistid={item['id']}"
+                        f"&ownerid={item['owner']['id']})",
                     )
                 )
             elif item["owner"]["id"] != self.userid:
@@ -1193,7 +1185,8 @@ class PluginContent:
                     (
                         self.addon.getLocalizedString(FOLLOW_PLAYLIST_STR_ID),
                         "RunPlugin(plugin://plugin.audio.spotify/"
-                        f"?action=follow_playlist&playlistid={item['id']}&ownerid={item['owner']['id']})",
+                        f"?action=follow_playlist&playlistid={item['id']}"
+                        f"&ownerid={item['owner']['id']})",
                     )
                 )
 

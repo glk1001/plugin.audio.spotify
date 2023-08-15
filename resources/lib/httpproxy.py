@@ -6,14 +6,15 @@ import time
 
 # Would like to do the following submodule imports, but they won't work.
 # See the comment in 'lib/__init__.py':
-# from deps import cherrypy
-# from deps.cherrypy._cpnative_server import CPHTTPServer
+# 'from deps import cherrypy'
+# 'from deps.cherrypy._cpnative_server import CPHTTPServer'
 import cherrypy
 import xbmc
 import xbmcaddon
 from cherrypy._cpnative_server import CPHTTPServer
 
-from utils import create_wave_header, log_msg, log_exception, PROXY_PORT, ADDON_ID
+from utils import create_wave_header, log_msg, log_exception, PROXY_PORT, ADDON_ID, ADDON_DATA_PATH
+
 
 LIBRESPOT_INITIAL_VOLUME = "50"
 SPOTTY_AUDIO_CHUNK_SIZE = 524288
@@ -93,11 +94,11 @@ class Root:
     def _check_request():
         method = cherrypy.request.method.upper()
         # headers = cherrypy.request.headers
-        # Fail for other methods than get or head
+        # Fail for other methods than get or head.
         if method not in ("GET", "HEAD"):
             raise cherrypy.HTTPError(405)
-        # Error if the requester is not allowed
-        # for now this is a simple check just checking if the useragent matches Kodi
+        # Error if the requester is not allowed.
+        # For now this is a simple check just checking if the useragent matches Kodi.
         # user_agent = headers['User-Agent'].lower()
         # if not ("Kodi" in user_agent or "osmc" in user_agent):
         #     raise cherrypy.HTTPError(403)
@@ -109,65 +110,84 @@ class Root:
 
     @cherrypy.expose
     def track(self, track_id, duration):
-        # Check sanity of the request
+        # Check the sanity of the request.
         self._check_request()
 
         # Calculate file size, and obtain the header
+        # Get track info.
         duration = int(float(duration))
-        wave_header, filesize = create_wave_header(duration)
+        wave_header, file_size = create_wave_header(duration)
         request_range = cherrypy.request.headers.get("Range", "")
+
         # Response timeout must be at least the duration of the track read/write loop.
         # Checks for timeout and stops pushing audio to player if it occurs.
         cherrypy.response.timeout = int(math.ceil(duration * 1.5))
 
-        range_l = 0
-        range_r = filesize
-
-        # headers
-        if request_range and request_range != "bytes=0-":
-            # Partial request.
-            cherrypy.response.status = "206 Partial Content"
-            cherrypy.response.headers["Content-Type"] = "audio/x-wav"
-            rng = cherrypy.request.headers["Range"].split("bytes=")[1].split("-")
-            log_msg(f"Request header range: {cherrypy.request.headers['Range']}", xbmc.LOGDEBUG)
-            range_l = int(rng[0])
-            try:
-                range_r = int(rng[1])
-            except:
-                range_r = filesize
-
-            cherrypy.response.headers["Accept-Ranges"] = "bytes"
-            cherrypy.response.headers["Content-Length"] = range_r - range_l
-            cherrypy.response.headers["Content-Range"] = f"bytes {range_l}-{range_r}/{filesize}"
-            log_msg(
-                f"Partial request range: {cherrypy.response.headers['Content-Range']},"
-                f" length: {cherrypy.response.headers['Content-Length']}",
-                xbmc.LOGDEBUG,
-            )
-        else:
-            # Full file
-            cherrypy.response.headers["Content-Type"] = "audio/x-wav"
-            cherrypy.response.headers["Accept-Ranges"] = "bytes"
-            cherrypy.response.headers["Content-Length"] = filesize
-            log_msg(f"Full File. Size: {filesize}.", xbmc.LOGDEBUG)
-            log_msg(f"Track ended?", xbmc.LOGDEBUG)
-            self.reset_volume_to_saved()
+        # Set the cherrypy headers.
+        range_l, range_r = self._set_cherrypy_headers(request_range, file_size)
 
         # If method was GET, then write the file content.
         if cherrypy.request.method.upper() == "GET":
-            if self.spotty_bin is not None:
-                # If spotty binary still attached for a different request, try to terminate it.
-                log_msg(
-                    "WHOOPS!!! A running 'spotty' detected - killing it to continue.", xbmc.LOGERROR
-                )
-                self.kill_spotty()
-
-            while self.spotty_bin:
-                time.sleep(0.1)
-
+            self._ensure_no_spotty_running()
             return self.send_audio_stream(track_id, range_r - range_l, wave_header, range_l)
 
     track._cp_config = {"response.stream": True}
+
+    def _set_cherrypy_headers(self, request_range, file_size):
+        if request_range and request_range != "bytes=0-":
+            return self._set_partial_cherrypy_headers(file_size)
+        return self._set_full_cherrypy_headers(file_size)
+
+    @staticmethod
+    def _set_partial_cherrypy_headers(file_size):
+        # Partial request.
+        cherrypy.response.status = "206 Partial Content"
+        cherrypy.response.headers["Content-Type"] = "audio/x-wav"
+        rng = cherrypy.request.headers["Range"].split("bytes=")[1].split("-")
+        log_msg(f"Request header range: {cherrypy.request.headers['Range']}", xbmc.LOGDEBUG)
+        range_l = int(rng[0])
+        try:
+            range_r = int(rng[1])
+        except:
+            range_r = file_size
+
+        cherrypy.response.headers["Accept-Ranges"] = "bytes"
+        cherrypy.response.headers["Content-Length"] = range_r - range_l
+        cherrypy.response.headers["Content-Range"] = f"bytes {range_l}-{range_r}/{file_size}"
+        log_msg(
+            f"Partial request range: {cherrypy.response.headers['Content-Range']},"
+            f" length: {cherrypy.response.headers['Content-Length']}",
+            xbmc.LOGDEBUG,
+        )
+
+        return range_l, range_r
+
+    def _set_full_cherrypy_headers(self, file_size):
+        # Full file
+        cherrypy.response.headers["Content-Type"] = "audio/x-wav"
+        cherrypy.response.headers["Accept-Ranges"] = "bytes"
+        cherrypy.response.headers["Content-Length"] = file_size
+        log_msg(f"Full File. Size: {file_size}.", xbmc.LOGDEBUG)
+        log_msg(f"Track ended?", xbmc.LOGDEBUG)
+        self.reset_volume_to_saved()
+
+        return 0, file_size
+
+    def _ensure_no_spotty_running(self):
+        if not self.spotty_bin:
+            return
+
+        # If the spotty binary is still attached for a different request, then try to terminate it.
+        log_msg("A running 'spotty' was detected - killing it to continue.", xbmc.LOGWARNING)
+        self.kill_spotty()
+
+        count = 20
+        while self.spotty_bin and (count > 0):
+            time.sleep(0.1)
+            count -= 1
+
+        if not self.spotty_bin:
+            raise Exception("Could not kill spotty binary.")
 
     def kill_spotty(self):
         self.spotty_bin.terminate()
@@ -262,25 +282,18 @@ class Root:
             log_msg("authkey sent")
             return html
 
-    @cherrypy.expose
-    def playercmd(self, cmd):
-        if cmd == "start":
-            cherrypy.response.headers["Content-Type"] = "text"
-            log_msg("Playback start requested by connect.")
-            xbmc.executebuiltin("RunPlugin(plugin://plugin.audio.spotify/?action=play_connect)")
-            return "OK"
-        elif cmd == "stop":
-            cherrypy.response.headers["Content-Type"] = "text"
-            log_msg("Playback stop requested by connect")
-            xbmc.executebuiltin("PlayerControl(Stop)")
-            return "OK"
-
 
 class ProxyRunner(threading.Thread):
     def __init__(self, spotty):
         self.__root = Root(spotty)
+
         log = cherrypy.log
         log.screen = True
+        # log.access_file = ADDON_DATA_PATH + "/cherrypy-access.log"
+        # log.access_log.setLevel(logging.DEBUG)
+        # log.error_file = ADDON_DATA_PATH + "/cherrypy-error.log"
+        # log.error_log.setLevel(logging.DEBUG)
+
         cherrypy.config.update(
             {"server.socket_host": "127.0.0.1", "server.socket_port": PROXY_PORT}
         )

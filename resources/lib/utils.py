@@ -11,6 +11,7 @@
 import inspect
 import math
 import os
+import platform
 import stat
 import struct
 import subprocess
@@ -28,6 +29,8 @@ DEBUG = True
 PROXY_PORT = 52308
 
 ADDON_ID = "plugin.audio.spotify"
+ADDON_DATA_PATH = xbmcvfs.translatePath(f"special://profile/addon_data/{ADDON_ID}")
+
 SPOTTY_SCOPE = [
     "user-read-playback-state",
     "user-read-currently-playing",
@@ -48,6 +51,10 @@ SPOTTY_SCOPE = [
 CLIENT_ID = "2eb96f9b37494be1824999d58028a305"
 CLIENT_SECRET = "038ec3b4555f46eab1169134985b9013"
 
+KODI_PROPERTY_SPOTIFY_TOKEN = "spotify-token"
+KODI_PROPERTY_SPOTIFY_USERNAME = "spotify-username"
+KODI_PROPERTY_SPOTIFY_COUNTRY = "spotify - country"
+
 try:
     from multiprocessing.pool import ThreadPool
 
@@ -59,7 +66,7 @@ except Exception:
 def log_msg(msg, loglevel=xbmc.LOGDEBUG, caller_name=None):
     if isinstance(msg, str):
         msg = msg.encode("utf-8")
-    if DEBUG:
+    if DEBUG and (loglevel == xbmc.LOGDEBUG):
         loglevel = xbmc.LOGINFO
     if not caller_name:
         caller_name = get_formatted_caller_name(inspect.stack()[1][1], inspect.stack()[1][3])
@@ -108,6 +115,20 @@ def addon_setting(setting_name, set_value=None):
 def kill_on_timeout(done, timeout, proc):
     if not done.wait(timeout):
         proc.kill()
+
+
+def get_authkey_from_kodi():
+    win = xbmcgui.Window(10000)
+    auth_token = None
+
+    count = 10
+    while not auth_token and count:
+        auth_token = win.getProperty(KODI_PROPERTY_SPOTIFY_TOKEN)
+        count -= 1
+        if not auth_token:
+            xbmc.sleep(500)
+
+    return auth_token
 
 
 def get_token(spotty):
@@ -263,6 +284,19 @@ def process_method_on_list(method_to_run, items):
     return all_items
 
 
+def get_user_playlists(spotipy, userid, limit=50, offset=0):
+    playlists = spotipy.user_playlists(userid, limit=limit, offset=offset)
+
+    own_playlists = []
+    own_playlist_names = []
+    for playlist in playlists["items"]:
+        if playlist["owner"]["id"] == userid:
+            own_playlists.append(playlist)
+            own_playlist_names.append(playlist["name"])
+
+    return own_playlists, own_playlist_names
+
+
 def get_track_rating(popularity):
     if not popularity:
         return 0
@@ -358,14 +392,13 @@ def get_player_name():
 
 class Spotty(object):
     """
-    spotty is wrapped into a seperate class to store common properties
-    this is done to prevent hitting a kodi issue where calling one of the infolabel methods
-    at playback time causes a crash of the playback
+    Spotty is wrapped into a separate class to store common properties.
+    This is done to prevent hitting a kodi issue where calling one of the
+    infolabel methods at playback time causes a crash of the playback.
     """
 
     def __init__(self):
-        """initialize with default values"""
-        self.__cache_path = xbmcvfs.translatePath("special://profile/addon_data/%s/" % ADDON_ID)
+        self.__cache_path = f"{ADDON_DATA_PATH}/spotty-cache"
         self.player_name = get_player_name()
         self.__spotty_binary = self.get_spotty_binary()
 
@@ -418,7 +451,7 @@ class Spotty(object):
         return False
 
     def run_spotty(self, arguments=None, use_creds=False, ap_port="54443"):
-        """On supported platforms we include spotty binary"""
+        """on supported platforms we include the spotty binary"""
         try:
             # os.environ["RUST_LOG"] = "debug"
             args = [
@@ -486,9 +519,6 @@ class Spotty(object):
         elif xbmc.getCondVisibility("System.Platform.OSX"):
             sp_binary = os.path.join(os.path.dirname(__file__), "deps/spotty", "macos", "spotty")
         elif xbmc.getCondVisibility("System.Platform.Linux + !System.Platform.Android"):
-            # Try to find the correct architecture by trial and error.
-            import platform
-
             architecture = platform.machine()
             log_msg(f"Reported architecture: '{architecture}'.")
             if architecture.startswith("AMD64") or architecture.startswith("x86_64"):
@@ -497,7 +527,8 @@ class Spotty(object):
                     os.path.dirname(__file__), "deps/spotty", "x86-linux", "spotty-x86_64"
                 )
             else:
-                # When we're unsure about the platform/cpu, try by testing to get the correct binary path.
+                # When we're unsure about the platform/cpu, try by testing to get
+                # the correct binary path.
                 paths = [
                     os.path.join(
                         os.path.dirname(__file__), "deps/spotty", "arm-linux", "spotty-hf"
@@ -528,9 +559,7 @@ class Spotty(object):
         """obtain/check (last) username of the credentials obtained by spotify connect"""
         username = ""
 
-        cred_file = xbmcvfs.translatePath(
-            f"special://profile/addon_data/{ADDON_ID}/credentials.json"
-        )
+        cred_file = xbmcvfs.translatePath(f"{ADDON_DATA_PATH}/credentials.json")
 
         if xbmcvfs.exists(cred_file):
             with open(cred_file) as cred_file:
