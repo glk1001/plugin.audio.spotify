@@ -151,3 +151,7 @@ msgstr "Ansichten"
 msgctxt "#11068"
 msgid "Initial Spotify volume as a percent (disable with -1)"
 msgstr "Initial Spotify volume as a percent (disable with -1)"
+
+msgctxt "#11069"
+msgid "My recently played playlist"
+msgstr "My recently played playlist"

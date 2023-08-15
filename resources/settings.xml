@@ -10,6 +10,8 @@
             <minimum>-1</minimum>
             <maximum>100</maximum>
         </setting>
+        <setting id="my_recently_played_playlist_name" type="text" label="11069"
+                 help="Disable with empty string" default="My Recently Played"/>
     </category>
 
     <category label="11055">

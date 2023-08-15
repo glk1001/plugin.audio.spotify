@@ -9,16 +9,24 @@ import time
 # 'from deps import cherrypy'
 # 'from deps.cherrypy._cpnative_server import CPHTTPServer'
 import cherrypy
+import spotipy
 import xbmc
 import xbmcaddon
+import xbmcgui
 from cherrypy._cpnative_server import CPHTTPServer
 
+import utils
 from utils import create_wave_header, log_msg, log_exception, PROXY_PORT, ADDON_ID, ADDON_DATA_PATH
-
 
 LIBRESPOT_INITIAL_VOLUME = "50"
 SPOTTY_AUDIO_CHUNK_SIZE = 524288
 SPOTIFY_TRACK_PREFIX = "spotify:track:"
+
+SAVE_TO_RECENTLY_PLAYED_FILE = True
+if SAVE_TO_RECENTLY_PLAYED_FILE:
+    import os
+
+    ADDON_OUTPUT_PATH = f"{ADDON_DATA_PATH}/output"
 
 
 class Root:
@@ -30,6 +38,16 @@ class Root:
         self.requested_kodi_volume = self.get_spotify_volume_setting()
         self.kodi_volume_has_been_reset = False
         self.saved_volume = -1
+
+        self.sp = None
+        self.win = xbmcgui.Window(10000)
+        self.my_recently_played_playlist_name = self.get_my_recently_played_playlist_name()
+        self.my_recently_played_playlist_id = None
+
+        if SAVE_TO_RECENTLY_PLAYED_FILE:
+            os.makedirs(ADDON_OUTPUT_PATH, exist_ok=True)
+            timestamp = time.strftime("%Y%m%d%H%M%S", time.gmtime())
+            self.recently_played_file = f"{ADDON_OUTPUT_PATH}/recently_played_{timestamp}.txt"
 
     @staticmethod
     def get_spotify_volume_setting():
@@ -90,6 +108,65 @@ class Root:
         self.kodi_volume_has_been_reset = False
         log_msg(f"Reset volume to saved volume: {self.saved_volume}%.", xbmc.LOGDEBUG)
 
+    if SAVE_TO_RECENTLY_PLAYED_FILE:
+
+        def save_currently_playing_track_to_recently_played(self, track_id):
+            if not xbmc.Player().isPlaying():
+                log_msg(f"Player not active. Not saving track to recently played.", xbmc.LOGWARNING)
+                return
+
+            if self.my_recently_played_playlist_name:
+                if not self.my_recently_played_playlist_id:
+                    self.set_my_recently_played_playlist_id()
+                self.sp.playlist_add_items(self.my_recently_played_playlist_id, [track_id])
+                log_msg(
+                    f"Saved track to '{self.my_recently_played_playlist_name}' playlist.",
+                    xbmc.LOGWARNING,
+                )
+
+            info_tag = xbmc.Player().getPlayingItem().getMusicInfoTag()
+            artist = str(info_tag.getArtist())
+            title = str(info_tag.getTitle())
+            track_name = f"{artist} ---- {title}"
+
+            try:
+                with open(self.recently_played_file, "a", encoding="utf-8") as f:
+                    f.write(f"{track_name}\n")
+            except Exception as ex:
+                log_msg(f"Error saving track: {ex}'.", xbmc.LOGERROR)
+
+            log_msg(f"Saved track '{track_name}' to '{self.recently_played_file}'.", xbmc.LOGDEBUG)
+
+    @staticmethod
+    def get_my_recently_played_playlist_name():
+        return xbmcaddon.Addon(id=ADDON_ID).getSetting("my_recently_played_playlist_name")
+
+    def set_my_recently_played_playlist_id(self):
+        self.sp = spotipy.Spotify(auth=utils.get_authkey_from_kodi())
+        userid = self.win.getProperty(utils.KODI_PROPERTY_SPOTIFY_USERNAME)
+        log_msg(
+            f"Getting id for '{self.my_recently_played_playlist_name}' playlist.", xbmc.LOGDEBUG
+        )
+        self.my_recently_played_playlist_id = utils.get_user_playlist_id(
+            self.sp, userid, self.my_recently_played_playlist_name
+        )
+
+        if not self.my_recently_played_playlist_id:
+            log_msg(
+                f"Did not find a '{self.my_recently_played_playlist_name}' playlist."
+                " Creating one now.",
+                xbmc.LOGINFO,
+            )
+            playlist = self.sp.user_playlist_create(
+                userid, self.my_recently_played_playlist_name, False
+            )
+            self.my_recently_played_playlist_id = playlist["id"]
+
+            if not self.my_recently_played_playlist_id:
+                raise Exception(
+                    f"Could not create a '{self.my_recently_played_playlist_name}' playlist."
+                )
+
     @staticmethod
     def _check_request():
         method = cherrypy.request.method.upper()
@@ -113,7 +190,9 @@ class Root:
         # Check the sanity of the request.
         self._check_request()
 
-        # Calculate file size, and obtain the header
+        if SAVE_TO_RECENTLY_PLAYED_FILE:
+            self.save_currently_playing_track_to_recently_played(track_id)
+
         # Get track info.
         duration = int(float(duration))
         wave_header, file_size = create_wave_header(duration)

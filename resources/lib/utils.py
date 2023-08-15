@@ -297,6 +297,22 @@ def get_user_playlists(spotipy, userid, limit=50, offset=0):
     return own_playlists, own_playlist_names
 
 
+def get_user_playlist_id(spotipy, userid, playlist_name):
+    offset = 0
+    while True:
+        own_playlists, own_playlist_names = get_user_playlists(
+            spotipy, userid, limit=50, offset=offset
+        )
+        if len(own_playlists) == 0:
+            break
+        for playlist in own_playlists:
+            if playlist_name == playlist["name"]:
+                return playlist["id"]
+        offset += 50
+
+    return None
+
+
 def get_track_rating(popularity):
     if not popularity:
         return 0
