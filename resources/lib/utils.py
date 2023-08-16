@@ -321,8 +321,9 @@ def get_track_rating(popularity):
 
 
 def parse_spotify_track(track, is_album_track=True):
-    if "track" in track:
-        track = track["track"]
+    # This doesn't make sense - track["track"] is a bool
+    # if "track" in track:
+    #     track = track["track"]
     if track.get("images"):
         thumb = track["images"][0]["url"]
     elif track["album"].get("images"):

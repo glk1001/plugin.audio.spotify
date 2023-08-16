@@ -63,7 +63,7 @@ class MainService:
                 self.switch_user()
             elif not self.auth_token:
                 # We do not yet have a token.
-                log_msg("retrieving token...")
+                log_msg("Retrieving token...")
                 if self.renew_token():
                     xbmc.executebuiltin("Container.Refresh")
             elif self.auth_token and (self.auth_token["expires_at"] - 60) <= (int(time.time())):

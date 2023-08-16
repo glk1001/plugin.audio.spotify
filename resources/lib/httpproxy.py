@@ -121,14 +121,16 @@ class Root:
                 self.sp.playlist_add_items(self.my_recently_played_playlist_id, [track_id])
                 log_msg(
                     f"Saved track to '{self.my_recently_played_playlist_name}' playlist.",
-                    xbmc.LOGWARNING,
+                    xbmc.LOGDEBUG,
                 )
 
+            log_msg("Getting music info tag of currently playing item.", xbmc.LOGDEBUG)
             info_tag = xbmc.Player().getPlayingItem().getMusicInfoTag()
             artist = str(info_tag.getArtist())
             title = str(info_tag.getTitle())
             track_name = f"{artist} ---- {title}"
 
+            log_msg(f"Saving track '{track_name}' to '{self.recently_played_file}'.", xbmc.LOGDEBUG)
             try:
                 with open(self.recently_played_file, "a", encoding="utf-8") as f:
                     f.write(f"{track_name}\n")
@@ -350,6 +352,11 @@ class Root:
 
     @cherrypy.expose
     def callback(self, **kwargs):
+        log_msg(
+            f"cherrypy.callback: kwargs = '{kwargs}'",
+            xbmc.LOGDEBUG,
+        )
+
         cherrypy.response.headers["Content-Type"] = "text/html"
         code = kwargs.get("code")
         url = f"http://localhost:{PROXY_PORT}/callback?code={code}"
@@ -383,6 +390,7 @@ class ProxyRunner(threading.Thread):
         threading.Thread.__init__(self)
 
     def run(self):
+        log_msg("Running cherrypy quickstart.")
         conf = {"/": {}}
         cherrypy.quickstart(self.__root, "/", conf)
 
@@ -393,6 +401,7 @@ class ProxyRunner(threading.Thread):
         return self.__server.bind_addr[0]
 
     def stop(self):
+        log_msg("Running cherrypy engine exit.")
         cherrypy.engine.exit()
         self.join(0)
         del self.__root
