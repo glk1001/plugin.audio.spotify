@@ -48,6 +48,33 @@ CURRENT_USER_STR_ID = 11047
 NO_CREDENTIALS_MSG_STR_ID = 11050
 
 
+class MyPlayer(xbmc.Player):
+
+    def onPlayBackStarted(self) -> None:
+        log_msg("onPlayBackStarted called.")
+
+    def onAVStarted(self) -> None:
+        log_msg("onAVStarted called.")
+
+    def onAVChange(self) -> None:
+        log_msg("onAVChange called.")
+
+    def onPlayBackEnded(self) -> None:
+        log_msg("onPlayBackEnded called.")
+
+    def onPlayBackStopped(self) -> None:
+        log_msg("onPlayBackStopped called.")
+
+    def onPlayBackError(self) -> None:
+        log_msg("onPlayBackError called.")
+
+    def onPlayBackPaused(self) -> None:
+        log_msg("onPlayBackPaused called.")
+
+    def onPlayBackResumed(self) -> None:
+        log_msg("onPlayBackResumed called.")
+
+
 class PluginContent:
     action = ""
     sp = None
@@ -120,6 +147,7 @@ class PluginContent:
 
     def parse_params(self):
         """parse parameters from the plugin entry path"""
+        log_msg(f"sys.argv = {str(sys.argv)}")
         self.params = urllib.parse.parse_qs(sys.argv[2][1:])
         action = self.params.get("action", None)
         if action:
@@ -533,19 +561,28 @@ class PluginContent:
     def play_playlist(self):
         """play entire playlist"""
         playlist_details = self.get_playlist_details(self.playlist_id)
+        log_msg(f"Play playlist \'{playlist_details['name']}\'.")
+
+        # Add tracks to the playlist then start playing.
         kodi_playlist = xbmc.PlayList(0)
         kodi_playlist.clear()
-        kodi_player = xbmc.Player()
-
-        # Add first track and start playing.
-        url, li = parse_spotify_track(playlist_details["tracks"]["items"][0])
-        kodi_playlist.add(url, li)
-        kodi_player.play(kodi_playlist)
-
-        # Add remaining tracks to the playlist while already playing.
-        for track in playlist_details["tracks"]["items"][1:]:
+        track_num = 1
+        for track in playlist_details["tracks"]["items"]:
+            log_msg(f"Adding track {track_num}.")
             url, li = parse_spotify_track(track)
             kodi_playlist.add(url, li)
+            track_num += 1
+
+        kodi_player = MyPlayer()
+        kodi_player.play(kodi_playlist)
+        log_msg("Handed playlist over to kodi.")
+
+        log_msg("Starting wait loop.")
+        while True:
+            if not kodi_player.isPlaying():
+                break
+            time.sleep(0.5)
+        log_msg("Finished wait loop.")
 
     def get_category(self, categoryid):
         category = self.sp.category(categoryid, country=self.user_country, locale=self.user_country)
