@@ -558,31 +558,41 @@ class PluginContent:
         if self.default_view_songs:
             xbmc.executebuiltin(f"Container.SetViewMode({self.default_view_songs})")
 
+    def play_track(self):
+        """play track"""
+        track = self.sp.track(self.track_id)
+        log_msg(f"Play track \'{track['name']} ({self.track_id})\'.")
+        url, li = parse_spotify_track(track)
+
+        kodi_player = MyPlayer()
+        kodi_player.play(url, li)
+
+        while not kodi_player.isPlaying():
+           time.sleep(0.1)
+        log_msg("Starting wait loop.")
+        while kodi_player.isPlaying():
+            time.sleep(0.5)
+        log_msg("Finished wait loop.")
+
     def play_playlist(self):
         """play entire playlist"""
         playlist_details = self.get_playlist_details(self.playlist_id)
         log_msg(f"Play playlist \'{playlist_details['name']}\'.")
 
         # Add tracks to the playlist then start playing.
-        kodi_playlist = xbmc.PlayList(0)
-        kodi_playlist.clear()
+        kodi_player = MyPlayer()
         track_num = 1
         for track in playlist_details["tracks"]["items"]:
-            log_msg(f"Adding track {track_num}.")
+            log_msg(f"Playing track {track_num}.")
             url, li = parse_spotify_track(track)
-            kodi_playlist.add(url, li)
+            kodi_player.play(url, li)
+            while not kodi_player.isPlaying():
+                time.sleep(0.1)
             track_num += 1
-
-        kodi_player = MyPlayer()
-        kodi_player.play(kodi_playlist)
-        log_msg("Handed playlist over to kodi.")
-
-        log_msg("Starting wait loop.")
-        while True:
-            if not kodi_player.isPlaying():
-                break
-            time.sleep(0.5)
-        log_msg("Finished wait loop.")
+            log_msg("Starting wait loop.")
+            while kodi_player.isPlaying():
+                time.sleep(0.5)
+            log_msg("Finished wait loop.")
 
     def get_category(self, categoryid):
         category = self.sp.category(categoryid, country=self.user_country, locale=self.user_country)
@@ -877,6 +887,14 @@ class PluginContent:
                         f"{real_trackuri}&playlistid={playlist_details['id']})",
                     )
                 )
+
+            contextitems.append(
+                (
+                    'MyPlay', #xbmc.getLocalizedString(14098),
+                    "RunPlugin(plugin://plugin.audio.spotify/"
+                    f"?action=play_track&trackid={real_trackuri})",
+                )
+            )
 
             contextitems.append(
                 (
