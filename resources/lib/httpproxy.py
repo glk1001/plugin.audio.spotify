@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import json
 import math
+import struct
 import threading
 import time
+from io import BytesIO
 
 # Would like to do the following submodule imports, but they won't work.
 # See the comment in 'lib/__init__.py':
@@ -16,7 +18,7 @@ import xbmcgui
 from cherrypy._cpnative_server import CPHTTPServer
 
 import utils
-from utils import create_wave_header, log_msg, log_exception, PROXY_PORT, ADDON_ID, ADDON_DATA_PATH
+from utils import log_msg, log_exception, PROXY_PORT, ADDON_ID, ADDON_DATA_PATH
 
 LIBRESPOT_INITIAL_VOLUME = "50"
 SPOTTY_AUDIO_CHUNK_SIZE = 524288
@@ -351,23 +353,67 @@ class Root:
             if self.spotty_bin is not None:
                 self.kill_spotty()
 
-    @cherrypy.expose
-    def callback(self, **kwargs):
-        log_msg(
-            f"cherrypy.callback: kwargs = '{kwargs}'",
-            xbmc.LOGDEBUG,
+
+def create_wave_header(duration):
+    """generate a wave header for the stream"""
+    try:
+        log_msg(f"Start getting wave header. duration = {duration}", xbmc.LOGDEBUG)
+        file = BytesIO()
+        num_samples = 44100 * duration
+        channels = 2
+        sample_rate = 44100
+        bits_per_sample = 16
+
+        # Generate format chunk.
+        format_chunk_spec = "<4sLHHLLHH"
+        format_chunk = struct.pack(
+            format_chunk_spec,
+            "fmt ".encode(encoding="UTF-8"),  # Chunk id
+            16,  # Size of this chunk (excluding chunk id and this field)
+            1,  # Audio format, 1 for PCM
+            channels,  # Number of channels
+            sample_rate,  # Samplerate, 44100, 48000, etc.
+            sample_rate * channels * (bits_per_sample // 8),  # Byterate
+            channels * (bits_per_sample // 8),  # Blockalign
+            bits_per_sample,  # 16 bits for two byte samples, etc.  => A METTRE A JOUR - POUR TEST
         )
 
-        cherrypy.response.headers["Content-Type"] = "text/html"
-        code = kwargs.get("code")
-        url = f"http://localhost:{PROXY_PORT}/callback?code={code}"
-        if cherrypy.request.method.upper() in ["GET", "POST"]:
-            html = "<html><body><h1>Authentication succesful</h1>"
-            html += "<p>You can now close this browser window.</p>"
-            html += "</body></html>"
-            xbmc.executebuiltin(f"SetProperty(spotify-token-info,{url},Home)")
-            log_msg("authkey sent")
-            return html
+        # Generate data chunk.
+        data_chunk_spec = "<4sL"
+        data_size = num_samples * channels * (bits_per_sample / 8)
+        data_chunk = struct.pack(
+            data_chunk_spec,
+            "data".encode(encoding="UTF-8"),  # Chunk id
+            int(data_size),  # Chunk size (excluding chunk id and this field)
+        )
+        sum_items = [
+            # "WAVE" string following size field
+            4,
+            # "fmt " + chunk size field + chunk size
+            struct.calcsize(format_chunk_spec),
+            # Size of data chunk spec + data size
+            struct.calcsize(data_chunk_spec) + data_size,
+        ]
+
+        # Generate main header.
+        all_chunks_size = int(sum(sum_items))
+        main_header_spec = "<4sL4s"
+        main_header = struct.pack(
+            main_header_spec,
+            "RIFF".encode(encoding="UTF-8"),
+            all_chunks_size,
+            "WAVE".encode(encoding="UTF-8"),
+        )
+
+        # Write all the contents in.
+        file.write(main_header)
+        file.write(format_chunk)
+        file.write(data_chunk)
+
+        return file.getvalue(), all_chunks_size + 8
+
+    except Exception as ex:
+        log_exception("Failed to create wave header.")
 
 
 class ProxyRunner(threading.Thread):
