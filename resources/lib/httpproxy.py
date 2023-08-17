@@ -32,17 +32,18 @@ if SAVE_TO_RECENTLY_PLAYED_FILE:
 
 
 class Root:
-    spotty_bin = None
-    spotty_trackid = None
-    spotty_range_l = None
-
     def __init__(self, spotty):
         self.spotty = spotty
+        self.track_id: str = ""
+        self.track_duration: int = 0
+        self.wav_header: bytes = bytes()
+        self.track_length = 0
+
         self.requested_kodi_volume = self.get_spotify_volume_setting()
         self.kodi_volume_has_been_reset = False
         self.saved_volume = -1
 
-        self.sp = None
+        self.spotipy = None
         self.win = xbmcgui.Window(10000)
         self.my_recently_played_playlist_name = self.get_my_recently_played_playlist_name()
         self.my_recently_played_playlist_id = None
@@ -51,6 +52,11 @@ class Root:
             os.makedirs(ADDON_OUTPUT_PATH, exist_ok=True)
             timestamp = time.strftime("%Y%m%d%H%M%S", time.gmtime())
             self.recently_played_file = f"{ADDON_OUTPUT_PATH}/recently_played_{timestamp}.txt"
+
+    def set_track(self, track_id: str, track_duration: float) -> None:
+        self.track_id = track_id
+        self.track_duration = int(track_duration)
+        self.wav_header, self.track_length = self.create_wav_header()
 
     @staticmethod
     def get_spotify_volume_setting():
@@ -121,7 +127,7 @@ class Root:
             if self.my_recently_played_playlist_name:
                 if not self.my_recently_played_playlist_id:
                     self.set_my_recently_played_playlist_id()
-                self.sp.playlist_add_items(self.my_recently_played_playlist_id, [track_id])
+                self.spotipy.playlist_add_items(self.my_recently_played_playlist_id, [track_id])
                 log_msg(
                     f"Saved track to '{self.my_recently_played_playlist_name}' playlist.",
                     xbmc.LOGDEBUG,
@@ -147,13 +153,13 @@ class Root:
         return xbmcaddon.Addon(id=ADDON_ID).getSetting("my_recently_played_playlist_name")
 
     def set_my_recently_played_playlist_id(self):
-        self.sp = spotipy.Spotify(auth=utils.get_authkey_from_kodi())
+        self.spotipy = spotipy.Spotify(auth=utils.get_authkey_from_kodi())
         userid = self.win.getProperty(utils.KODI_PROPERTY_SPOTIFY_USERNAME)
         log_msg(
             f"Getting id for '{self.my_recently_played_playlist_name}' playlist.", xbmc.LOGDEBUG
         )
         self.my_recently_played_playlist_id = utils.get_user_playlist_id(
-            self.sp, userid, self.my_recently_played_playlist_name
+            self.spotipy, userid, self.my_recently_played_playlist_name
         )
 
         if not self.my_recently_played_playlist_id:
@@ -162,7 +168,7 @@ class Root:
                 " Creating one now.",
                 xbmc.LOGINFO,
             )
-            playlist = self.sp.user_playlist_create(
+            playlist = self.spotipy.user_playlist_create(
                 userid, self.my_recently_played_playlist_name, False
             )
             self.my_recently_played_playlist_id = playlist["id"]
@@ -191,39 +197,39 @@ class Root:
         return "Server started"
 
     @cherrypy.expose
-    def track(self, track_id, duration):
-        # Check the sanity of the request.
-        self._check_request()
+    def track(self, track_id, flt_duration_str):
+        try:
+            self.set_track(track_id, float(flt_duration_str))
 
-        if SAVE_TO_RECENTLY_PLAYED_FILE:
-            self.save_currently_playing_track_to_recently_played(track_id)
+            # Check the sanity of the request.
+            self._check_request()
 
-        # Get track info.
-        duration = int(float(duration))
-        wave_header, file_size = create_wave_header(duration)
-        request_range = cherrypy.request.headers.get("Range", "")
+            if SAVE_TO_RECENTLY_PLAYED_FILE:
+                self.save_currently_playing_track_to_recently_played(track_id)
 
-        # Response timeout must be at least the duration of the track read/write loop.
-        # Checks for timeout and stops pushing audio to player if it occurs.
-        cherrypy.response.timeout = int(math.ceil(duration * 1.5))
+            # Response timeout must be at least the duration of the track read/write loop.
+            # Checks for timeout and stops pushing audio to player if it occurs.
+            cherrypy.response.timeout = int(math.ceil(self.track_duration * 1.5))
 
-        # Set the cherrypy headers.
-        range_l, range_r = self._set_cherrypy_headers(request_range, file_size)
+            # Set the cherrypy headers.
+            request_range = cherrypy.request.headers.get("Range", "")
+            range_l, range_r = self._set_cherrypy_headers(request_range)
 
-        # If method was GET, then write the file content.
-        if cherrypy.request.method.upper() == "GET":
-            self._ensure_no_spotty_running()
-            return self.send_audio_stream(track_id, range_r - range_l, wave_header, range_l)
+            # If method was GET, then write the file content.
+            if cherrypy.request.method.upper() == "GET":
+                return self.send_audio_stream(range_r - range_l, range_l)
+        except:
+            log_exception("Error in 'track'")
 
     track._cp_config = {"response.stream": True}
 
-    def _set_cherrypy_headers(self, request_range, file_size):
+    def _set_cherrypy_headers(self, request_range):
         if request_range and request_range != "bytes=0-":
-            return self._set_partial_cherrypy_headers(file_size)
-        return self._set_full_cherrypy_headers(file_size)
+            return self._set_partial_cherrypy_headers()
+        return self._set_full_cherrypy_headers()
 
     @staticmethod
-    def _set_partial_cherrypy_headers(file_size):
+    def _set_partial_cherrypy_headers():
         # Partial request.
         cherrypy.response.status = "206 Partial Content"
         cherrypy.response.headers["Content-Type"] = "audio/x-wav"
@@ -233,11 +239,13 @@ class Root:
         try:
             range_r = int(rng[1])
         except:
-            range_r = file_size
+            range_r = self.track_length
 
         cherrypy.response.headers["Accept-Ranges"] = "bytes"
         cherrypy.response.headers["Content-Length"] = range_r - range_l
-        cherrypy.response.headers["Content-Range"] = f"bytes {range_l}-{range_r}/{file_size}"
+        cherrypy.response.headers[
+            "Content-Range"
+        ] = f"bytes {range_l}-{range_r}/{self.track_length}"
         log_msg(
             f"Partial request range: {cherrypy.response.headers['Content-Range']},"
             f" length: {cherrypy.response.headers['Content-Length']}",
@@ -246,58 +254,37 @@ class Root:
 
         return range_l, range_r
 
-    def _set_full_cherrypy_headers(self, file_size):
+    def _set_full_cherrypy_headers(self):
         # Full file
         cherrypy.response.headers["Content-Type"] = "audio/x-wav"
         cherrypy.response.headers["Accept-Ranges"] = "bytes"
-        cherrypy.response.headers["Content-Length"] = file_size
-        log_msg(f"Full File. Size: {file_size}.", xbmc.LOGDEBUG)
+        cherrypy.response.headers["Content-Length"] = self.track_length
+        log_msg(f"Full File. Size: {self.track_length}.", xbmc.LOGDEBUG)
         log_msg(f"Track ended?", xbmc.LOGDEBUG)
         self.reset_volume_to_saved()
 
-        return 0, file_size
+        return 0, self.track_length
 
-    def _ensure_no_spotty_running(self):
-        if not self.spotty_bin:
-            return
-
-        # If the spotty binary is still attached for a different request, then try to terminate it.
-        log_msg("A running 'spotty' was detected - killing it to continue.", xbmc.LOGWARNING)
-        self.kill_spotty()
-
-        count = 20
-        while self.spotty_bin and (count > 0):
-            time.sleep(0.1)
-            count -= 1
-
-        if not self.spotty_bin:
-            raise Exception("Could not kill spotty binary.")
-
-    def kill_spotty(self):
-        self.spotty_bin.terminate()
-        self.spotty_bin.communicate()
-        self.spotty_bin = None
-        self.spotty_trackid = None
-        self.spotty_range_l = None
-        log_msg("Killing spotty.")
-
-    def send_audio_stream(self, track_id, length, wave_header, range_l):
+    def send_audio_stream(self, range_len, range_l):
         """Chunked transfer of audio data from spotty binary"""
+        self.spotty.kill_spotty()
+
+        spotty_bin = None
         bytes_written = 0
 
         try:
             self.reset_kodi_volume()
 
-            log_msg(f"Start transfer for track {track_id} - range: {range_l}", xbmc.LOGDEBUG)
+            log_msg(f"Start transfer for track {self.track_id} - range: {range_l}", xbmc.LOGDEBUG)
 
             # Write wave header.
             # Only count bytes actually from the spotify stream.
             if not range_l:
-                yield wave_header
-                bytes_written = len(wave_header)
+                yield self.wav_header
+                bytes_written = len(self.wav_header)
 
             # Get data from spotty stdout and append to our buffer.
-            track_id_uri = SPOTIFY_TRACK_PREFIX + track_id
+            track_id_uri = SPOTIFY_TRACK_PREFIX + self.track_id
             args = [
                 "--name",
                 "temp",
@@ -309,35 +296,31 @@ class Root:
                 "--single-track",
                 track_id_uri,
             ]
-            if self.spotty_bin is None:
-                self.spotty_bin = self.spotty.run_spotty(args, use_creds=True)
-            if not self.spotty_bin.returncode:
-                log_msg(f"returncode: {self.spotty_bin.returncode}", xbmc.LOGDEBUG)
+            spotty_bin = self.spotty.run_spotty(args, use_creds=True)
+            if not spotty_bin.returncode:
+                log_msg(f"returncode: {spotty_bin.returncode}", xbmc.LOGDEBUG)
 
-            self.spotty_trackid = track_id
-            self.spotty_range_l = range_l
-
-            log_msg(f"Reading track uri: {track_id_uri}, length = {length}", xbmc.LOGDEBUG)
+            log_msg(f"Reading track uri: {track_id_uri}, length = {range_len}", xbmc.LOGDEBUG)
 
             # Ignore the first x bytes to match the range request.
             if range_l:
-                self.spotty_bin.stdout.read(range_l)
+                spotty_bin.stdout.read(range_l)
 
             # Loop as long as there's something to output.
-            while bytes_written < length:
-                frame = self.spotty_bin.stdout.read(SPOTTY_AUDIO_CHUNK_SIZE)
+            while bytes_written < range_len:
+                frame = spotty_bin.stdout.read(SPOTTY_AUDIO_CHUNK_SIZE)
                 if not frame:
                     log_msg("Nothing read from stdout.", xbmc.LOGDEBUG)
                     break
                 bytes_written += len(frame)
                 log_msg(
-                    f"Continuing transfer for track {track_id} - bytes written = {bytes_written}",
+                    f"Continuing transfer for track {self.track_id} - bytes written = {bytes_written}",
                     xbmc.LOGDEBUG,
                 )
                 yield frame
 
             log_msg(
-                f"FINISHED transfer for track {track_id}"
+                f"FINISHED transfer for track {self.track_id}"
                 f" - range {range_l} - bytes written {bytes_written}.",
                 xbmc.LOGDEBUG,
             )
@@ -350,70 +333,72 @@ class Root:
             log_exception("Error with track transfer")
         finally:
             # Make sure spotty always gets terminated.
-            if self.spotty_bin is not None:
-                self.kill_spotty()
+            if spotty_bin is not None:
+                log_msg("Killing spotty.")
+                spotty_bin.terminate()
+                spotty_bin.communicate()
+                self.spotty.kill_spotty()
 
+    def create_wav_header(self):
+        """generate a wave header for the stream"""
+        try:
+            log_msg(f"Start getting wave header. duration = {self.track_duration}", xbmc.LOGDEBUG)
+            file = BytesIO()
+            num_samples = 44100 * self.track_duration
+            channels = 2
+            sample_rate = 44100
+            bits_per_sample = 16
 
-def create_wave_header(duration):
-    """generate a wave header for the stream"""
-    try:
-        log_msg(f"Start getting wave header. duration = {duration}", xbmc.LOGDEBUG)
-        file = BytesIO()
-        num_samples = 44100 * duration
-        channels = 2
-        sample_rate = 44100
-        bits_per_sample = 16
+            # Generate format chunk.
+            format_chunk_spec = "<4sLHHLLHH"
+            format_chunk = struct.pack(
+                format_chunk_spec,
+                "fmt ".encode(encoding="UTF-8"),  # Chunk id
+                16,  # Size of this chunk (excluding chunk id and this field)
+                1,  # Audio format, 1 for PCM
+                channels,  # Number of channels
+                sample_rate,  # Samplerate, 44100, 48000, etc.
+                sample_rate * channels * (bits_per_sample // 8),  # Byterate
+                channels * (bits_per_sample // 8),  # Blockalign
+                bits_per_sample,  # 16 bits for two byte samples, etc.  => A METTRE A JOUR - POUR TEST
+            )
 
-        # Generate format chunk.
-        format_chunk_spec = "<4sLHHLLHH"
-        format_chunk = struct.pack(
-            format_chunk_spec,
-            "fmt ".encode(encoding="UTF-8"),  # Chunk id
-            16,  # Size of this chunk (excluding chunk id and this field)
-            1,  # Audio format, 1 for PCM
-            channels,  # Number of channels
-            sample_rate,  # Samplerate, 44100, 48000, etc.
-            sample_rate * channels * (bits_per_sample // 8),  # Byterate
-            channels * (bits_per_sample // 8),  # Blockalign
-            bits_per_sample,  # 16 bits for two byte samples, etc.  => A METTRE A JOUR - POUR TEST
-        )
+            # Generate data chunk.
+            data_chunk_spec = "<4sL"
+            data_size = num_samples * channels * (bits_per_sample / 8)
+            data_chunk = struct.pack(
+                data_chunk_spec,
+                "data".encode(encoding="UTF-8"),  # Chunk id
+                int(data_size),  # Chunk size (excluding chunk id and this field)
+            )
+            sum_items = [
+                # "WAVE" string following size field
+                4,
+                # "fmt " + chunk size field + chunk size
+                struct.calcsize(format_chunk_spec),
+                # Size of data chunk spec + data size
+                struct.calcsize(data_chunk_spec) + data_size,
+            ]
 
-        # Generate data chunk.
-        data_chunk_spec = "<4sL"
-        data_size = num_samples * channels * (bits_per_sample / 8)
-        data_chunk = struct.pack(
-            data_chunk_spec,
-            "data".encode(encoding="UTF-8"),  # Chunk id
-            int(data_size),  # Chunk size (excluding chunk id and this field)
-        )
-        sum_items = [
-            # "WAVE" string following size field
-            4,
-            # "fmt " + chunk size field + chunk size
-            struct.calcsize(format_chunk_spec),
-            # Size of data chunk spec + data size
-            struct.calcsize(data_chunk_spec) + data_size,
-        ]
+            # Generate main header.
+            all_chunks_size = int(sum(sum_items))
+            main_header_spec = "<4sL4s"
+            main_header = struct.pack(
+                main_header_spec,
+                "RIFF".encode(encoding="UTF-8"),
+                all_chunks_size,
+                "WAVE".encode(encoding="UTF-8"),
+            )
 
-        # Generate main header.
-        all_chunks_size = int(sum(sum_items))
-        main_header_spec = "<4sL4s"
-        main_header = struct.pack(
-            main_header_spec,
-            "RIFF".encode(encoding="UTF-8"),
-            all_chunks_size,
-            "WAVE".encode(encoding="UTF-8"),
-        )
+            # Write all the contents in.
+            file.write(main_header)
+            file.write(format_chunk)
+            file.write(data_chunk)
 
-        # Write all the contents in.
-        file.write(main_header)
-        file.write(format_chunk)
-        file.write(data_chunk)
+            return file.getvalue(), all_chunks_size + 8
 
-        return file.getvalue(), all_chunks_size + 8
-
-    except Exception as ex:
-        log_exception("Failed to create wave header.")
+        except Exception:
+            log_exception("Failed to create wave header.")
 
 
 class ProxyRunner(threading.Thread):
