@@ -213,11 +213,6 @@ class PluginContent:
         self.addon.setSetting("cache_checksum", time.strftime("%Y%m%d%H%M%S", time.gmtime()))
         xbmc.executebuiltin("Container.Refresh")
 
-    def refresh_connected_device(self):
-        """set reconnect flag for main_loop"""
-        if self.addon.getSetting("playback_device") == "connect":
-            self.win.setProperty("spotify-cmd", "__RECONNECT__")
-
     def browse_main(self):
         # Main listing.
         xbmcplugin.setContent(self.addon_handle, "files")
@@ -270,8 +265,6 @@ class PluginContent:
 
         xbmcplugin.addSortMethod(self.addon_handle, xbmcplugin.SORT_METHOD_UNSORTED)
         xbmcplugin.endOfDirectory(handle=self.addon_handle)
-
-        self.refresh_connected_device()
 
     def active_playback_device(self):
         device_name = self.addon.getLocalizedString(LOCAL_PLAYBACK_STR_ID)

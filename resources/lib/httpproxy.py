@@ -297,7 +297,7 @@ class Root:
             # Get data from spotty stdout and append to our buffer.
             track_id_uri = SPOTIFY_TRACK_PREFIX + track_id
             args = [
-                "-n",
+                "--name",
                 "temp",
                 "--enable-volume-normalisation",
                 "--normalisation-gain-type",

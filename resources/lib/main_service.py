@@ -53,15 +53,8 @@ class MainService:
         """main loop which keeps our threads alive and refreshes the token"""
         loop_timer = 5
         while not self.kodimonitor.waitForAbort(loop_timer):
-            # Monitor logged in user.
-            cmd = self.win.getProperty("spotify-cmd")
-            if cmd == "__LOGOUT__":
-                log_msg("logout cmd received")
-                self.win.clearProperty("spotify-cmd")
-                self.current_user = None
-                self.auth_token = None
-                self.switch_user()
-            elif not self.auth_token:
+            # Monitor authorization.
+            if not self.auth_token:
                 # We do not yet have a token.
                 log_msg("Retrieving token...")
                 if self.renew_token():
@@ -85,20 +78,6 @@ class MainService:
         del self.win
         log_msg("Stopped.", xbmc.LOGINFO)
 
-    def switch_user(self):
-        """called whenever we switch to a different user/credentials"""
-        log_msg("Login credentials changed.")
-        if self.renew_token():
-            xbmc.executebuiltin("Container.Refresh")
-
-    def get_username(self):
-        """get the current configured/setup username"""
-        username = self.spotty.get_username()
-        if not username:
-            username = self.addon.getSetting("username")
-
-        return username
-
     def renew_token(self):
         """refresh/retrieve the token"""
         result = False
@@ -106,7 +85,6 @@ class MainService:
         username = self.get_username()
 
         if username:
-            # Stop the connect daemon and retrieve a token.
             log_msg("Retrieving auth token....")
             auth_token = get_token(self.spotty)
 
@@ -124,3 +102,11 @@ class MainService:
             result = True
 
         return result
+
+    def get_username(self):
+        """get the current configured/setup username"""
+        username = self.spotty.get_username()
+        if not username:
+            username = self.addon.getSetting("username")
+
+        return username

@@ -171,7 +171,7 @@ def request_token_spotty(spotty, use_creds=True):
             CLIENT_ID,
             "--scope",
             ",".join(SPOTTY_SCOPE),
-            "-n",
+            "--name",
             "temp-spotty",
         ]
         spotty = spotty.run_spotty(arguments=args, use_creds=use_creds)
@@ -260,28 +260,6 @@ def create_wave_header(duration):
     file.write(data_chunk)
 
     return file.getvalue(), all_chunks_size + 8
-
-
-def process_method_on_list(method_to_run, items):
-    """helper method that processes a method on each list item
-    with pooling if the system supports it"""
-    all_items = []
-
-    if not SUPPORTS_POOL:
-        all_items = [method_to_run(item) for item in items]
-    else:
-        pool = ThreadPool()
-        try:
-            all_items = pool.map(method_to_run, items)
-        except Exception:
-            # Catch exception to prevent threadpool running forever.
-            log_exception(f"Error in '{method_to_run}'")
-        pool.close()
-        pool.join()
-
-    all_items = [f for f in all_items if f]
-
-    return all_items
 
 
 def get_user_playlists(spotipy, userid, limit=50, offset=0):
@@ -398,15 +376,6 @@ def normalize_string(text):
     return text
 
 
-def get_player_name():
-    player_name = xbmc.getInfoLabel("System.FriendlyName")
-    if player_name == "Kodi":
-        import socket
-
-        player_name = "Kodi - %s" % socket.gethostname()
-    return player_name
-
-
 class Spotty(object):
     """
     Spotty is wrapped into a separate class to store common properties.
@@ -416,7 +385,7 @@ class Spotty(object):
 
     def __init__(self):
         self.__cache_path = f"{ADDON_DATA_PATH}/spotty-cache"
-        self.player_name = get_player_name()
+        self.player_name = ""
         self.__spotty_binary = self.get_spotty_binary()
 
         if self.__spotty_binary and self.test_spotty(self.__spotty_binary):
@@ -434,7 +403,7 @@ class Spotty(object):
         try:
             st = os.stat(binary_path)
             os.chmod(binary_path, st.st_mode | stat.S_IEXEC)
-            args = [binary_path, "-n", "selftest", "--disable-discovery", "-x", "-v"]
+            args = [binary_path, "--name", "selftest", "--disable-discovery", "-x", "-v"]
             startupinfo = None
             if os.name == "nt":
                 startupinfo = subprocess.STARTUPINFO()
@@ -473,11 +442,11 @@ class Spotty(object):
             # os.environ["RUST_LOG"] = "debug"
             args = [
                 self.__spotty_binary,
-                "-c",
+                "--cache",
                 self.__cache_path,
-                "-b",
+                "--bitrate",
                 "320",
-                "-v",
+                "--verbose",
                 "--enable-audio-cache",
                 "--ap-port",
                 ap_port,
@@ -485,8 +454,6 @@ class Spotty(object):
 
             if arguments:
                 args += arguments
-            if "-n" not in args:
-                args += ["-n", self.player_name]
 
             loggable_args = args.copy()
 
