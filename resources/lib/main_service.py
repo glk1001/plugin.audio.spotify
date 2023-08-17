@@ -36,7 +36,7 @@ class MainService:
         # Spotipy and the webservice are always pre-started in the background.
         # The auth key for spotipy will be set afterward.
         # The webserver is also used for the authentication callbacks from the Spotify api.
-        self.sp = spotipy.Spotify()
+        self.spotipy = spotipy.Spotify()
 
         self.proxy_runner = ProxyRunner(self.spotty)
         self.proxy_runner.start()
@@ -92,13 +92,13 @@ class MainService:
             log_msg("Retrieved auth token.")
             self.auth_token = auth_token
             # Only update token info in spotipy object.
-            self.sp._auth = auth_token["access_token"]
-            self.current_user = self.sp.me()["id"]
+            self.spotipy._auth = auth_token["access_token"]
+            self.current_user = self.spotipy.me()["id"]
             log_msg(f"Logged into Spotify - Username: {self.current_user}", xbmc.LOGINFO)
             # Store auth_token and username as a window property for easy access by plugin entry.
             self.win.setProperty(utils.KODI_PROPERTY_SPOTIFY_TOKEN, auth_token["access_token"])
             self.win.setProperty(utils.KODI_PROPERTY_SPOTIFY_USERNAME, self.current_user)
-            self.win.setProperty(utils.KODI_PROPERTY_SPOTIFY_COUNTRY, self.sp.me()["country"])
+            self.win.setProperty(utils.KODI_PROPERTY_SPOTIFY_COUNTRY, self.spotipy.me()["country"])
             result = True
 
         return result

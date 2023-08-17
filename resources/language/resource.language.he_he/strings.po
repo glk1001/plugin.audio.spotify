@@ -272,10 +272,6 @@ msgctxt "#11064"
 msgid "Use Kodi OSD for playback on (remote) Spotify Connect device"
 msgstr "תשתמש בנגן של קודי כהתקן הפעלה (מרוחק) כאשר Spotify מתחברת"
 
-msgctxt "#11068"
-msgid "Initial Spotify volume (%)"
-msgstr "Initial Spotify volume (%)"
-
 msgctxt "#11069"
 msgid "My recently played playlist"
 msgstr "My recently played playlist"
