@@ -30,11 +30,12 @@ if SAVE_TO_RECENTLY_PLAYED_FILE:
 
 
 class Root:
+    spotty_bin = None
+    spotty_trackid = None
+    spotty_range_l = None
+
     def __init__(self, spotty):
         self.spotty = spotty
-        self.spotty_bin = None
-        self.spotty_trackid = None
-        self.spotty_range_l = None
         self.requested_kodi_volume = self.get_spotify_volume_setting()
         self.kodi_volume_has_been_reset = False
         self.saved_volume = -1

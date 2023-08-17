@@ -333,7 +333,7 @@ def parse_spotify_track(track, is_album_track=True):
 
     duration = track["duration_ms"] / 1000
 
-    url = "http://localhost:%s/track/%s/%s" % (PROXY_PORT, track["id"], duration)
+    url = f"http://localhost:{PROXY_PORT}/track/{track['id']}/{duration}"
 
     info_labels = {
         "title": track["name"],
