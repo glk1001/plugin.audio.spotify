@@ -11,8 +11,6 @@
 import inspect
 import math
 import os
-import platform
-import stat
 import subprocess
 import time
 from threading import Thread, Event
@@ -22,6 +20,7 @@ import xbmc
 import xbmcaddon
 import xbmcgui
 import xbmcvfs
+from xbmc import LOGDEBUG, LOGINFO, LOGERROR
 
 DEBUG = True
 PROXY_PORT = 52308
@@ -69,11 +68,11 @@ except Exception:
     SUPPORTS_POOL = False
 
 
-def log_msg(msg, loglevel=xbmc.LOGDEBUG, caller_name=None):
+def log_msg(msg, loglevel=LOGDEBUG, caller_name=None):
     if isinstance(msg, str):
         msg = msg.encode("utf-8")
-    if DEBUG and (loglevel == xbmc.LOGDEBUG):
-        loglevel = xbmc.LOGINFO
+    if DEBUG and (loglevel == LOGDEBUG):
+        loglevel = LOGINFO
     if not caller_name:
         caller_name = get_formatted_caller_name(inspect.stack()[1][1], inspect.stack()[1][3])
 
@@ -84,29 +83,11 @@ def get_formatted_caller_name(filename, function_name):
     return f"{os.path.splitext(os.path.basename(filename))[0]}:{function_name}"
 
 
-# def get_log_level_str(loglevel):
-#     match loglevel:
-#         case xbmc.LOGDEBUG:
-#             return "debug"
-#         case xbmc.LOGINFO:
-#             return "info"
-#         case xbmc.LOGWARNING:
-#             return "warn"
-#         case xbmc.LOGERROR:
-#             return "error"
-#         case xbmc.LOGFATAL:
-#             return "fatal"
-#         case xbmc.LOGNONE:
-#             return "none"
-
-
 def log_exception(exception_details):
     """helper to properly log an exception"""
     the_caller_name = get_formatted_caller_name(inspect.stack()[1][1], inspect.stack()[1][3])
-    log_msg(format_exc(), loglevel=xbmc.LOGERROR, caller_name=the_caller_name)
-    log_msg(
-        f"Exception --> {exception_details}.", loglevel=xbmc.LOGERROR, caller_name=the_caller_name
-    )
+    log_msg(format_exc(), loglevel=LOGERROR, caller_name=the_caller_name)
+    log_msg(f"Exception --> {exception_details}.", loglevel=LOGERROR, caller_name=the_caller_name)
 
 
 def addon_setting(setting_name, set_value=None):
@@ -331,66 +312,36 @@ class Spotty(object):
     """
 
     def __init__(self):
-        self.__cache_path = f"{ADDON_DATA_PATH}/spotty-cache"
-        self.player_name = ""
-        self.__spotty_binary = self.get_spotty_binary()
+        self.spotty_binary = None
+        self.spotty_cache = None
+        self.spotify_username = ""
+        self.spotify_password = ""
 
-        if self.__spotty_binary and self.test_spotty(self.__spotty_binary):
+        self.playback_supported = True
+
+    def set_spotty_paths(self, spotty_binary: str, spotty_cache: str) -> None:
+        self.spotty_binary = spotty_binary
+        self.spotty_cache = spotty_cache
+
+        if self.spotty_binary:
             self.playback_supported = True
             xbmc.executebuiltin("SetProperty(spotify.supportsplayback, true, Home)")
         else:
             self.playback_supported = False
-            log_msg(
-                "Error while verifying spotty. Local playback is disabled.", loglevel=xbmc.LOGERROR
-            )
+            log_msg("Error while verifying spotty. Local playback is disabled.", loglevel=LOGERROR)
 
-    @staticmethod
-    def test_spotty(binary_path):
-        """self-test spotty binary"""
-        try:
-            st = os.stat(binary_path)
-            os.chmod(binary_path, st.st_mode | stat.S_IEXEC)
-            args = [binary_path, "--name", "selftest", "--disable-discovery", "-x", "-v"]
-            startupinfo = None
-            if os.name == "nt":
-                startupinfo = subprocess.STARTUPINFO()
-                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-
-            spotty = subprocess.Popen(
-                args,
-                startupinfo=startupinfo,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                bufsize=0,
-            )
-
-            stdout, stderr = spotty.communicate()
-
-            log_msg(stdout)
-
-            if "ok spotty".encode(encoding="UTF-8") in stdout:
-                return True
-
-            if xbmc.getCondVisibility("System.Platform.Windows"):
-                log_msg(
-                    "Unable to initialize spotty binary for playback."
-                    "Make sure you have the VC++ 2015 runtime installed.",
-                    xbmc.LOGERROR,
-                )
-
-        except Exception:
-            log_exception("Test spotty binary error")
-
-        return False
+    def set_spotify_user(self, username: str, password: str) -> None:
+        self.spotify_username = username
+        self.spotify_password = password
 
     def run_spotty(self, arguments=None, use_creds=False, ap_port="54443"):
         """on supported platforms we include the spotty binary"""
         try:
             # os.environ["RUST_LOG"] = "debug"
             args = [
-                self.__spotty_binary,
+                self.spotty_binary,
                 "--cache",
-                self.__cache_path,
+                self.spotty_cache,
                 "--ap-port",
                 ap_port,
             ] + SPOTTY_DEFAULT_ARGS
@@ -401,14 +352,8 @@ class Spotty(object):
             loggable_args = args.copy()
 
             if use_creds:
-                # Use username/password login for spotty.
-                addon = xbmcaddon.Addon(id=ADDON_ID)
-                username = addon.getSetting("username")
-                password = addon.getSetting("password")
-                del addon
-                if username and password:
-                    args += ["-u", username, "-p", password]
-                    loggable_args += ["-u", username, "-p", "****"]
+                args += ["-u", self.spotify_username, "-p", self.spotify_password]
+                loggable_args += ["-u", self.spotify_username, "-p", "****"]
 
             log_msg("run_spotty args: %s" % " ".join(loggable_args))
 
@@ -432,54 +377,9 @@ class Spotty(object):
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             subprocess.Popen(["taskkill", "/IM", "spotty.exe"], startupinfo=startupinfo, shell=True)
         else:
-            if self.__spotty_binary is not None:
-                sp_binary_file = os.path.basename(self.__spotty_binary)
+            if self.spotty_binary is not None:
+                sp_binary_file = os.path.basename(self.spotty_binary)
                 os.system("killall " + sp_binary_file)
-
-    def get_spotty_binary(self):
-        """find the correct spotty binary belonging to the platform"""
-        sp_binary = None
-        if xbmc.getCondVisibility("System.Platform.Windows"):
-            sp_binary = os.path.join(
-                os.path.dirname(__file__), "deps/spotty", "windows", "spotty.exe"
-            )
-        elif xbmc.getCondVisibility("System.Platform.OSX"):
-            sp_binary = os.path.join(os.path.dirname(__file__), "deps/spotty", "macos", "spotty")
-        elif xbmc.getCondVisibility("System.Platform.Linux + !System.Platform.Android"):
-            architecture = platform.machine()
-            log_msg(f"Reported architecture: '{architecture}'.")
-            if architecture.startswith("AMD64") or architecture.startswith("x86_64"):
-                # Generic linux x86_64 binary.
-                sp_binary = os.path.join(
-                    os.path.dirname(__file__), "deps/spotty", "x86-linux", "spotty-x86_64"
-                )
-            else:
-                # When we're unsure about the platform/cpu, try by testing to get
-                # the correct binary path.
-                paths = [
-                    os.path.join(
-                        os.path.dirname(__file__), "deps/spotty", "arm-linux", "spotty-hf"
-                    ),
-                    os.path.join(os.path.dirname(__file__), "deps/spotty", "x86-linux", "spotty"),
-                ]
-                for binary_path in paths:
-                    if self.test_spotty(binary_path):
-                        sp_binary = binary_path
-                        break
-
-        if not sp_binary:
-            log_msg(
-                "Spotty: failed to detect architecture or platform not supported!"
-                " Local playback will not be available.",
-                loglevel=xbmc.LOGERROR,
-            )
-            return None
-
-        st = os.stat(sp_binary)
-        os.chmod(sp_binary, st.st_mode | stat.S_IEXEC)
-        log_msg(f"Spotty architecture detected. Using spotty binary '{sp_binary}'.")
-
-        return sp_binary
 
     @staticmethod
     def get_username():

@@ -17,6 +17,7 @@ import xbmcgui
 import utils
 from deps import spotipy
 from httpproxy import ProxyRunner
+from spotty_helper import SpottyHelper
 from utils import log_msg, ADDON_ID, get_token, Spotty
 
 
@@ -31,7 +32,16 @@ class MainService:
         self.addon = xbmcaddon.Addon(id=ADDON_ID)
         self.win = xbmcgui.Window(10000)
         self.kodimonitor = xbmc.Monitor()
+
+        spotty_helper = SpottyHelper()
         self.spotty = Spotty()
+        self.spotty.set_spotty_paths(
+            spotty_helper.spotty_binary_path, spotty_helper.spotty_cache_path
+        )
+        # Use username/password login for spotty.
+        addon = xbmcaddon.Addon(id=ADDON_ID)
+        self.spotty.set_spotify_user(addon.getSetting("username"), addon.getSetting("password"))
+        del addon
 
         # Spotipy and the webservice are always pre-started in the background.
         # The auth key for spotipy will be set afterward.
