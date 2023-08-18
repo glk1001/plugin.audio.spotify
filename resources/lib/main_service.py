@@ -91,13 +91,11 @@ class MainService:
 
     def renew_token(self):
         """refresh/retrieve the token"""
-        result = False
-        auth_token = None
-        username = self.get_username()
 
-        if username:
-            log_msg("Retrieving auth token....")
-            auth_token = get_token(self.spotty)
+        result = False
+
+        log_msg("Retrieving auth token....")
+        auth_token = get_token(self.spotty)
 
         if auth_token:
             log_msg("Retrieved auth token.")
@@ -113,11 +111,3 @@ class MainService:
             result = True
 
         return result
-
-    def get_username(self):
-        """get the current configured/setup username"""
-        username = self.spotty_helper.get_username()
-        if not username:
-            username = self.addon.getSetting("username")
-
-        return username

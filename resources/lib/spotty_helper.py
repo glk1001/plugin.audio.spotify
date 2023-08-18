@@ -4,7 +4,6 @@ import stat
 import subprocess
 
 import xbmc
-import xbmcvfs
 from xbmc import LOGERROR
 
 from utils import log_msg, log_exception, ADDON_DATA_PATH
@@ -99,17 +98,3 @@ class SpottyHelper:
             log_exception("Test spotty binary error")
 
         return False
-
-    @staticmethod
-    def get_username():
-        username = ""
-
-        cred_file = xbmcvfs.translatePath(f"{ADDON_DATA_PATH}/credentials.json")
-
-        if xbmcvfs.exists(cred_file):
-            with open(cred_file) as cred_file:
-                data = cred_file.read()
-                data = eval(data)
-                username = data["username"]
-
-        return username
