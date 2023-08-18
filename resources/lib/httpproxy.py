@@ -17,8 +17,9 @@ from spotty import Spotty
 from utils import log_msg, log_exception, PROXY_PORT
 
 SPOTIFY_TRACK_PREFIX = "spotify:track:"
-SPOTIFY_BITRATE = "320"
 SPOTTY_AUDIO_CHUNK_SIZE = 524288
+
+SPOTIFY_BITRATE = "320"
 SPOTTY_INITIAL_VOLUME = "50"
 SPOTTY_GAIN_TYPE = "track"
 SPOTTY_STREAMING_DEFAULT_ARGS = [
