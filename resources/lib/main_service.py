@@ -17,8 +17,9 @@ import xbmcgui
 import utils
 from deps import spotipy
 from httpproxy import ProxyRunner
+from spotty import Spotty
 from spotty_helper import SpottyHelper
-from utils import log_msg, ADDON_ID, get_token, Spotty
+from utils import log_msg, ADDON_ID, get_token
 
 
 class MainService:
@@ -33,10 +34,10 @@ class MainService:
         self.win = xbmcgui.Window(10000)
         self.kodimonitor = xbmc.Monitor()
 
-        spotty_helper = SpottyHelper()
+        self.spotty_helper = SpottyHelper()
         self.spotty = Spotty()
         self.spotty.set_spotty_paths(
-            spotty_helper.spotty_binary_path, spotty_helper.spotty_cache_path
+            self.spotty_helper.spotty_binary_path, self.spotty_helper.spotty_cache_path
         )
         # Use username/password login for spotty.
         addon = xbmcaddon.Addon(id=ADDON_ID)
@@ -115,7 +116,7 @@ class MainService:
 
     def get_username(self):
         """get the current configured/setup username"""
-        username = self.spotty.get_username()
+        username = self.spotty_helper.get_username()
         if not username:
             username = self.addon.getSetting("username")
 

@@ -49,7 +49,6 @@ NO_CREDENTIALS_MSG_STR_ID = 11050
 
 
 class MyPlayer(xbmc.Player):
-
     def onPlayBackStarted(self) -> None:
         log_msg("onPlayBackStarted called.")
 
@@ -554,14 +553,14 @@ class PluginContent:
     def play_track(self):
         """play track"""
         track = self.sp.track(self.track_id)
-        log_msg(f"Play track \'{track['name']} ({self.track_id})\'.")
+        log_msg(f"Play track '{track['name']} ({self.track_id})'.")
         url, li = parse_spotify_track(track)
 
         kodi_player = MyPlayer()
         kodi_player.play(url, li)
 
         while not kodi_player.isPlaying():
-           time.sleep(0.1)
+            time.sleep(0.1)
         log_msg("Starting wait loop.")
         while kodi_player.isPlaying():
             time.sleep(0.5)
@@ -570,7 +569,7 @@ class PluginContent:
     def play_playlist(self):
         """play entire playlist"""
         playlist_details = self.get_playlist_details(self.playlist_id)
-        log_msg(f"Play playlist \'{playlist_details['name']}\'.")
+        log_msg(f"Play playlist '{playlist_details['name']}'.")
 
         # Add tracks to the playlist then start playing.
         kodi_player = MyPlayer()
@@ -883,7 +882,7 @@ class PluginContent:
 
             contextitems.append(
                 (
-                    'MyPlay', #xbmc.getLocalizedString(14098),
+                    "MyPlay",  # xbmc.getLocalizedString(14098),
                     "RunPlugin(plugin://plugin.audio.spotify/"
                     f"?action=play_track&trackid={real_trackuri})",
                 )

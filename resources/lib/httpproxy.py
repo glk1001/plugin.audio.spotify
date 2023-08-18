@@ -13,7 +13,8 @@ import xbmc
 import cherrypy
 from cherrypy._cpnative_server import CPHTTPServer
 from save_recently_played import SaveRecentlyPlayed
-from utils import log_msg, log_exception, PROXY_PORT, Spotty
+from spotty import Spotty
+from utils import log_msg, log_exception, PROXY_PORT
 
 SPOTIFY_TRACK_PREFIX = "spotify:track:"
 SPOTIFY_BITRATE = "320"
