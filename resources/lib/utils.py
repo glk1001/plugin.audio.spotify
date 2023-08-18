@@ -53,6 +53,14 @@ KODI_PROPERTY_SPOTIFY_TOKEN = "spotify-token"
 KODI_PROPERTY_SPOTIFY_USERNAME = "spotify-username"
 KODI_PROPERTY_SPOTIFY_COUNTRY = "spotify - country"
 
+SPOTTY_PLAYER_NAME = "temp-spotty"
+SPOTTY_DEFAULT_ARGS = [
+    "--verbose",
+    "--enable-audio-cache",
+    "--name",
+    SPOTTY_PLAYER_NAME,
+]
+
 try:
     from multiprocessing.pool import ThreadPool
 
@@ -169,8 +177,6 @@ def request_token_spotty(spotty, use_creds=True):
             CLIENT_ID,
             "--scope",
             ",".join(SPOTTY_SCOPE),
-            "--name",
-            "temp-spotty",
         ]
         spotty = spotty.run_spotty(arguments=args, use_creds=use_creds)
 
@@ -385,13 +391,9 @@ class Spotty(object):
                 self.__spotty_binary,
                 "--cache",
                 self.__cache_path,
-                "--bitrate",
-                "320",
-                "--verbose",
-                "--enable-audio-cache",
                 "--ap-port",
                 ap_port,
-            ]
+            ] + SPOTTY_DEFAULT_ARGS
 
             if arguments:
                 args += arguments
