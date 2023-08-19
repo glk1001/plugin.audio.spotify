@@ -18,6 +18,7 @@ import utils
 from deps import spotipy
 from httpproxy import ProxyRunner
 from spotty import Spotty
+from spotty_audio_streamer import SpottyAudioStreamer
 from spotty_helper import SpottyHelper
 from utils import log_msg, ADDON_ID, get_token
 
@@ -43,16 +44,16 @@ class MainService:
         addon = xbmcaddon.Addon(id=ADDON_ID)
         self.spotty.set_spotify_user(addon.getSetting("username"), addon.getSetting("password"))
         del addon
+        self.spotty_streamer = SpottyAudioStreamer(self.spotty)
 
         # Spotipy and the webservice are always pre-started in the background.
         # The auth key for spotipy will be set afterward.
         # The webserver is also used for the authentication callbacks from the Spotify api.
         self.spotipy = spotipy.Spotify()
 
-        self.proxy_runner = ProxyRunner(self.spotty)
+        self.proxy_runner = ProxyRunner(self.spotty_streamer)
         self.proxy_runner.start()
-        webport = self.proxy_runner.get_port()
-        log_msg(f"Started webproxy at port {webport}.")
+        log_msg(f"Started web proxy at port {self.proxy_runner.get_port()}.")
 
         # Authenticate at startup.
         self.renew_token()
