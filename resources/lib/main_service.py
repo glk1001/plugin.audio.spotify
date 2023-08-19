@@ -63,19 +63,26 @@ class MainService:
 
     def __main_loop(self):
         """main loop which keeps our threads alive and refreshes the token"""
-        loop_timer = 5
-        while not self.kodimonitor.waitForAbort(loop_timer):
+        log_msg("Starting main loop.")
+        loop_counter = 0
+        loop_timer_in_secs = 6
+        while not self.kodimonitor.waitForAbort(loop_timer_in_secs):
+            loop_counter += 1
+            if (loop_counter % 10) == 0:
+                log_msg(f"Main loop continuing. Loop counter: {loop_counter}.")
+
             # Monitor authorization.
             if not self.auth_token:
                 # We do not yet have a token.
-                log_msg("Retrieving token...")
+                log_msg("Retrieving first token...")
                 if self.__renew_token():
                     xbmc.executebuiltin("Container.Refresh")
             elif self.auth_token and (self.auth_token["expires_at"] - 60) <= (int(time.time())):
-                log_msg("Token needs to be refreshed.")
+                expire_time = self.auth_token["expires_at"]
+                time_now = int(time.time())
+                log_msg(f"Token expire time: {expire_time}; time now: {time_now}.")
+                log_msg("Refreshing token now.")
                 self.__renew_token()
-            else:
-                loop_timer = 5
 
         # End of loop: we should exit.
         self.__close()
@@ -99,8 +106,11 @@ class MainService:
         auth_token = get_token(self.spotty)
 
         if auth_token:
-            log_msg("Retrieved auth token.")
             self.auth_token = auth_token
+            expire_time = time.strftime(
+                "%Y-%m-%d %H:%M:%S", time.localtime(self.auth_token["expires_at"])
+            )
+            log_msg(f"Retrieved auth token. Expires at {expire_time}.")
             # Only update token info in spotipy object.
             self.spotipy._auth = auth_token["access_token"]
             self.current_user = self.spotipy.me()["id"]
