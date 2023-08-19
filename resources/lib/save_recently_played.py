@@ -16,7 +16,7 @@ class SaveRecentlyPlayed:
     def __init__(self):
         self.spotipy = None
         self.win = xbmcgui.Window(10000)
-        self.my_recently_played_playlist_name = self.get_my_recently_played_playlist_name()
+        self.my_recently_played_playlist_name = self.__get_my_recently_played_playlist_name()
         self.my_recently_played_playlist_id = None
 
         os.makedirs(ADDON_OUTPUT_PATH, exist_ok=True)
@@ -30,7 +30,7 @@ class SaveRecentlyPlayed:
 
         if self.my_recently_played_playlist_name:
             if not self.my_recently_played_playlist_id:
-                self.set_my_recently_played_playlist_id()
+                self.__set_my_recently_played_playlist_id()
             self.spotipy.playlist_add_items(self.my_recently_played_playlist_id, [track_id])
             log_msg(
                 f"Saved track to '{self.my_recently_played_playlist_name}' playlist.",
@@ -53,10 +53,10 @@ class SaveRecentlyPlayed:
         log_msg(f"Saved track '{track_name}' to '{self.recently_played_file}'.", xbmc.LOGDEBUG)
 
     @staticmethod
-    def get_my_recently_played_playlist_name():
+    def __get_my_recently_played_playlist_name():
         return xbmcaddon.Addon(id=ADDON_ID).getSetting("my_recently_played_playlist_name")
 
-    def set_my_recently_played_playlist_id(self):
+    def __set_my_recently_played_playlist_id(self):
         self.spotipy = spotipy.Spotify(auth=utils.get_authkey_from_kodi())
         userid = self.win.getProperty(utils.KODI_PROPERTY_SPOTIFY_USERNAME)
         log_msg(

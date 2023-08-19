@@ -56,12 +56,12 @@ class MainService:
         log_msg(f"Started web proxy at port {self.proxy_runner.get_port()}.")
 
         # Authenticate at startup.
-        self.renew_token()
+        self.__renew_token()
 
         # Start mainloop.
-        self.main_loop()
+        self.__main_loop()
 
-    def main_loop(self):
+    def __main_loop(self):
         """main loop which keeps our threads alive and refreshes the token"""
         loop_timer = 5
         while not self.kodimonitor.waitForAbort(loop_timer):
@@ -69,18 +69,18 @@ class MainService:
             if not self.auth_token:
                 # We do not yet have a token.
                 log_msg("Retrieving token...")
-                if self.renew_token():
+                if self.__renew_token():
                     xbmc.executebuiltin("Container.Refresh")
             elif self.auth_token and (self.auth_token["expires_at"] - 60) <= (int(time.time())):
                 log_msg("Token needs to be refreshed.")
-                self.renew_token()
+                self.__renew_token()
             else:
                 loop_timer = 5
 
         # End of loop: we should exit.
-        self.close()
+        self.__close()
 
-    def close(self):
+    def __close(self):
         """shutdown, perform cleanup"""
         log_msg("Shutdown requested!", xbmc.LOGINFO)
         self.spotty.kill_spotty()
@@ -90,7 +90,7 @@ class MainService:
         del self.win
         log_msg("Stopped.", xbmc.LOGINFO)
 
-    def renew_token(self):
+    def __renew_token(self):
         """refresh/retrieve the token"""
 
         result = False

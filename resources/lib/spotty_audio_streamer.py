@@ -37,7 +37,7 @@ class SpottyAudioStreamer:
     def set_track(self, track_id: str, track_duration: float) -> None:
         self.track_id = track_id
         self.track_duration = int(track_duration)
-        self.wav_header, self.track_length = self.create_wav_header()
+        self.wav_header, self.track_length = self.__create_wav_header()
 
     def send_audio_stream(self, range_len: int, range_l: int):
         """Chunked transfer of audio data from spotty binary"""
@@ -107,7 +107,7 @@ class SpottyAudioStreamer:
     def kill_spotty(self):
         self.spotty.kill_spotty()
 
-    def create_wav_header(self):
+    def __create_wav_header(self):
         """generate a wav header for the stream"""
         try:
             log_msg(f"Start getting wav header. Duration = {self.track_duration}", xbmc.LOGDEBUG)

@@ -34,7 +34,7 @@ class Root:
             self.spotty_streamer.set_track(track_id, float(flt_duration_str))
 
             # Check the sanity of the request.
-            self._check_request()
+            self.__check_request()
 
             if SAVE_TO_RECENTLY_PLAYED_FILE:
                 self.save_recently_played.save_currently_playing_track(track_id)
@@ -45,7 +45,7 @@ class Root:
 
             # Set the cherrypy headers.
             request_range = cherrypy.request.headers.get("Range", "")
-            range_l, range_r = self._set_cherrypy_headers(request_range)
+            range_l, range_r = self.__set_cherrypy_headers(request_range)
 
             # If method was GET, then write the file content.
             if cherrypy.request.method.upper() == "GET":
@@ -56,7 +56,7 @@ class Root:
     track._cp_config = {"response.stream": True}
 
     @staticmethod
-    def _check_request():
+    def __check_request():
         method = cherrypy.request.method.upper()
         # headers = cherrypy.request.headers
         # Fail for other methods than get or head.
@@ -69,12 +69,12 @@ class Root:
         #     raise cherrypy.HTTPError(403)
         return method
 
-    def _set_cherrypy_headers(self, request_range):
+    def __set_cherrypy_headers(self, request_range):
         if request_range and request_range != "bytes=0-":
-            return self._set_partial_cherrypy_headers()
-        return self._set_full_cherrypy_headers()
+            return self.__set_partial_cherrypy_headers()
+        return self.__set_full_cherrypy_headers()
 
-    def _set_partial_cherrypy_headers(self):
+    def __set_partial_cherrypy_headers(self):
         # Partial request.
         cherrypy.response.status = "206 Partial Content"
         cherrypy.response.headers["Content-Type"] = "audio/x-wav"
@@ -99,7 +99,7 @@ class Root:
 
         return range_l, range_r
 
-    def _set_full_cherrypy_headers(self):
+    def __set_full_cherrypy_headers(self):
         # Full file
         cherrypy.response.headers["Content-Type"] = "audio/x-wav"
         cherrypy.response.headers["Accept-Ranges"] = "bytes"
