@@ -1,6 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 """
     plugin.audio.spotify
     Spotify player for Kodi
@@ -23,34 +20,33 @@ from utils import log_msg, ADDON_ID
 
 
 class MainService:
-    """our main background service running the various threads"""
-
     def __init__(self):
         log_msg(f"Spotify plugin version: {xbmcaddon.Addon(id=ADDON_ID).getAddonInfo('version')}.")
 
         self.__spotty_helper = SpottyHelper()
 
-        self.__spotty = Spotty()
-        self.__spotty.set_spotty_paths(
+        spotty = Spotty()
+        spotty.set_spotty_paths(
             self.__spotty_helper.spotty_binary_path, self.__spotty_helper.spotty_cache_path
         )
-        self.__spotty.set_spotify_user(
+        spotty.set_spotify_user(
             self.__spotty_helper.spotify_username, self.__spotty_helper.spotify_password
         )
-        self.__spotty_streamer = SpottyAudioStreamer(self.__spotty)
 
-        self.__spotty_auth = SpottyAuth(self.__spotty)
+        self.__spotty_streamer = SpottyAudioStreamer(spotty)
+
+        self.__spotty_auth = SpottyAuth(spotty)
         self.__auth_token = None
 
         self.__proxy_runner = ProxyRunner(self.__spotty_streamer)
-        self.__proxy_runner.start()
-        log_msg(f"Started web proxy at port {self.__proxy_runner.get_port()}.")
 
         self.__kodimonitor = xbmc.Monitor()
 
     def run(self):
-        """main loop which keeps our threads alive and refreshes the token"""
         log_msg("Starting main service loop.")
+
+        self.__proxy_runner.start()
+        log_msg(f"Started web proxy at port {self.__proxy_runner.get_port()}.")
 
         self.__renew_token()
 
@@ -77,24 +73,21 @@ class MainService:
 
     def __close(self):
         log_msg("Shutdown requested!")
-        self.__spotty.kill_spotty()
+        self.__spotty_helper.kill_all_spotties()
         self.__proxy_runner.stop()
         log_msg("Main service stopped.")
 
     def __renew_token(self):
-        result = False
-
         log_msg("Retrieving auth token....", xbmc.LOGDEBUG)
         auth_token = self.__spotty_auth.get_token()
+        if not auth_token:
+            raise Exception("Could not get Spotify auth token.")
 
-        if auth_token:
-            self.__auth_token = auth_token
-            expire_time = time.strftime(
-                "%Y-%m-%d %H:%M:%S", time.localtime(float(self.__auth_token["expires_at"]))
-            )
-            log_msg(f"Retrieved Spotify auth token. Expires at {expire_time}.")
-            # Cache auth token for easy access by the plugin.
-            utils.cache_auth_token(self.__auth_token["access_token"])
-            result = True
+        self.__auth_token = auth_token
+        expire_time = time.strftime(
+            "%Y-%m-%d %H:%M:%S", time.localtime(float(self.__auth_token["expires_at"]))
+        )
+        log_msg(f"Retrieved Spotify auth token. Expires at {expire_time}.")
 
-        return result
+        # Cache auth token for easy access by the plugin.
+        utils.cache_auth_token(self.__auth_token["access_token"])

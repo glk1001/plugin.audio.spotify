@@ -19,6 +19,20 @@ class SpottyHelper:
         self.spotify_username = addon.getSetting("username")
         self.spotify_password = addon.getSetting("password")
 
+        if not self.spotify_username:
+            raise Exception("Could not get spotify username.")
+        if not self.spotify_password:
+            raise Exception("Could not get spotify password.")
+
+    def kill_all_spotties(self):
+        if platform.system() == "Windows":
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            subprocess.Popen(["taskkill", "/IM", "spotty.exe"], startupinfo=startupinfo, shell=True)
+        else:
+            sp_binary_file = os.path.basename(self.spotty_binary_path)
+            os.system("killall --quiet " + sp_binary_file)
+
     @staticmethod
     def __get_spotty_path():
         """find the correct spotty binary belonging to the platform"""

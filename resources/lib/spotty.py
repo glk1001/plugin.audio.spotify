@@ -77,14 +77,3 @@ class Spotty:
             )
         except Exception as ex:
             raise Exception(f"Run spotty error: {ex}")
-
-    def kill_spotty(self):
-        """make sure we don't have any (remaining) spotty processes running before we start one"""
-        if xbmc.getCondVisibility("System.Platform.Windows"):
-            startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            subprocess.Popen(["taskkill", "/IM", "spotty.exe"], startupinfo=startupinfo, shell=True)
-        else:
-            if self.spotty_binary is not None:
-                sp_binary_file = os.path.basename(self.spotty_binary)
-                os.system("killall " + sp_binary_file)
