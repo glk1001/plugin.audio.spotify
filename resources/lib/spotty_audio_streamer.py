@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 import struct
 from io import BytesIO
+from typing import Tuple
 
 import xbmc
 
 from spotty import Spotty
-from utils import log_msg, log_exception
+from utils import log_msg, log_exception, kill_process_by_pid
 
 SPOTIFY_TRACK_PREFIX = "spotify:track:"
 # SPOTTY_AUDIO_CHUNK_SIZE = 20*1024
@@ -27,42 +27,52 @@ SPOTTY_STREAMING_DEFAULT_ARGS = [
 
 class SpottyAudioStreamer:
     def __init__(self, spotty: Spotty):
-        self.spotty = spotty
+        self.__spotty = spotty
 
-        self.track_id: str = ""
-        self.track_duration: int = 0
-        self.wav_header: bytes = bytes()
-        self.track_length = 0
+        self.__track_id: str = ""
+        self.__track_duration: int = 0
+        self.__wav_header: bytes = bytes()
+        self.__track_length: int = 0
+
+        self.__last_spotty_pid = -1
+
+    def get_track_length(self) -> int:
+        return self.__track_length
+
+    def get_track_duration(self) -> int:
+        return self.__track_duration
 
     def set_track(self, track_id: str, track_duration: float) -> None:
-        self.track_id = track_id
-        self.track_duration = int(track_duration)
-        self.wav_header, self.track_length = self.__create_wav_header()
+        self.__track_id = track_id
+        self.__track_duration = int(track_duration)
+        self.__wav_header, self.__track_length = self.__create_wav_header()
 
     def send_audio_stream(self, range_len: int, range_l: int):
         """Chunked transfer of audio data from spotty binary"""
-        self.kill_spotty()
-        spotty_process = None
 
+        spotty_process = None
         bytes_sent = 0
         try:
-            log_msg(f"Start transfer for track {self.track_id} - range: {range_l}", xbmc.LOGDEBUG)
+            self.__kill_last_spotty()
+
+            log_msg(f"Start transfer for track {self.__track_id} - range: {range_l}", xbmc.LOGDEBUG)
 
             # Send the wav header.
             if range_l == 0:
-                bytes_sent = len(self.wav_header)
-                yield self.wav_header
+                bytes_sent = len(self.__wav_header)
+                yield self.__wav_header
 
-            track_id_uri = SPOTIFY_TRACK_PREFIX + self.track_id
+            track_id_uri = SPOTIFY_TRACK_PREFIX + self.__track_id
 
             # Execute the spotty process, then collect stdout.
             args = SPOTTY_STREAMING_DEFAULT_ARGS + [
                 "--single-track",
                 track_id_uri,
             ]
-            spotty_process = self.spotty.run_spotty(args, use_creds=True)
+            spotty_process = self.__spotty.run_spotty(args, use_creds=True)
             if not spotty_process.returncode:
                 log_msg(f"returncode: {spotty_process.returncode}", xbmc.LOGERROR)
+            self.__last_spotty_pid = spotty_process.pid
 
             log_msg(f"Reading track uri: {track_id_uri}, length = {range_len}", xbmc.LOGDEBUG)
 
@@ -79,14 +89,14 @@ class SpottyAudioStreamer:
 
                 bytes_sent += len(frame)
                 log_msg(
-                    f"Continuing transfer for track {self.track_id} - bytes written = {bytes_sent}",
+                    f"Continuing transfer for track {self.__track_id} - bytes written = {bytes_sent}",
                     xbmc.LOGDEBUG,
                 )
                 yield frame
 
             # All done.
             log_msg(
-                f"FINISHED transfer for track {self.track_id}"
+                f"FINISHED transfer for track {self.__track_id}"
                 f" - range {range_l} - bytes written {bytes_sent}.",
                 xbmc.LOGDEBUG,
             )
@@ -100,19 +110,24 @@ class SpottyAudioStreamer:
         finally:
             # Make sure spotty always gets terminated.
             if spotty_process:
+                self.__last_spotty_pid = -1
                 spotty_process.terminate()
                 spotty_process.communicate()
-            self.kill_spotty()
+                # Make really sure!
+                kill_process_by_pid(spotty_process.pid)
 
-    def kill_spotty(self):
-        self.spotty.kill_spotty()
+    def __kill_last_spotty(self):
+        if self.__last_spotty_pid == -1:
+            return
+        kill_process_by_pid(self.__last_spotty_pid)
+        self.__last_spotty_pid = -1
 
-    def __create_wav_header(self):
+    def __create_wav_header(self) -> Tuple[bytes, int]:
         """generate a wav header for the stream"""
         try:
-            log_msg(f"Start getting wav header. Duration = {self.track_duration}", xbmc.LOGDEBUG)
+            log_msg(f"Start getting wav header. Duration = {self.__track_duration}", xbmc.LOGDEBUG)
             file = BytesIO()
-            num_samples = 44100 * self.track_duration
+            num_samples = 44100 * self.__track_duration
             channels = 2
             sample_rate = 44100
             bits_per_sample = 16

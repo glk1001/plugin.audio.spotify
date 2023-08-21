@@ -41,7 +41,9 @@ class Root:
 
             # Response timeout must be at least the duration of the track read/write loop.
             # Checks for timeout and stops pushing audio to player if it occurs.
-            cherrypy.response.timeout = int(math.ceil(self.spotty_streamer.track_duration * 1.5))
+            cherrypy.response.timeout = int(
+                math.ceil(self.spotty_streamer.get_track_duration() * 1.5)
+            )
 
             # Set the cherrypy headers.
             request_range = cherrypy.request.headers.get("Range", "")
@@ -84,13 +86,13 @@ class Root:
         try:
             range_r = int(rng[1])
         except:
-            range_r = self.spotty_streamer.track_length
+            range_r = self.spotty_streamer.get_track_length()
 
         cherrypy.response.headers["Accept-Ranges"] = "bytes"
         cherrypy.response.headers["Content-Length"] = range_r - range_l
         cherrypy.response.headers[
             "Content-Range"
-        ] = f"bytes {range_l}-{range_r}/{self.spotty_streamer.track_length}"
+        ] = f"bytes {range_l}-{range_r}/{self.spotty_streamer.get_track_length()}"
         log_msg(
             f"Partial request range: {cherrypy.response.headers['Content-Range']},"
             f" length: {cherrypy.response.headers['Content-Length']}",
@@ -103,11 +105,11 @@ class Root:
         # Full file
         cherrypy.response.headers["Content-Type"] = "audio/x-wav"
         cherrypy.response.headers["Accept-Ranges"] = "bytes"
-        cherrypy.response.headers["Content-Length"] = self.spotty_streamer.track_length
-        log_msg(f"Full File. Size: {self.spotty_streamer.track_length}.", xbmc.LOGDEBUG)
+        cherrypy.response.headers["Content-Length"] = self.spotty_streamer.get_track_length()
+        log_msg(f"Full File. Size: {self.spotty_streamer.get_track_length()}.", xbmc.LOGDEBUG)
         log_msg(f"Track ended?", xbmc.LOGDEBUG)
 
-        return 0, self.spotty_streamer.track_length
+        return 0, self.spotty_streamer.get_track_length()
 
 
 class ProxyRunner(threading.Thread):

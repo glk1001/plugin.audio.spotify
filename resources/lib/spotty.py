@@ -1,11 +1,13 @@
 import os
 import subprocess
+from typing import List
 
 import xbmc
-from xbmc import LOGERROR
+from xbmc import LOGDEBUG, LOGERROR
 
-from utils import log_msg, log_exception
+from utils import log_msg
 
+SPOTTY_PORT = 54443
 SPOTTY_PLAYER_NAME = "temp-spotty"
 SPOTTY_DEFAULT_ARGS = [
     "--verbose",
@@ -15,16 +17,10 @@ SPOTTY_DEFAULT_ARGS = [
 ]
 
 
-class Spotty(object):
-    """
-    Spotty is wrapped into a separate class to store common properties.
-    This is done to prevent hitting a kodi issue where calling one of the
-    infolabel methods at playback time causes a crash of the playback.
-    """
-
+class Spotty:
     def __init__(self):
-        self.spotty_binary = None
-        self.spotty_cache = None
+        self.spotty_binary = ""
+        self.spotty_cache = ""
         self.spotify_username = ""
         self.spotify_password = ""
 
@@ -45,8 +41,11 @@ class Spotty(object):
         self.spotify_username = username
         self.spotify_password = password
 
-    def run_spotty(self, extra_args=None, use_creds=False, ap_port="54443"):
-        """on supported platforms we include the spotty binary"""
+    def run_spotty(
+        self, extra_args: List[str] = None, use_creds: bool = False, ap_port: str = SPOTTY_PORT
+    ) -> subprocess.Popen:
+        log_msg("Running spotty...", LOGDEBUG)
+
         try:
             # os.environ["RUST_LOG"] = "debug"
             args = [
@@ -54,7 +53,7 @@ class Spotty(object):
                 "--cache",
                 self.spotty_cache,
                 "--ap-port",
-                ap_port,
+                str(ap_port),
             ] + SPOTTY_DEFAULT_ARGS
 
             if extra_args:
@@ -66,7 +65,7 @@ class Spotty(object):
                 args += ["-u", self.spotify_username, "-p", self.spotify_password]
                 loggable_args += ["-u", self.spotify_username, "-p", "****"]
 
-            log_msg("run_spotty args: %s" % " ".join(loggable_args))
+            log_msg(f"Spotty args: {' '.join(loggable_args)}", LOGDEBUG)
 
             startupinfo = None
             if os.name == "nt":
@@ -76,10 +75,8 @@ class Spotty(object):
             return subprocess.Popen(
                 args, startupinfo=startupinfo, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
             )
-        except Exception:
-            log_exception("Run spotty error")
-
-        return None
+        except Exception as ex:
+            raise Exception(f"Run spotty error: {ex}")
 
     def kill_spotty(self):
         """make sure we don't have any (remaining) spotty processes running before we start one"""

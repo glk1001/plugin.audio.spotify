@@ -4,15 +4,20 @@ import stat
 import subprocess
 
 import xbmc
+import xbmcaddon
 from xbmc import LOGERROR
 
-from utils import log_msg, log_exception, ADDON_DATA_PATH
+from utils import log_msg, log_exception, ADDON_ID, ADDON_DATA_PATH
 
 
 class SpottyHelper:
     def __init__(self):
         self.spotty_binary_path = self.__get_spotty_path()
         self.spotty_cache_path = f"{ADDON_DATA_PATH}/spotty-cache"
+
+        addon = xbmcaddon.Addon(id=ADDON_ID)
+        self.spotify_username = addon.getSetting("username")
+        self.spotify_password = addon.getSetting("password")
 
     @staticmethod
     def __get_spotty_path():

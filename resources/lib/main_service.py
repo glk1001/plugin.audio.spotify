@@ -34,9 +34,9 @@ class MainService:
         self.__spotty.set_spotty_paths(
             self.__spotty_helper.spotty_binary_path, self.__spotty_helper.spotty_cache_path
         )
-        # Use username/password login for spotty.
-        addon = xbmcaddon.Addon(id=ADDON_ID)
-        self.__spotty.set_spotify_user(addon.getSetting("username"), addon.getSetting("password"))
+        self.__spotty.set_spotify_user(
+            self.__spotty_helper.spotify_username, self.__spotty_helper.spotify_password
+        )
         self.__spotty_streamer = SpottyAudioStreamer(self.__spotty)
 
         self.__spotty_auth = SpottyAuth(self.__spotty)

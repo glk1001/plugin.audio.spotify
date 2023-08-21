@@ -11,6 +11,7 @@
 import inspect
 import math
 import os
+import signal
 from traceback import format_exc
 
 import xbmc
@@ -48,6 +49,13 @@ def log_exception(exception_details):
     the_caller_name = get_formatted_caller_name(inspect.stack()[1][1], inspect.stack()[1][3])
     log_msg(format_exc(), loglevel=LOGERROR, caller_name=the_caller_name)
     log_msg(f"Exception --> {exception_details}.", loglevel=LOGERROR, caller_name=the_caller_name)
+
+
+def kill_process_by_pid(pid: int) -> None:
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except OSError:
+        pass
 
 
 def cache_value_in_kodi(kodi_property_id, value):
