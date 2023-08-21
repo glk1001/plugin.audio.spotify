@@ -17,8 +17,9 @@ import utils
 from httpproxy import ProxyRunner
 from spotty import Spotty
 from spotty_audio_streamer import SpottyAudioStreamer
+from spotty_auth import SpottyAuth
 from spotty_helper import SpottyHelper
-from utils import log_msg, ADDON_ID, get_token
+from utils import log_msg, ADDON_ID
 
 
 class MainService:
@@ -28,6 +29,7 @@ class MainService:
         log_msg(f"Spotify plugin version: {xbmcaddon.Addon(id=ADDON_ID).getAddonInfo('version')}.")
 
         self.__spotty_helper = SpottyHelper()
+
         self.__spotty = Spotty()
         self.__spotty.set_spotty_paths(
             self.__spotty_helper.spotty_binary_path, self.__spotty_helper.spotty_cache_path
@@ -37,11 +39,13 @@ class MainService:
         self.__spotty.set_spotify_user(addon.getSetting("username"), addon.getSetting("password"))
         self.__spotty_streamer = SpottyAudioStreamer(self.__spotty)
 
+        self.__spotty_auth = SpottyAuth(self.__spotty)
+        self.__auth_token = None
+
         self.__proxy_runner = ProxyRunner(self.__spotty_streamer)
         self.__proxy_runner.start()
         log_msg(f"Started web proxy at port {self.__proxy_runner.get_port()}.")
 
-        self.__auth_token = None
         self.__kodimonitor = xbmc.Monitor()
 
     def run(self):
@@ -81,7 +85,7 @@ class MainService:
         result = False
 
         log_msg("Retrieving auth token....", xbmc.LOGDEBUG)
-        auth_token = get_token(self.__spotty)
+        auth_token = self.__spotty_auth.get_token()
 
         if auth_token:
             self.__auth_token = auth_token

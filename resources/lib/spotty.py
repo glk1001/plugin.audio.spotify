@@ -45,7 +45,7 @@ class Spotty(object):
         self.spotify_username = username
         self.spotify_password = password
 
-    def run_spotty(self, arguments=None, use_creds=False, ap_port="54443"):
+    def run_spotty(self, extra_args=None, use_creds=False, ap_port="54443"):
         """on supported platforms we include the spotty binary"""
         try:
             # os.environ["RUST_LOG"] = "debug"
@@ -57,8 +57,8 @@ class Spotty(object):
                 ap_port,
             ] + SPOTTY_DEFAULT_ARGS
 
-            if arguments:
-                args += arguments
+            if extra_args:
+                args += extra_args
 
             loggable_args = args.copy()
 

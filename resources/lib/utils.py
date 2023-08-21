@@ -11,12 +11,9 @@
 import inspect
 import math
 import os
-import time
-from threading import Thread, Event
 from traceback import format_exc
 
 import xbmc
-import xbmcaddon
 import xbmcgui
 import xbmcvfs
 from xbmc import LOGDEBUG, LOGINFO, LOGERROR
@@ -28,34 +25,7 @@ ADDON_ID = "plugin.audio.spotify"
 ADDON_DATA_PATH = xbmcvfs.translatePath(f"special://profile/addon_data/{ADDON_ID}")
 ADDON_WINDOW_ID = 10000
 
-SPOTTY_SCOPE = [
-    "user-read-playback-state",
-    "user-read-currently-playing",
-    "user-modify-playback-state",
-    "playlist-read-private",
-    "playlist-read-collaborative",
-    "playlist-modify-public",
-    "playlist-modify-private",
-    "user-follow-modify",
-    "user-follow-read",
-    "user-library-read",
-    "user-library-modify",
-    "user-read-private",
-    "user-read-email",
-    "user-read-birthdate",
-    "user-top-read",
-]
-CLIENT_ID = "2eb96f9b37494be1824999d58028a305"
-CLIENT_SECRET = "038ec3b4555f46eab1169134985b9013"
-
 KODI_PROPERTY_SPOTIFY_TOKEN = "spotify-token"
-
-try:
-    from multiprocessing.pool import ThreadPool
-
-    SUPPORTS_POOL = True
-except Exception:
-    SUPPORTS_POOL = False
 
 
 def log_msg(msg, loglevel=LOGDEBUG, caller_name=None):
@@ -78,20 +48,6 @@ def log_exception(exception_details):
     the_caller_name = get_formatted_caller_name(inspect.stack()[1][1], inspect.stack()[1][3])
     log_msg(format_exc(), loglevel=LOGERROR, caller_name=the_caller_name)
     log_msg(f"Exception --> {exception_details}.", loglevel=LOGERROR, caller_name=the_caller_name)
-
-
-def addon_setting(setting_name, set_value=None):
-    """get/set addon setting"""
-    addon = xbmcaddon.Addon(id=ADDON_ID)
-    if not set_value:
-        return addon.getSetting(setting_name)
-
-    addon.setSetting(setting_name, set_value)
-
-
-def kill_on_timeout(done, timeout, proc):
-    if not done.wait(timeout):
-        proc.kill()
 
 
 def cache_value_in_kodi(kodi_property_id, value):
@@ -119,78 +75,6 @@ def cache_auth_token(auth_token):
 
 def get_cached_auth_token():
     return get_cached_value_from_kodi(KODI_PROPERTY_SPOTIFY_TOKEN)
-
-
-def get_token(spotty):
-    # Get authentication token for api - prefer cached version.
-    token_info = None
-    try:
-        if spotty.playback_supported:
-            # Try to get a token with spotty.
-            token_info = request_token_spotty(spotty, use_creds=False)
-            if token_info:
-                # Save current username in cached spotty creds.
-                spotty.get_username()
-            if not token_info:
-                token_info = request_token_spotty(spotty, use_creds=True)
-    except Exception:
-        log_exception("Spotify get token error")
-        token_info = None
-
-    if not token_info:
-        log_msg(
-            "Couldn't request authentication token. Username/password error?"
-            " If you're using a facebook account with Spotify,"
-            " make sure to generate a device account/password in the Spotify accountdetails."
-        )
-
-    return token_info
-
-
-def request_token_spotty(spotty, use_creds=True):
-    """request token by using the spotty binary"""
-    if not spotty.playback_supported:
-        return None
-
-    token_info = None
-
-    try:
-        args = [
-            "-t",
-            "--client-id",
-            CLIENT_ID,
-            "--scope",
-            ",".join(SPOTTY_SCOPE),
-        ]
-        spotty = spotty.run_spotty(arguments=args, use_creds=use_creds)
-
-        done = Event()
-        watcher = Thread(target=kill_on_timeout, args=(done, 5, spotty))
-        watcher.daemon = True
-        watcher.start()
-
-        stdout, stderr = spotty.communicate()
-        done.set()
-
-        log_msg(f"request_token_spotty stdout: {stdout}")
-        result = None
-        for line in stdout.split():
-            line = line.strip()
-            if line.startswith(b'{"accessToken"'):
-                result = eval(line)
-
-        # Transform token info to spotipy compatible format.
-        if result:
-            token_info = {
-                "access_token": result["accessToken"],
-                "expires_in": result["expiresIn"],
-                "expires_at": int(time.time()) + result["expiresIn"],
-                "refresh_token": result["accessToken"],
-            }
-    except Exception:
-        log_exception("Spotify request token error")
-
-    return token_info
 
 
 def get_user_playlists(spotipy, limit=50, offset=0):
