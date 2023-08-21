@@ -65,7 +65,7 @@ class SpottyAuth:
                     "refresh_token": result["accessToken"],
                 }
                 log_msg(f"Token: {token_info}", LOGDEBUG)
-        except Exception:
-            log_exception("Get Spotify token error")
+        except Exception as exc:
+            log_exception(exc, "Get Spotify token error")
 
         return token_info

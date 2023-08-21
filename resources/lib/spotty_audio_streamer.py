@@ -100,13 +100,13 @@ class SpottyAudioStreamer:
                 f" - range {range_l} - bytes written {bytes_sent}.",
                 xbmc.LOGDEBUG,
             )
-        except Exception:
+        except Exception as exc:
             log_msg(
                 "EXCEPTION FINISH transfer for track {track_id}"
                 f" - range {range_l} - bytes written {bytes_sent}.",
                 xbmc.LOGERROR,
             )
-            log_exception("Error with track transfer")
+            log_exception(exc, "Error with track transfer")
         finally:
             # Make sure spotty always gets terminated.
             if spotty_process:
@@ -180,5 +180,5 @@ class SpottyAudioStreamer:
 
             return file.getvalue(), all_chunks_size + 8
 
-        except Exception:
-            log_exception("Failed to create wave header.")
+        except Exception as exc:
+            log_exception(exc, "Failed to create wave header.")

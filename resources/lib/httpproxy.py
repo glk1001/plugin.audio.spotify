@@ -51,8 +51,8 @@ class Root:
             # If method was GET, then write the file content.
             if cherrypy.request.method.upper() == "GET":
                 return self.spotty_streamer.send_audio_stream(range_r - range_l, range_l)
-        except:
-            log_exception("Error in 'track'")
+        except Exception as exc:
+            log_exception(exc, "Error in 'track'")
 
     track._cp_config = {"response.stream": True}
 

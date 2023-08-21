@@ -101,7 +101,7 @@ class SpottyHelper:
 
             stdout, stderr = spotty.communicate()
 
-            log_msg(stdout)
+            log_msg(stdout.decode(encoding="UTF-8"))
 
             if "ok spotty".encode(encoding="UTF-8") in stdout:
                 return True
@@ -113,7 +113,7 @@ class SpottyHelper:
                     LOGERROR,
                 )
 
-        except Exception:
-            log_exception("Test spotty binary error")
+        except Exception as exc:
+            log_exception(exc, "Test spotty binary error")
 
         return False

@@ -126,8 +126,8 @@ class PluginContent:
                 self.browse_main()
                 self.precache_library()
 
-        except Exception:
-            log_exception("PluginContent init error")
+        except Exception as exc:
+            log_exception(exc, "PluginContent init error")
             xbmcplugin.endOfDirectory(handle=self.addon_handle)
 
     def get_authkey(self):

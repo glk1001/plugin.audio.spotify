@@ -1,6 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 """
     plugin.audio.spotify
     Spotify player for Kodi
@@ -12,7 +9,7 @@ import inspect
 import math
 import os
 import signal
-from traceback import format_exc
+from traceback import format_exception
 
 import xbmc
 import xbmcgui
@@ -29,7 +26,7 @@ ADDON_WINDOW_ID = 10000
 KODI_PROPERTY_SPOTIFY_TOKEN = "spotify-token"
 
 
-def log_msg(msg, loglevel=LOGDEBUG, caller_name=None):
+def log_msg(msg: str, loglevel: int = LOGDEBUG, caller_name: str = "") -> None:
     if isinstance(msg, str):
         msg = msg.encode("utf-8")
     if DEBUG and (loglevel == LOGDEBUG):
@@ -40,15 +37,14 @@ def log_msg(msg, loglevel=LOGDEBUG, caller_name=None):
     xbmc.log(f"{ADDON_ID}:{caller_name} --> {msg}", level=loglevel)
 
 
-def get_formatted_caller_name(filename, function_name):
-    return f"{os.path.splitext(os.path.basename(filename))[0]}:{function_name}"
-
-
-def log_exception(exception_details):
-    """helper to properly log an exception"""
+def log_exception(exc: Exception, exception_details: str) -> None:
     the_caller_name = get_formatted_caller_name(inspect.stack()[1][1], inspect.stack()[1][3])
-    log_msg(format_exc(), loglevel=LOGERROR, caller_name=the_caller_name)
+    log_msg(" ".join(format_exception(exc)), loglevel=LOGERROR, caller_name=the_caller_name)
     log_msg(f"Exception --> {exception_details}.", loglevel=LOGERROR, caller_name=the_caller_name)
+
+
+def get_formatted_caller_name(filename: str, function_name: str) -> str:
+    return f"{os.path.splitext(os.path.basename(filename))[0]}:{function_name}"
 
 
 def kill_process_by_pid(pid: int) -> None:
@@ -56,6 +52,57 @@ def kill_process_by_pid(pid: int) -> None:
         os.kill(pid, signal.SIGKILL)
     except OSError:
         pass
+
+
+def bytes_to_megabytes(byts: int):
+    return (byts / 1024.0) / 1024.0
+
+
+def get_chunks(data, chunk_size):
+    return [data[x : x + chunk_size] for x in range(0, len(data), chunk_size)]
+
+
+def try_encode(text, encoding="utf-8"):
+    try:
+        return text.encode(encoding, "ignore")
+    except:
+        return text
+
+
+def try_decode(text, encoding="utf-8"):
+    try:
+        return text.decode(encoding, "ignore")
+    except:
+        return text
+
+
+def normalize_string(text):
+    import unicodedata
+
+    text = text.replace(":", "")
+    text = text.replace("/", "-")
+    text = text.replace("\\", "-")
+    text = text.replace("<", "")
+    text = text.replace(">", "")
+    text = text.replace("*", "")
+    text = text.replace("?", "")
+    text = text.replace("|", "")
+    text = text.replace("(", "")
+    text = text.replace(")", "")
+    text = text.replace('"', "")
+    text = text.strip()
+    text = text.rstrip(".")
+    text = unicodedata.normalize("NFKD", try_decode(text))
+
+    return text
+
+
+def cache_auth_token(auth_token):
+    cache_value_in_kodi(KODI_PROPERTY_SPOTIFY_TOKEN, auth_token)
+
+
+def get_cached_auth_token():
+    return get_cached_value_from_kodi(KODI_PROPERTY_SPOTIFY_TOKEN)
 
 
 def cache_value_in_kodi(kodi_property_id, value):
@@ -75,14 +122,6 @@ def get_cached_value_from_kodi(kodi_property_id, wait_ms=500):
         count -= 1
 
     return None
-
-
-def cache_auth_token(auth_token):
-    cache_value_in_kodi(KODI_PROPERTY_SPOTIFY_TOKEN, auth_token)
-
-
-def get_cached_auth_token():
-    return get_cached_value_from_kodi(KODI_PROPERTY_SPOTIFY_TOKEN)
 
 
 def get_user_playlists(spotipy, limit=50, offset=0):
@@ -157,42 +196,3 @@ def parse_spotify_track(track, is_album_track=True):
     li.setMimeType("audio/wave")
 
     return url, li
-
-
-def get_chunks(data, chunk_size):
-    return [data[x : x + chunk_size] for x in range(0, len(data), chunk_size)]
-
-
-def try_encode(text, encoding="utf-8"):
-    try:
-        return text.encode(encoding, "ignore")
-    except:
-        return text
-
-
-def try_decode(text, encoding="utf-8"):
-    try:
-        return text.decode(encoding, "ignore")
-    except:
-        return text
-
-
-def normalize_string(text):
-    import unicodedata
-
-    text = text.replace(":", "")
-    text = text.replace("/", "-")
-    text = text.replace("\\", "-")
-    text = text.replace("<", "")
-    text = text.replace(">", "")
-    text = text.replace("*", "")
-    text = text.replace("?", "")
-    text = text.replace("|", "")
-    text = text.replace("(", "")
-    text = text.replace(")", "")
-    text = text.replace('"', "")
-    text = text.strip()
-    text = text.rstrip(".")
-    text = unicodedata.normalize("NFKD", try_decode(text))
-
-    return text
