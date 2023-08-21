@@ -12,7 +12,6 @@ import time
 
 import xbmc
 import xbmcaddon
-import xbmcgui
 
 import utils
 from httpproxy import ProxyRunner
@@ -43,12 +42,11 @@ class MainService:
         log_msg(f"Started web proxy at port {self.__proxy_runner.get_port()}.")
 
         self.__auth_token = None
-        self.__win = xbmcgui.Window(10000)
         self.__kodimonitor = xbmc.Monitor()
 
     def run(self):
         """main loop which keeps our threads alive and refreshes the token"""
-        log_msg("Starting main loop.")
+        log_msg("Starting main service loop.")
 
         self.__renew_token()
 
@@ -63,8 +61,8 @@ class MainService:
             if (self.__auth_token["expires_at"] - 60) <= (int(time.time())):
                 expire_time = self.__auth_token["expires_at"]
                 time_now = int(time.time())
-                log_msg(f"Token expire time: {expire_time}; time now: {time_now}.")
-                log_msg("Refreshing token now.")
+                log_msg(f"Spotify token expired. Expire time: {expire_time}; time now: {time_now}.")
+                log_msg("Refreshing auth token now.")
                 self.__renew_token()
                 xbmc.executebuiltin("Container.Refresh")  # ???????????
 
@@ -74,25 +72,25 @@ class MainService:
         self.__close()
 
     def __close(self):
-        log_msg("Shutdown requested!", xbmc.LOGINFO)
+        log_msg("Shutdown requested!")
         self.__spotty.kill_spotty()
         self.__proxy_runner.stop()
-        log_msg("Stopped.", xbmc.LOGINFO)
+        log_msg("Main service stopped.")
 
     def __renew_token(self):
         result = False
 
-        log_msg("Retrieving auth token....")
+        log_msg("Retrieving auth token....", xbmc.LOGDEBUG)
         auth_token = get_token(self.__spotty)
 
         if auth_token:
             self.__auth_token = auth_token
             expire_time = time.strftime(
-                "%Y-%m-%d %H:%M:%S", time.localtime(self.__auth_token["expires_at"])
+                "%Y-%m-%d %H:%M:%S", time.localtime(float(self.__auth_token["expires_at"]))
             )
             log_msg(f"Retrieved Spotify auth token. Expires at {expire_time}.")
-            # Store auth token as a window property for easy access by plugin entry.
-            self.__win.setProperty(utils.KODI_PROPERTY_SPOTIFY_TOKEN, auth_token["access_token"])
+            # Cache auth token for easy access by the plugin.
+            utils.cache_auth_token(self.__auth_token["access_token"])
             result = True
 
         return result

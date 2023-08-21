@@ -98,7 +98,7 @@ class PluginContent:
     def __init__(self):
         try:
             self.addon = xbmcaddon.Addon(id=ADDON_ID)
-            self.win = xbmcgui.Window(10000)
+            self.win = xbmcgui.Window(utils.ADDON_WINDOW_ID)
             self.cache = SimpleCache()
 
             auth_token = self.get_authkey()
@@ -132,7 +132,7 @@ class PluginContent:
 
     def get_authkey(self):
         """get authentication key"""
-        auth_token = utils.get_authkey_from_kodi()
+        auth_token = utils.get_cached_auth_token()
 
         if not auth_token:
             if self.win.getProperty("spotify.supportsplayback"):
@@ -625,7 +625,7 @@ class PluginContent:
         if not self.track_id and xbmc.getInfoLabel("MusicPlayer.(1).Property(spotifytrackid)"):
             self.track_id = xbmc.getInfoLabel("MusicPlayer.(1).Property(spotifytrackid)")
 
-        own_playlists, own_playlist_names = utils.get_user_playlists(self.sp, self.userid, 50)
+        own_playlists, own_playlist_names = utils.get_user_playlists(self.sp, 50)
         own_playlist_names.append(xbmc.getLocalizedString(525))
 
         xbmc.executebuiltin("Dialog.Close(busydialog)")
