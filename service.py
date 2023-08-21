@@ -16,4 +16,4 @@ if __name__ == "__main__":
 
     from resources.lib.main_service import MainService
 
-    MainService()
+    MainService().run()

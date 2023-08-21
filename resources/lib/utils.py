@@ -48,8 +48,6 @@ CLIENT_ID = "2eb96f9b37494be1824999d58028a305"
 CLIENT_SECRET = "038ec3b4555f46eab1169134985b9013"
 
 KODI_PROPERTY_SPOTIFY_TOKEN = "spotify-token"
-KODI_PROPERTY_SPOTIFY_USERNAME = "spotify-username"
-KODI_PROPERTY_SPOTIFY_COUNTRY = "spotify - country"
 
 try:
     from multiprocessing.pool import ThreadPool
@@ -194,7 +192,8 @@ def get_user_playlists(spotipy, userid, limit=50, offset=0):
     return own_playlists, own_playlist_names
 
 
-def get_user_playlist_id(spotipy, userid, playlist_name):
+def get_user_playlist_id(spotipy, playlist_name):
+    userid = spotipy.me()["id"]
     offset = 0
     while True:
         own_playlists, own_playlist_names = get_user_playlists(

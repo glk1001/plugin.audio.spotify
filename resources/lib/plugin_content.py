@@ -114,8 +114,8 @@ class PluginContent:
             self.default_view_category = self.addon.getSetting("categoryDefaultView")
             self.parse_params()
             self.sp = spotipy.Spotify(auth=auth_token)
-            self.userid = self.win.getProperty(utils.KODI_PROPERTY_SPOTIFY_USERNAME)
-            self.user_country = self.win.getProperty(utils.KODI_PROPERTY_SPOTIFY_COUNTRY)
+            self.userid = self.sp.me()["id"]
+            self.user_country = self.sp.me()["country"]
             self.playername = self.active_playback_device()
             if self.action:
                 log_msg(f"Evaluating action '{self.action}'.")

@@ -58,12 +58,11 @@ class SaveRecentlyPlayed:
 
     def __set_my_recently_played_playlist_id(self):
         self.spotipy = spotipy.Spotify(auth=utils.get_authkey_from_kodi())
-        userid = self.win.getProperty(utils.KODI_PROPERTY_SPOTIFY_USERNAME)
         log_msg(
             f"Getting id for '{self.my_recently_played_playlist_name}' playlist.", xbmc.LOGDEBUG
         )
         self.my_recently_played_playlist_id = utils.get_user_playlist_id(
-            self.spotipy, userid, self.my_recently_played_playlist_name
+            self.spotipy, self.my_recently_played_playlist_name
         )
 
         if not self.my_recently_played_playlist_id:
