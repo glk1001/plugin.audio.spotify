@@ -1,6 +1,6 @@
 import struct
 from io import BytesIO
-from typing import Tuple
+from typing import Callable, Tuple
 
 import xbmc
 
@@ -34,6 +34,7 @@ class SpottyAudioStreamer:
         self.__wav_header: bytes = bytes()
         self.__track_length: int = 0
 
+        self.__notify_track_finished: Callable[[str], None] = lambda x: None
         self.__last_spotty_pid = -1
 
     def get_track_length(self) -> int:
@@ -46,6 +47,9 @@ class SpottyAudioStreamer:
         self.__track_id = track_id
         self.__track_duration = int(track_duration)
         self.__wav_header, self.__track_length = self.__create_wav_header()
+
+    def set_notify_track_finished(self, func: Callable[[str], None]) -> None:
+        self.__notify_track_finished = func
 
     def send_audio_stream(self, range_len: int, range_l: int):
         """Chunked transfer of audio data from spotty binary"""
@@ -95,6 +99,7 @@ class SpottyAudioStreamer:
                 yield frame
 
             # All done.
+            self.__notify_track_finished(self.__track_id)
             log_msg(
                 f"FINISHED transfer for track {self.__track_id}"
                 f" - range {range_l} - bytes written {bytes_sent}.",

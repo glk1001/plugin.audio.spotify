@@ -1,5 +1,6 @@
 import math
 import threading
+from typing import Callable
 
 import xbmc
 
@@ -9,19 +10,16 @@ import xbmc
 # 'from deps.cherrypy._cpnative_server import CPHTTPServer'
 import cherrypy
 from cherrypy._cpnative_server import CPHTTPServer
-from save_recently_played import SaveRecentlyPlayed
 from spotty_audio_streamer import SpottyAudioStreamer
 from utils import log_msg, log_exception, PROXY_PORT
-
-SAVE_TO_RECENTLY_PLAYED_FILE = True
 
 
 class Root:
     def __init__(self, spotty_streamer: SpottyAudioStreamer):
-        self.spotty_streamer = spotty_streamer
+        self.__spotty_streamer = spotty_streamer
 
-        if SAVE_TO_RECENTLY_PLAYED_FILE:
-            self.save_recently_played = SaveRecentlyPlayed()
+    def set_notify_track_finished(self, func: Callable[[str], None]) -> None:
+        self.__spotty_streamer.set_notify_track_finished(func)
 
     @cherrypy.expose
     def index(self):
@@ -30,18 +28,15 @@ class Root:
     @cherrypy.expose
     def track(self, track_id, flt_duration_str):
         try:
-            self.spotty_streamer.set_track(track_id, float(flt_duration_str))
+            self.__spotty_streamer.set_track(track_id, float(flt_duration_str))
 
             # Check the sanity of the request.
             self.__check_request()
 
-            if SAVE_TO_RECENTLY_PLAYED_FILE:
-                self.save_recently_played.save_currently_playing_track(track_id)
-
             # Response timeout must be at least the duration of the track read/write loop.
             # Checks for timeout and stops pushing audio to player if it occurs.
             cherrypy.response.timeout = int(
-                math.ceil(self.spotty_streamer.get_track_duration() * 1.5)
+                math.ceil(self.__spotty_streamer.get_track_duration() * 1.5)
             )
 
             # Set the cherrypy headers.
@@ -50,7 +45,7 @@ class Root:
 
             # If method was GET, then write the file content.
             if cherrypy.request.method.upper() == "GET":
-                return self.spotty_streamer.send_audio_stream(range_r - range_l, range_l)
+                return self.__spotty_streamer.send_audio_stream(range_r - range_l, range_l)
         except Exception as exc:
             log_exception(exc, "Error in 'track'")
 
@@ -85,13 +80,13 @@ class Root:
         try:
             range_r = int(rng[1])
         except:
-            range_r = self.spotty_streamer.get_track_length()
+            range_r = self.__spotty_streamer.get_track_length()
 
         cherrypy.response.headers["Accept-Ranges"] = "bytes"
         cherrypy.response.headers["Content-Length"] = range_r - range_l
         cherrypy.response.headers[
             "Content-Range"
-        ] = f"bytes {range_l}-{range_r}/{self.spotty_streamer.get_track_length()}"
+        ] = f"bytes {range_l}-{range_r}/{self.__spotty_streamer.get_track_length()}"
         log_msg(
             f"Partial request range: {cherrypy.response.headers['Content-Range']},"
             f" length: {cherrypy.response.headers['Content-Length']}",
@@ -104,11 +99,11 @@ class Root:
         # Full file
         cherrypy.response.headers["Content-Type"] = "audio/x-wav"
         cherrypy.response.headers["Accept-Ranges"] = "bytes"
-        cherrypy.response.headers["Content-Length"] = self.spotty_streamer.get_track_length()
-        log_msg(f"Full File. Size: {self.spotty_streamer.get_track_length()}.", xbmc.LOGDEBUG)
+        cherrypy.response.headers["Content-Length"] = self.__spotty_streamer.get_track_length()
+        log_msg(f"Full File. Size: {self.__spotty_streamer.get_track_length()}.", xbmc.LOGDEBUG)
         log_msg(f"Track ended?", xbmc.LOGDEBUG)
 
-        return 0, self.spotty_streamer.get_track_length()
+        return 0, self.__spotty_streamer.get_track_length()
 
 
 class ProxyRunner(threading.Thread):

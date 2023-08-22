@@ -12,11 +12,14 @@ import xbmcaddon
 
 import utils
 from httpproxy import ProxyRunner
+from save_recently_played import SaveRecentlyPlayed
 from spotty import Spotty
 from spotty_audio_streamer import SpottyAudioStreamer
 from spotty_auth import SpottyAuth
 from spotty_helper import SpottyHelper
 from utils import log_msg, ADDON_ID
+
+SAVE_TO_RECENTLY_PLAYED_FILE = True
 
 
 class MainService:
@@ -34,6 +37,8 @@ class MainService:
         )
 
         self.__spotty_streamer = SpottyAudioStreamer(spotty)
+        self.__save_recently_played = SaveRecentlyPlayed()
+        self.__spotty_streamer.set_notify_track_finished(self.__save_track_to_recently_played)
 
         self.__spotty_auth = SpottyAuth(spotty)
         self.__auth_token = None
@@ -41,6 +46,10 @@ class MainService:
         self.__proxy_runner = ProxyRunner(self.__spotty_streamer)
 
         self.__kodimonitor = xbmc.Monitor()
+
+    def __save_track_to_recently_played(self, track_id: str) -> None:
+        if SAVE_TO_RECENTLY_PLAYED_FILE:
+            self.__save_recently_played.save_track(track_id)
 
     def run(self):
         log_msg("Starting main service loop.")
@@ -64,7 +73,6 @@ class MainService:
                 log_msg(f"Spotify token expired. Expire time: {expire_time}; time now: {time_now}.")
                 log_msg("Refreshing auth token now.")
                 self.__renew_token()
-                xbmc.executebuiltin("Container.Refresh")  # ???????????
 
             if self.__kodimonitor.waitForAbort(loop_wait_in_secs):
                 break
