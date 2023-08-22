@@ -571,20 +571,19 @@ class PluginContent:
         playlist_details = self.get_playlist_details(self.playlist_id)
         log_msg(f"Play playlist '{playlist_details['name']}'.")
 
-        # Add tracks to the playlist then start playing.
-        kodi_player = MyPlayer()
-        track_num = 1
-        for track in playlist_details["tracks"]["items"]:
-            log_msg(f"Playing track {track_num}.")
+        kodi_playlist = xbmc.PlayList(0)
+        kodi_playlist.clear()
+        kodi_player = xbmc.Player()
+
+        # Add first track and start playing.
+        url, li = parse_spotify_track(playlist_details["tracks"]["items"][0])
+        kodi_playlist.add(url, li)
+        kodi_player.play(kodi_playlist)
+
+        # Add remaining tracks to the playlist while already playing.
+        for track in playlist_details["tracks"]["items"][1:]:
             url, li = parse_spotify_track(track)
-            kodi_player.play(url, li)
-            while not kodi_player.isPlaying():
-                time.sleep(0.1)
-            track_num += 1
-            log_msg("Starting wait loop.")
-            while kodi_player.isPlaying():
-                time.sleep(0.5)
-            log_msg("Finished wait loop.")
+            kodi_playlist.add(url, li)
 
     def get_category(self, categoryid):
         category = self.sp.category(categoryid, country=self.user_country, locale=self.user_country)
