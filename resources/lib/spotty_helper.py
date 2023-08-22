@@ -2,6 +2,7 @@ import os
 import platform
 import stat
 import subprocess
+from typing import Union
 
 import xbmc
 import xbmcaddon
@@ -24,7 +25,7 @@ class SpottyHelper:
         if not self.spotify_password:
             raise Exception("Could not get spotify password.")
 
-    def kill_all_spotties(self):
+    def kill_all_spotties(self) -> None:
         if platform.system() == "Windows":
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -34,7 +35,7 @@ class SpottyHelper:
             os.system("killall --quiet " + sp_binary_file)
 
     @staticmethod
-    def __get_spotty_path():
+    def __get_spotty_path() -> Union[str, None]:
         """find the correct spotty binary belonging to the platform"""
         spotty_path = None
         if xbmc.getCondVisibility("System.Platform.Windows"):
@@ -80,7 +81,7 @@ class SpottyHelper:
         return spotty_path
 
     @classmethod
-    def __test_spotty(cls, binary_path):
+    def __test_spotty(cls, binary_path) -> bool:
         """self-test spotty binary"""
         try:
             st = os.stat(binary_path)

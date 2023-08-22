@@ -1,10 +1,10 @@
 import inspect
-import math
 import os
 import platform
 import signal
 import unicodedata
 from traceback import format_exception
+from typing import Any, Dict, List, Tuple, Union
 
 import xbmc
 import xbmcgui
@@ -48,11 +48,11 @@ def kill_process_by_pid(pid: int) -> None:
         pass
 
 
-def bytes_to_megabytes(byts: int):
+def bytes_to_megabytes(byts: int) -> float:
     return (byts / 1024.0) / 1024.0
 
 
-def get_chunks(data, chunk_size):
+def get_chunks(data, chunk_size: int):
     return [data[x : x + chunk_size] for x in range(0, len(data), chunk_size)]
 
 
@@ -89,20 +89,20 @@ def normalize_string(text):
     return text
 
 
-def cache_auth_token(auth_token):
+def cache_auth_token(auth_token: str) -> None:
     cache_value_in_kodi(KODI_PROPERTY_SPOTIFY_TOKEN, auth_token)
 
 
-def get_cached_auth_token():
+def get_cached_auth_token() -> str:
     return get_cached_value_from_kodi(KODI_PROPERTY_SPOTIFY_TOKEN)
 
 
-def cache_value_in_kodi(kodi_property_id, value):
+def cache_value_in_kodi(kodi_property_id: str, value: Any):
     win = xbmcgui.Window(ADDON_WINDOW_ID)
     win.setProperty(kodi_property_id, value)
 
 
-def get_cached_value_from_kodi(kodi_property_id, wait_ms=500):
+def get_cached_value_from_kodi(kodi_property_id: str, wait_ms: int = 500) -> Any:
     win = xbmcgui.Window(ADDON_WINDOW_ID)
 
     count = 10
@@ -116,7 +116,9 @@ def get_cached_value_from_kodi(kodi_property_id, wait_ms=500):
     return None
 
 
-def get_user_playlists(spotipy, limit=50, offset=0):
+def get_user_playlists(
+    spotipy, limit: int = 50, offset: int = 0
+) -> Tuple[List[Dict[str, Any]], List[str]]:
     userid = spotipy.me()["id"]
     playlists = spotipy.user_playlists(userid, limit=limit, offset=offset)
 
@@ -130,7 +132,7 @@ def get_user_playlists(spotipy, limit=50, offset=0):
     return own_playlists, own_playlist_names
 
 
-def get_user_playlist_id(spotipy, playlist_name):
+def get_user_playlist_id(spotipy, playlist_name: str) -> Union[str, None]:
     offset = 0
     while True:
         own_playlists, own_playlist_names = get_user_playlists(spotipy, limit=50, offset=offset)
@@ -142,49 +144,3 @@ def get_user_playlist_id(spotipy, playlist_name):
         offset += 50
 
     return None
-
-
-def get_track_rating(popularity):
-    if not popularity:
-        return 0
-
-    return int(math.ceil(popularity * 6 / 100.0)) - 1
-
-
-def parse_spotify_track(track, is_album_track=True):
-    # This doesn't make sense - track["track"] is a bool
-    # if "track" in track:
-    #     track = track["track"]
-    if track.get("images"):
-        thumb = track["images"][0]["url"]
-    elif track["album"].get("images"):
-        thumb = track["album"]["images"][0]["url"]
-    else:
-        thumb = "DefaultMusicSongs"
-
-    duration = track["duration_ms"] / 1000
-
-    url = f"http://localhost:{PROXY_PORT}/track/{track['id']}/{duration}"
-
-    info_labels = {
-        "title": track["name"],
-        "genre": " / ".join(track["album"].get("genres", [])),
-        "year": int(track["album"].get("release_date", "0").split("-")[0]),
-        "album": track["album"]["name"],
-        "artist": " / ".join([artist["name"] for artist in track["artists"]]),
-        "rating": str(get_track_rating(track["popularity"])),
-        "duration": duration,
-    }
-
-    li = xbmcgui.ListItem(track["name"], path=url, offscreen=True)
-    if is_album_track:
-        info_labels["tracknumber"] = track["track_number"]
-        info_labels["discnumber"] = track["disc_number"]
-    li.setArt({"thumb": thumb})
-    li.setInfo(type="Music", infoLabels=info_labels)
-    li.setProperty("spotifytrackid", track["id"])
-    li.setContentLookup(False)
-    li.setProperty("do_not_analyze", "true")
-    li.setMimeType("audio/wave")
-
-    return url, li

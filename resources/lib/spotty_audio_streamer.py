@@ -113,7 +113,7 @@ class SpottyAudioStreamer:
                 # Make really sure!
                 kill_process_by_pid(spotty_process.pid)
 
-    def __kill_last_spotty(self):
+    def __kill_last_spotty(self) -> None:
         if self.__last_spotty_pid == -1:
             return
         kill_process_by_pid(self.__last_spotty_pid)
