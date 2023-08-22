@@ -45,7 +45,7 @@ class Root:
 
             # If method was GET, then write the file content.
             if cherrypy.request.method.upper() == "GET":
-                return self.__spotty_streamer.send_audio_stream(range_r - range_l, range_l)
+                return self.__spotty_streamer.send_part_audio_stream(range_r - range_l, range_l)
         except Exception as exc:
             log_exception(exc, "Error in 'track'")
 

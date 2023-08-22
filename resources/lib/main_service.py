@@ -9,6 +9,7 @@ import time
 
 import xbmc
 import xbmcaddon
+from xbmc import LOGDEBUG
 
 import utils
 from httpproxy import ProxyRunner
@@ -20,6 +21,10 @@ from spotty_helper import SpottyHelper
 from utils import log_msg, ADDON_ID
 
 SAVE_TO_RECENTLY_PLAYED_FILE = True
+
+
+def abort_app(timeout_in_secs: int) -> bool:
+    return xbmc.Monitor().waitForAbort(timeout_in_secs)
 
 
 class MainService:
@@ -36,16 +41,14 @@ class MainService:
             self.__spotty_helper.spotify_username, self.__spotty_helper.spotify_password
         )
 
+        self.__spotty_auth = SpottyAuth(spotty)
+        self.__auth_token = None
+
         self.__spotty_streamer = SpottyAudioStreamer(spotty)
         self.__save_recently_played = SaveRecentlyPlayed()
         self.__spotty_streamer.set_notify_track_finished(self.__save_track_to_recently_played)
 
-        self.__spotty_auth = SpottyAuth(spotty)
-        self.__auth_token = None
-
         self.__proxy_runner = ProxyRunner(self.__spotty_streamer)
-
-        self.__kodimonitor = xbmc.Monitor()
 
     def __save_track_to_recently_played(self, track_id: str) -> None:
         if SAVE_TO_RECENTLY_PLAYED_FILE:
@@ -74,19 +77,19 @@ class MainService:
                 log_msg("Refreshing auth token now.")
                 self.__renew_token()
 
-            if self.__kodimonitor.waitForAbort(loop_wait_in_secs):
+            if abort_app(loop_wait_in_secs):
                 break
 
         self.__close()
 
     def __close(self):
-        log_msg("Shutdown requested!")
+        log_msg("Shutdown requested.")
         self.__spotty_helper.kill_all_spotties()
         self.__proxy_runner.stop()
         log_msg("Main service stopped.")
 
     def __renew_token(self):
-        log_msg("Retrieving auth token....", xbmc.LOGDEBUG)
+        log_msg("Retrieving auth token....", LOGDEBUG)
         auth_token = self.__spotty_auth.get_token()
         if not auth_token:
             raise Exception("Could not get Spotify auth token.")

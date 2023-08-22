@@ -1,14 +1,8 @@
-"""
-    plugin.audio.spotify
-    Spotify player for Kodi
-    utils.py
-    Various helper methods
-"""
-
 import inspect
 import math
 import os
 import signal
+import unicodedata
 from traceback import format_exception
 
 import xbmc
@@ -27,14 +21,12 @@ KODI_PROPERTY_SPOTIFY_TOKEN = "spotify-token"
 
 
 def log_msg(msg: str, loglevel: int = LOGDEBUG, caller_name: str = "") -> None:
-    if isinstance(msg, str):
-        msg = msg.encode("utf-8")
     if DEBUG and (loglevel == LOGDEBUG):
         loglevel = LOGINFO
     if not caller_name:
         caller_name = get_formatted_caller_name(inspect.stack()[1][1], inspect.stack()[1][3])
 
-    xbmc.log(f"{ADDON_ID}:{caller_name} --> {msg}", level=loglevel)
+    xbmc.log(f"{ADDON_ID}:{caller_name}: {msg}", level=loglevel)
 
 
 def log_exception(exc: Exception, exception_details: str) -> None:
@@ -65,20 +57,18 @@ def get_chunks(data, chunk_size):
 def try_encode(text, encoding="utf-8"):
     try:
         return text.encode(encoding, "ignore")
-    except:
+    except UnicodeEncodeError:
         return text
 
 
 def try_decode(text, encoding="utf-8"):
     try:
         return text.decode(encoding, "ignore")
-    except:
+    except UnicodeDecodeError:
         return text
 
 
 def normalize_string(text):
-    import unicodedata
-
     text = text.replace(":", "")
     text = text.replace("/", "-")
     text = text.replace("\\", "-")

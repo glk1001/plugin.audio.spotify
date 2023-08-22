@@ -23,7 +23,7 @@ class SaveRecentlyPlayed:
 
         self.__spotipy.playlist_add_items(self.__my_recently_played_playlist_id, [track_id])
         log_msg(
-            f"Saved track to '{self.__my_recently_played_playlist_name}' playlist.",
+            f"Saved track '{track_id}' to '{self.__my_recently_played_playlist_name}' playlist.",
             xbmc.LOGINFO,
         )
 

@@ -1,11 +1,12 @@
 import struct
+import subprocess
 from io import BytesIO
 from typing import Callable, Tuple
 
-import xbmc
+from xbmc import LOGDEBUG, LOGWARNING, LOGERROR
 
 from spotty import Spotty
-from utils import log_msg, log_exception, kill_process_by_pid
+from utils import bytes_to_megabytes, kill_process_by_pid, log_msg, log_exception
 
 SPOTIFY_TRACK_PREFIX = "spotify:track:"
 # SPOTTY_AUDIO_CHUNK_SIZE = 20*1024
@@ -51,7 +52,10 @@ class SpottyAudioStreamer:
     def set_notify_track_finished(self, func: Callable[[str], None]) -> None:
         self.__notify_track_finished = func
 
-    def send_audio_stream(self, range_len: int, range_l: int):
+    def send_audio_stream(self, range_l: int) -> str:
+        return self.send_part_audio_stream(self.__track_length, range_l)
+
+    def send_part_audio_stream(self, range_len: int, range_l: int) -> str:
         """Chunked transfer of audio data from spotty binary"""
 
         spotty_process = None
@@ -59,14 +63,16 @@ class SpottyAudioStreamer:
         try:
             self.__kill_last_spotty()
 
-            log_msg(f"Start transfer for track {self.__track_id} - range: {range_l}", xbmc.LOGDEBUG)
+            self.__log_start_transfer(range_l)
 
             # Send the wav header.
             if range_l == 0:
                 bytes_sent = len(self.__wav_header)
+                self.__log_send_wav_header()
                 yield self.__wav_header
 
             track_id_uri = SPOTIFY_TRACK_PREFIX + self.__track_id
+            self.__log_start_reading_audio(track_id_uri)
 
             # Execute the spotty process, then collect stdout.
             args = SPOTTY_STREAMING_DEFAULT_ARGS + [
@@ -74,11 +80,8 @@ class SpottyAudioStreamer:
                 track_id_uri,
             ]
             spotty_process = self.__spotty.run_spotty(args, use_creds=True)
-            if not spotty_process.returncode:
-                log_msg(f"returncode: {spotty_process.returncode}", xbmc.LOGERROR)
+            self.__log_spotty_returncode(spotty_process)
             self.__last_spotty_pid = spotty_process.pid
-
-            log_msg(f"Reading track uri: {track_id_uri}, length = {range_len}", xbmc.LOGDEBUG)
 
             # Ignore the first x bytes to match the range request.
             if range_l != 0:
@@ -88,30 +91,19 @@ class SpottyAudioStreamer:
             while bytes_sent < range_len:
                 frame = spotty_process.stdout.read(SPOTTY_AUDIO_CHUNK_SIZE)
                 if not frame:
-                    log_msg("Nothing read from stdout.", xbmc.LOGERROR)
+                    log_msg("Nothing read from stdout.", LOGERROR)
                     break
 
                 bytes_sent += len(frame)
-                log_msg(
-                    f"Continuing transfer for track {self.__track_id} - bytes written = {bytes_sent}",
-                    xbmc.LOGDEBUG,
-                )
+                self.__log_continue_sending(bytes_sent)
                 yield frame
 
             # All done.
             self.__notify_track_finished(self.__track_id)
-            log_msg(
-                f"FINISHED transfer for track {self.__track_id}"
-                f" - range {range_l} - bytes written {bytes_sent}.",
-                xbmc.LOGDEBUG,
-            )
-        except Exception as exc:
-            log_msg(
-                "EXCEPTION FINISH transfer for track {track_id}"
-                f" - range {range_l} - bytes written {bytes_sent}.",
-                xbmc.LOGERROR,
-            )
-            log_exception(exc, "Error with track transfer")
+            self.__log_finished_sending(range_l, bytes_sent)
+
+        except Exception as ex:
+            self.__log_exception_sending(ex, range_l, bytes_sent)
         finally:
             # Make sure spotty always gets terminated.
             if spotty_process:
@@ -127,10 +119,70 @@ class SpottyAudioStreamer:
         kill_process_by_pid(self.__last_spotty_pid)
         self.__last_spotty_pid = -1
 
+    def __log_start_transfer(self, range_l: int) -> None:
+        log_msg(
+            f"Start transfer for track '{self.__track_id}' - range start: {range_l}",
+            LOGDEBUG,
+        )
+
+    def __log_send_wav_header(self) -> None:
+        log_msg(
+            f"Sending wav header for track '{self.__track_id}'.",
+            LOGDEBUG,
+        )
+
+    def __log_start_reading_audio(self, track_id_uri: str) -> None:
+        log_msg(
+            f"Start reading audio data for track: '{track_id_uri}',"
+            f" length = {self.__track_length} ({self.__get_mb_str(self.__track_length)}).",
+            LOGDEBUG,
+        )
+
+    def __log_continue_sending(self, bytes_sent: int) -> None:
+        log_msg(
+            f"Continue sending track '{self.__track_id}'"
+            f" - {self.__get_data_sent_str(bytes_sent, self.__track_length)}.",
+            LOGDEBUG,
+        )
+
+    def __log_finished_sending(self, range_l: int, bytes_sent: int) -> None:
+        log_msg(
+            f"Finished sending track '{self.__track_id}'"
+            f" - range start {range_l} - range end {bytes_sent} - {self.__get_mb_str(bytes_sent)}.",
+            LOGDEBUG,
+        )
+
+    def __log_exception_sending(self, ex: Exception, range_l: int, bytes_sent: int) -> None:
+        log_msg(
+            f"EXCEPTION sending track '{self.__track_id}'"
+            f" - range start {range_l} - range end {bytes_sent} - {self.__get_mb_str(bytes_sent)}.",
+            LOGERROR,
+        )
+        log_msg(f"Exception: {ex}")
+
+    @staticmethod
+    def __log_spotty_returncode(spotty_process: subprocess.Popen) -> None:
+        if spotty_process.returncode:
+            log_msg(
+                f"Spotty process return code: {spotty_process.returncode}",
+                LOGWARNING,
+            )
+
+    @staticmethod
+    def __get_mb_str(data_bytes: int) -> str:
+        data_mb = bytes_to_megabytes(data_bytes)
+        return f"{data_mb:.1f}MB"
+
+    @staticmethod
+    def __get_data_sent_str(data_bytes: int, track_length: int) -> str:
+        data_mb = bytes_to_megabytes(data_bytes)
+        percent = int(100.0 * float(data_bytes) / float(track_length))
+        return f"sent so far: {data_mb:>5.1f}MB ({percent:>3}%)"
+
     def __create_wav_header(self) -> Tuple[bytes, int]:
         """generate a wav header for the stream"""
         try:
-            log_msg(f"Start getting wav header. Duration = {self.__track_duration}", xbmc.LOGDEBUG)
+            log_msg(f"Start getting wav header. Duration = {self.__track_duration}", LOGDEBUG)
             file = BytesIO()
             num_samples = 44100 * self.__track_duration
             channels = 2
