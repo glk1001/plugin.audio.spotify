@@ -11,14 +11,14 @@ import xbmc
 import xbmcaddon
 from xbmc import LOGDEBUG
 
+import bottle_manager
 import utils
-from httpproxy import ProxyRunner
+from http_spotty_audio_streamer import HTTPSpottyAudioStreamer
 from save_recently_played import SaveRecentlyPlayed
 from spotty import Spotty
-from spotty_audio_streamer import SpottyAudioStreamer
 from spotty_auth import SpottyAuth
 from spotty_helper import SpottyHelper
-from utils import log_msg, ADDON_ID
+from utils import PROXY_PORT, log_msg, ADDON_ID
 
 SAVE_TO_RECENTLY_PLAYED_FILE = True
 
@@ -44,11 +44,11 @@ class MainService:
         self.__spotty_auth = SpottyAuth(spotty)
         self.__auth_token = None
 
-        self.__spotty_streamer = SpottyAudioStreamer(spotty)
+        self.__http_spotty_streamer = HTTPSpottyAudioStreamer(spotty)
         self.__save_recently_played = SaveRecentlyPlayed()
-        self.__spotty_streamer.set_notify_track_finished(self.__save_track_to_recently_played)
+        self.__http_spotty_streamer.set_notify_track_finished(self.__save_track_to_recently_played)
 
-        self.__proxy_runner = ProxyRunner(self.__spotty_streamer)
+        bottle_manager.route_all(self.__http_spotty_streamer)
 
     def __save_track_to_recently_played(self, track_id: str) -> None:
         if SAVE_TO_RECENTLY_PLAYED_FILE:
@@ -57,8 +57,8 @@ class MainService:
     def run(self):
         log_msg("Starting main service loop.")
 
-        self.__proxy_runner.start()
-        log_msg(f"Started web proxy at port {self.__proxy_runner.get_port()}.")
+        bottle_manager.start_thread(PROXY_PORT)
+        log_msg(f"Started bottle with port {PROXY_PORT}.")
 
         self.__renew_token()
 
@@ -84,8 +84,9 @@ class MainService:
 
     def __close(self):
         log_msg("Shutdown requested.")
+        self.__http_spotty_streamer.stop()
         self.__spotty_helper.kill_all_spotties()
-        self.__proxy_runner.stop()
+        bottle_manager.stop_thread()
         log_msg("Main service stopped.")
 
     def __renew_token(self):
