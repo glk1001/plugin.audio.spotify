@@ -179,10 +179,11 @@ def parse_spotify_track(track, is_album_track=True):
         info_labels["tracknumber"] = track["track_number"]
         info_labels["discnumber"] = track["disc_number"]
     li.setArt({"thumb": thumb})
-    li.setInfo(type="Music", infoLabels=info_labels)
     li.setProperty("spotifytrackid", track["id"])
     li.setContentLookup(False)
     li.setProperty("do_not_analyze", "true")
     li.setMimeType("audio/wave")
+    li.setInfo(type="music", infoLabels=info_labels)
+    li.setInfo("video", {})
 
     return url, li
