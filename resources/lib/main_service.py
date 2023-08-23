@@ -6,6 +6,7 @@
 """
 
 import time
+from typing import Dict
 
 import xbmc
 import xbmcaddon
@@ -31,7 +32,7 @@ class MainService:
     def __init__(self):
         log_msg(f"Spotify plugin version: {xbmcaddon.Addon(id=ADDON_ID).getAddonInfo('version')}.")
 
-        self.__spotty_helper = SpottyHelper()
+        self.__spotty_helper: SpottyHelper = SpottyHelper()
 
         spotty = Spotty()
         spotty.set_spotty_paths(
@@ -41,11 +42,11 @@ class MainService:
             self.__spotty_helper.spotify_username, self.__spotty_helper.spotify_password
         )
 
-        self.__spotty_auth = SpottyAuth(spotty)
-        self.__auth_token = None
+        self.__spotty_auth: SpottyAuth = SpottyAuth(spotty)
+        self.__auth_token: Dict[str, str] = dict()
 
-        self.__http_spotty_streamer = HTTPSpottyAudioStreamer(spotty)
-        self.__save_recently_played = SaveRecentlyPlayed()
+        self.__http_spotty_streamer: HTTPSpottyAudioStreamer = HTTPSpottyAudioStreamer(spotty)
+        self.__save_recently_played: SaveRecentlyPlayed = SaveRecentlyPlayed()
         self.__http_spotty_streamer.set_notify_track_finished(self.__save_track_to_recently_played)
 
         bottle_manager.route_all(self.__http_spotty_streamer)
@@ -70,7 +71,7 @@ class MainService:
                 log_msg(f"Main loop continuing. Loop counter: {loop_counter}.")
 
             # Monitor authorization.
-            if (self.__auth_token["expires_at"] - 60) <= (int(time.time())):
+            if (int(self.__auth_token["expires_at"]) - 60) <= (int(time.time())):
                 expire_time = self.__auth_token["expires_at"]
                 time_now = int(time.time())
                 log_msg(f"Spotify token expired. Expire time: {expire_time}; time now: {time_now}.")

@@ -3,6 +3,7 @@ import os
 import signal
 import unicodedata
 from traceback import format_exception
+from typing import Any, Union
 
 import xbmc
 import xbmcgui
@@ -45,11 +46,11 @@ def kill_process_by_pid(pid: int) -> None:
         pass
 
 
-def bytes_to_megabytes(byts: int):
+def bytes_to_megabytes(byts: int) -> float:
     return (byts / 1024.0) / 1024.0
 
 
-def get_chunks(data, chunk_size):
+def get_chunks(data, chunk_size: int):
     return [data[x : x + chunk_size] for x in range(0, len(data), chunk_size)]
 
 
@@ -86,20 +87,20 @@ def normalize_string(text):
     return text
 
 
-def cache_auth_token(auth_token):
+def cache_auth_token(auth_token: str) -> None:
     cache_value_in_kodi(KODI_PROPERTY_SPOTIFY_TOKEN, auth_token)
 
 
-def get_cached_auth_token():
+def get_cached_auth_token() -> str:
     return get_cached_value_from_kodi(KODI_PROPERTY_SPOTIFY_TOKEN)
 
 
-def cache_value_in_kodi(kodi_property_id, value):
+def cache_value_in_kodi(kodi_property_id: str, value: Any):
     win = xbmcgui.Window(ADDON_WINDOW_ID)
     win.setProperty(kodi_property_id, value)
 
 
-def get_cached_value_from_kodi(kodi_property_id, wait_ms=500):
+def get_cached_value_from_kodi(kodi_property_id: str, wait_ms: int = 500) -> Any:
     win = xbmcgui.Window(ADDON_WINDOW_ID)
 
     count = 10
@@ -113,7 +114,7 @@ def get_cached_value_from_kodi(kodi_property_id, wait_ms=500):
     return None
 
 
-def get_user_playlists(spotipy, limit=50, offset=0):
+def get_user_playlists(spotipy, limit: int = 50, offset: int = 0):
     userid = spotipy.me()["id"]
     playlists = spotipy.user_playlists(userid, limit=limit, offset=offset)
 
@@ -127,7 +128,7 @@ def get_user_playlists(spotipy, limit=50, offset=0):
     return own_playlists, own_playlist_names
 
 
-def get_user_playlist_id(spotipy, playlist_name):
+def get_user_playlist_id(spotipy, playlist_name: str) -> Union[str, None]:
     offset = 0
     while True:
         own_playlists, own_playlist_names = get_user_playlists(spotipy, limit=50, offset=offset)
