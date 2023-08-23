@@ -3,7 +3,7 @@ import os
 import signal
 import unicodedata
 from traceback import format_exception
-from typing import Any, Union
+from typing import Any, Dict, List, Tuple, Union
 
 import xbmc
 import xbmcgui
@@ -114,7 +114,9 @@ def get_cached_value_from_kodi(kodi_property_id: str, wait_ms: int = 500) -> Any
     return None
 
 
-def get_user_playlists(spotipy, limit: int = 50, offset: int = 0):
+def get_user_playlists(
+    spotipy, limit: int = 50, offset: int = 0
+) -> Tuple[List[Dict[str, Any]], List[str]]:
     userid = spotipy.me()["id"]
     playlists = spotipy.user_playlists(userid, limit=limit, offset=offset)
 

@@ -55,7 +55,7 @@ class MainService:
         if SAVE_TO_RECENTLY_PLAYED_FILE:
             self.__save_recently_played.save_track(track_id)
 
-    def run(self):
+    def run(self) -> None:
         log_msg("Starting main service loop.")
 
         bottle_manager.start_thread(PROXY_PORT)
@@ -83,14 +83,14 @@ class MainService:
 
         self.__close()
 
-    def __close(self):
+    def __close(self) -> None:
         log_msg("Shutdown requested.")
         self.__http_spotty_streamer.stop()
         self.__spotty_helper.kill_all_spotties()
         bottle_manager.stop_thread()
         log_msg("Main service stopped.")
 
-    def __renew_token(self):
+    def __renew_token(self) -> None:
         log_msg("Retrieving auth token....", LOGDEBUG)
         auth_token = self.__spotty_auth.get_token()
         if not auth_token:

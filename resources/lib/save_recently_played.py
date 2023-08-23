@@ -14,7 +14,7 @@ class SaveRecentlyPlayed:
         self.__my_recently_played_playlist_name = self.__get_my_recently_played_playlist_name()
         self.__my_recently_played_playlist_id = None
 
-    def save_track(self, track_id):
+    def save_track(self, track_id: str) -> None:
         if not self.__my_recently_played_playlist_name:
             return
 
@@ -28,12 +28,12 @@ class SaveRecentlyPlayed:
         )
 
     @staticmethod
-    def __get_my_recently_played_playlist_name():
+    def __get_my_recently_played_playlist_name() -> str:
         return xbmcaddon.Addon(id=ADDON_ID).getSetting(
             ADDON_SETTING_MY_RECENTLY_PLAYED_PLAYLIST_NAME
         )
 
-    def __set_my_recently_played_playlist_id(self):
+    def __set_my_recently_played_playlist_id(self) -> None:
         self.__spotipy = spotipy.Spotify(auth=utils.get_cached_auth_token())
         log_msg(
             f"Getting id for '{self.__my_recently_played_playlist_name}' playlist.", xbmc.LOGDEBUG
