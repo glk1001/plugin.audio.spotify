@@ -1,9 +1,7 @@
-# -*- coding: utf8 -*-
-from __future__ import print_function, unicode_literals
-
 import sys
 import time
 import urllib
+from typing import List, Tuple
 from urllib.parse import urlparse
 
 import xbmc
@@ -46,32 +44,6 @@ LOCAL_PLAYBACK_STR_ID = 11037
 PLAYBACK_DEVICE_STR_ID = 11039
 CURRENT_USER_STR_ID = 11047
 NO_CREDENTIALS_MSG_STR_ID = 11050
-
-
-class MyPlayer(xbmc.Player):
-    def onPlayBackStarted(self) -> None:
-        log_msg("onPlayBackStarted called.")
-
-    def onAVStarted(self) -> None:
-        log_msg("onAVStarted called.")
-
-    def onAVChange(self) -> None:
-        log_msg("onAVChange called.")
-
-    def onPlayBackEnded(self) -> None:
-        log_msg("onPlayBackEnded called.")
-
-    def onPlayBackStopped(self) -> None:
-        log_msg("onPlayBackStopped called.")
-
-    def onPlayBackError(self) -> None:
-        log_msg("onPlayBackError called.")
-
-    def onPlayBackPaused(self) -> None:
-        log_msg("onPlayBackPaused called.")
-
-    def onPlayBackResumed(self) -> None:
-        log_msg("onPlayBackResumed called.")
 
 
 class PluginContent:
@@ -211,6 +183,56 @@ class PluginContent:
     def refresh_listing(self):
         self.addon.setSetting("cache_checksum", time.strftime("%Y%m%d%H%M%S", time.gmtime()))
         xbmc.executebuiltin("Container.Refresh")
+
+    def add_track_listitems(self, tracks, append_artist_to_label=False):
+        list_items = self.get_track_list(tracks, append_artist_to_label)
+        xbmcplugin.addDirectoryItems(self.addon_handle, list_items, totalItems=len(list_items))
+
+    @staticmethod
+    def get_track_name(track, append_artist_to_label: bool) -> str:
+        if not append_artist_to_label:
+            return track["name"]
+        return f"{track['artist']} - {track['name']}"
+
+    def get_track_list(
+        self, tracks, append_artist_to_label=False
+    ) -> List[Tuple[str, xbmcgui.ListItem, bool]]:
+        list_items = []
+        for count, track in enumerate(tracks):
+            duration = track["duration_ms"] / 1000
+            label = self.get_track_name(track, append_artist_to_label)
+            title = label if self.append_artist_to_title else track["name"]
+
+            # Local playback by using proxy on this machine.
+            url = f"http://localhost:{PROXY_PORT}/track/{track['id']}/{duration}"
+
+            li = xbmcgui.ListItem(label, offscreen=True)
+            li.setProperty("isPlayable", "true")
+            li.setInfo(
+                "music",
+                {
+                    "title": title,
+                    "genre": track["genre"],
+                    "year": track["year"],
+                    "tracknumber": track["track_number"],
+                    "album": track["album"]["name"],
+                    "artist": track["artist"],
+                    "rating": track["rating"],
+                    "duration": duration,
+                },
+            )
+            li.setArt({"thumb": track["thumb"]})
+            li.setProperty("spotifytrackid", track["id"])
+            li.setContentLookup(False)
+            li.addContextMenuItems(track["contextitems"], True)
+            li.setProperty("do_not_analyze", "true")
+            li.setMimeType("audio/wave")
+            # IMPORTANT - Set 'video' here, so we use Kodi's VideoPlayer and
+            #             not PAPlayer. VideoPlayer streams, PAPlayer doesn't.
+            li.setInfo("video", {})
+            list_items.append((url, li, False))
+
+        return list_items
 
     def browse_main(self):
         # Main listing.
@@ -549,22 +571,6 @@ class PluginContent:
         xbmcplugin.endOfDirectory(handle=self.addon_handle)
         if self.default_view_songs:
             xbmc.executebuiltin(f"Container.SetViewMode({self.default_view_songs})")
-
-    def play_track(self):
-        """play track"""
-        track = self.sp.track(self.track_id)
-        log_msg(f"Play track '{track['name']} ({self.track_id})'.")
-        url, li = parse_spotify_track(track)
-
-        kodi_player = MyPlayer()
-        kodi_player.play(url, li)
-
-        while not kodi_player.isPlaying():
-            time.sleep(0.1)
-        log_msg("Starting wait loop.")
-        while kodi_player.isPlaying():
-            time.sleep(0.5)
-        log_msg("Finished wait loop.")
 
     def play_playlist(self):
         """play entire playlist"""
@@ -947,49 +953,6 @@ class PluginContent:
 
         return new_tracks
 
-    def add_track_listitems(self, tracks, append_artist_to_label=False):
-        list_items = []
-        for count, track in enumerate(tracks):
-            if append_artist_to_label:
-                label = f"{track['artist']} - {track['name']}"
-            else:
-                label = track["name"]
-            duration = track["duration_ms"] / 1000
-
-            # Local playback by using proxy on this machine.
-            url = f"http://localhost:{PROXY_PORT}/track/{track['id']}/{duration}"
-
-            if self.append_artist_to_title:
-                title = label
-            else:
-                title = track["name"]
-
-            li = xbmcgui.ListItem(label, offscreen=True)
-            li.setProperty("isPlayable", "true")
-            li.setInfo(
-                "music",
-                {
-                    "title": title,
-                    "genre": track["genre"],
-                    "year": track["year"],
-                    "tracknumber": track["track_number"],
-                    "album": track["album"]["name"],
-                    "artist": track["artist"],
-                    "rating": track["rating"],
-                    "duration": duration,
-                },
-            )
-            li.setArt({"thumb": track["thumb"]})
-            li.setProperty("spotifytrackid", track["id"])
-            li.setContentLookup(False)
-            li.addContextMenuItems(track["contextitems"], True)
-            li.setProperty("do_not_analyze", "true")
-            li.setMimeType("audio/wave")
-            li.setInfo("video", {})
-            list_items.append((url, li, False))
-
-        xbmcplugin.addDirectoryItems(self.addon_handle, list_items, totalItems=len(list_items))
-
     def prepare_album_listitems(self, album_ids=None, albums=None):
         if albums is None:
             albums = []
@@ -1078,28 +1041,25 @@ class PluginContent:
 
     def add_album_listitems(self, albums, append_artist_to_label=False):
         # Process listing.
-        for item in albums:
-            if append_artist_to_label:
-                label = f"{item['artist']} - {item['name']}"
-            else:
-                label = item["name"]
+        for track in albums:
+            label = self.get_track_name(track, append_artist_to_label)
 
-            li = xbmcgui.ListItem(label, path=item["url"], offscreen=True)
+            li = xbmcgui.ListItem(label, path=track["url"], offscreen=True)
             info_labels = {
-                "title": item["name"],
-                "genre": item["genre"],
-                "year": item["year"],
-                "album": item["name"],
-                "artist": item["artist"],
-                "rating": item["rating"],
+                "title": track["name"],
+                "genre": track["genre"],
+                "year": track["year"],
+                "album": track["name"],
+                "artist": track["artist"],
+                "rating": track["rating"],
             }
             li.setInfo(type="Music", infoLabels=info_labels)
-            li.setArt({"thumb": item["thumb"]})
+            li.setArt({"thumb": track["thumb"]})
             li.setProperty("do_not_analyze", "true")
             li.setProperty("IsPlayable", "false")
-            li.addContextMenuItems(item["contextitems"], True)
+            li.addContextMenuItems(track["contextitems"], True)
             xbmcplugin.addDirectoryItem(
-                handle=self.addon_handle, url=item["url"], listitem=li, isFolder=True
+                handle=self.addon_handle, url=track["url"], listitem=li, isFolder=True
             )
 
     def prepare_artist_listitems(self, artists, is_followed=False):
