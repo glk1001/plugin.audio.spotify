@@ -1,5 +1,4 @@
 import inspect
-import math
 import os
 import signal
 import unicodedata
@@ -140,50 +139,3 @@ def get_user_playlist_id(spotipy, playlist_name):
         offset += 50
 
     return None
-
-
-def get_track_rating(popularity):
-    if not popularity:
-        return 0
-
-    return int(math.ceil(popularity * 6 / 100.0)) - 1
-
-
-def parse_spotify_track(track, is_album_track=True):
-    # This doesn't make sense - track["track"] is a bool
-    # if "track" in track:
-    #     track = track["track"]
-    if track.get("images"):
-        thumb = track["images"][0]["url"]
-    elif track["album"].get("images"):
-        thumb = track["album"]["images"][0]["url"]
-    else:
-        thumb = "DefaultMusicSongs"
-
-    duration = track["duration_ms"] / 1000
-
-    url = f"http://localhost:{PROXY_PORT}/track/{track['id']}/{duration}"
-
-    info_labels = {
-        "title": track["name"],
-        "genre": " / ".join(track["album"].get("genres", [])),
-        "year": int(track["album"].get("release_date", "0").split("-")[0]),
-        "album": track["album"]["name"],
-        "artist": " / ".join([artist["name"] for artist in track["artists"]]),
-        "rating": str(get_track_rating(track["popularity"])),
-        "duration": duration,
-    }
-
-    li = xbmcgui.ListItem(track["name"], path=url, offscreen=True)
-    if is_album_track:
-        info_labels["tracknumber"] = track["track_number"]
-        info_labels["discnumber"] = track["disc_number"]
-    li.setArt({"thumb": thumb})
-    li.setProperty("spotifytrackid", track["id"])
-    li.setContentLookup(False)
-    li.setProperty("do_not_analyze", "true")
-    li.setMimeType("audio/wave")
-    li.setInfo(type="music", infoLabels=info_labels)
-    li.setInfo("video", {})
-
-    return url, li

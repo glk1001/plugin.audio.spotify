@@ -1,8 +1,8 @@
+import math
 import sys
 import time
-import urllib
+import urllib.parse
 from typing import List, Tuple
-from urllib.parse import urlparse
 
 import xbmc
 import xbmcaddon
@@ -12,15 +12,7 @@ from simplecache import SimpleCache
 
 import utils
 from deps import spotipy
-from utils import (
-    ADDON_ID,
-    PROXY_PORT,
-    log_exception,
-    log_msg,
-    get_chunks,
-    get_track_rating,
-    parse_spotify_track,
-)
+from utils import ADDON_ID, PROXY_PORT, log_exception, log_msg, get_chunks
 
 NEW_RELEASES_STR_ID = 11005
 SAVE_TRACKS_TO_MY_MUSIC_STR_ID = 11007
@@ -194,45 +186,56 @@ class PluginContent:
             return track["name"]
         return f"{track['artist']} - {track['name']}"
 
+    @staticmethod
+    def get_track_rating(popularity):
+        if not popularity:
+            return 0
+
+        return int(math.ceil(popularity * 6 / 100.0)) - 1
+
     def get_track_list(
         self, tracks, append_artist_to_label=False
     ) -> List[Tuple[str, xbmcgui.ListItem, bool]]:
         list_items = []
         for count, track in enumerate(tracks):
-            duration = track["duration_ms"] / 1000
-            label = self.get_track_name(track, append_artist_to_label)
-            title = label if self.append_artist_to_title else track["name"]
-
-            # Local playback by using proxy on this machine.
-            url = f"http://localhost:{PROXY_PORT}/track/{track['id']}/{duration}"
-
-            li = xbmcgui.ListItem(label, offscreen=True)
-            li.setProperty("isPlayable", "true")
-            li.setInfo(
-                "music",
-                {
-                    "title": title,
-                    "genre": track["genre"],
-                    "year": track["year"],
-                    "tracknumber": track["track_number"],
-                    "album": track["album"]["name"],
-                    "artist": track["artist"],
-                    "rating": track["rating"],
-                    "duration": duration,
-                },
-            )
-            li.setArt({"thumb": track["thumb"]})
-            li.setProperty("spotifytrackid", track["id"])
-            li.setContentLookup(False)
-            li.addContextMenuItems(track["contextitems"], True)
-            li.setProperty("do_not_analyze", "true")
-            li.setMimeType("audio/wave")
-            # IMPORTANT - Set 'video' here, so we use Kodi's VideoPlayer and
-            #             not PAPlayer. VideoPlayer streams, PAPlayer doesn't.
-            li.setInfo("video", {})
-            list_items.append((url, li, False))
+            list_items.append(self.get_track_item(track, append_artist_to_label) + (False,))
 
         return list_items
+
+    def get_track_item(self, track, append_artist_to_label=False) -> Tuple[str, xbmcgui.ListItem]:
+        duration = track["duration_ms"] / 1000
+        label = self.get_track_name(track, append_artist_to_label)
+        title = label if self.append_artist_to_title else track["name"]
+
+        # Local playback by using proxy on this machine.
+        url = f"http://localhost:{PROXY_PORT}/track/{track['id']}/{duration}"
+
+        li = xbmcgui.ListItem(label, offscreen=True)
+        li.setProperty("isPlayable", "true")
+        li.setInfo(
+            "music",
+            {
+                "title": title,
+                "genre": track["genre"],
+                "year": track["year"],
+                "tracknumber": track["track_number"],
+                "album": track["album"]["name"],
+                "artist": track["artist"],
+                "rating": track["rating"],
+                "duration": duration,
+            },
+        )
+        li.setArt({"thumb": track["thumb"]})
+        li.setProperty("spotifytrackid", track["id"])
+        li.setContentLookup(False)
+        li.addContextMenuItems(track["contextitems"], True)
+        li.setProperty("do_not_analyze", "true")
+        li.setMimeType("audio/wave")
+        # IMPORTANT - Set 'video' here, so we use Kodi's VideoPlayer and
+        #             not PAPlayer. VideoPlayer streams, PAPlayer doesn't.
+        li.setInfo("video", {})
+
+        return url, li
 
     def browse_main(self):
         # Main listing.
@@ -287,6 +290,7 @@ class PluginContent:
         xbmcplugin.addSortMethod(self.addon_handle, xbmcplugin.SORT_METHOD_UNSORTED)
         xbmcplugin.endOfDirectory(handle=self.addon_handle)
 
+    # TODO - What's the point of this?
     def active_playback_device(self):
         device_name = self.addon.getLocalizedString(LOCAL_PLAYBACK_STR_ID)
 
@@ -575,21 +579,23 @@ class PluginContent:
     def play_playlist(self):
         """play entire playlist"""
         playlist_details = self.get_playlist_details(self.playlist_id)
-        log_msg(f"Play playlist '{playlist_details['name']}'.")
+        log_msg(f"Start playing playlist '{playlist_details['name']}'.")
 
         kodi_playlist = xbmc.PlayList(0)
         kodi_playlist.clear()
-        kodi_player = xbmc.Player()
+
+        def add_to_playlist(trk):
+            url, li = self.get_track_item(trk, True)
+            kodi_playlist.add(url, li)
 
         # Add first track and start playing.
-        url, li = parse_spotify_track(playlist_details["tracks"]["items"][0])
-        kodi_playlist.add(url, li)
+        add_to_playlist(playlist_details["tracks"]["items"][0])
+        kodi_player = xbmc.Player()
         kodi_player.play(kodi_playlist)
 
         # Add remaining tracks to the playlist while already playing.
         for track in playlist_details["tracks"]["items"][1:]:
-            url, li = parse_spotify_track(track)
-            kodi_playlist.add(url, li)
+            add_to_playlist(track)
 
     def get_category(self, categoryid):
         category = self.sp.category(categoryid, country=self.user_country, locale=self.user_country)
@@ -843,7 +849,7 @@ class PluginContent:
                 if not release_date
                 else int(track["album"].get("release_date", "0").split("-")[0])
             )
-            track["rating"] = str(get_track_rating(track["popularity"]))
+            track["rating"] = str(self.get_track_rating(track["popularity"]))
             if playlist_details:
                 track["playlistid"] = playlist_details["id"]
             track["artistid"] = track["artists"][0]["id"]
@@ -966,39 +972,57 @@ class PluginContent:
         saved_albums = self.get_savedalbumsids()
 
         # process listing
-        for item in albums:
-            if item.get("images"):
-                item["thumb"] = item["images"][0]["url"]
+        for track in albums:
+            if track.get("images"):
+                track["thumb"] = track["images"][0]["url"]
             else:
-                item["thumb"] = "DefaultMusicAlbums.png"
+                track["thumb"] = "DefaultMusicAlbums.png"
 
-            item["url"] = self.build_url({"action": "browse_album", "albumid": item["id"]})
+            track["url"] = self.build_url({"action": "browse_album", "albumid": track["id"]})
 
             artists = []
-            for artist in item["artists"]:
+            for artist in track["artists"]:
                 artists.append(artist["name"])
-            item["artist"] = " / ".join(artists)
-            item["genre"] = " / ".join(item["genres"])
-            item["year"] = int(item["release_date"].split("-")[0])
-            item["rating"] = str(get_track_rating(item["popularity"]))
-            item["artistid"] = item["artists"][0]["id"]
+            track["artist"] = " / ".join(artists)
+            track["genre"] = " / ".join(track["genres"])
+            track["year"] = int(track["release_date"].split("-")[0])
+            track["rating"] = str(self.get_track_rating(track["popularity"]))
+            track["artistid"] = track["artists"][0]["id"]
 
-            contextitems = []
-            # play
-            contextitems.append(
+            contextitems = [
+                (xbmc.getLocalizedString(1024), f"RunPlugin({track['url']})"),
                 (
                     xbmc.getLocalizedString(208),
                     "RunPlugin(plugin://plugin.audio.spotify/"
-                    f"?action=connect_playback&albumid={item['id']})",
-                )
-            )
-            contextitems.append((xbmc.getLocalizedString(1024), f"RunPlugin({item['url']})"))
-            if item["id"] in saved_albums:
+                    f"?action=connect_playback&albumid={track['id']})",
+                ),
+                (
+                    self.addon.getLocalizedString(ARTIST_TOP_TRACKS_STR_ID),
+                    "Container.Update(plugin://plugin.audio.spotify/"
+                    f"?action=artist_toptracks&artistid={track['artistid']})",
+                ),
+                (
+                    self.addon.getLocalizedString(RELATED_ARTISTS_STR_ID),
+                    "Container.Update(plugin://plugin.audio.spotify/"
+                    f"?action=related_artists&artistid={track['artistid']})",
+                ),
+                (
+                    self.addon.getLocalizedString(ALL_ALBUMS_FOR_ARTIST_STR_ID),
+                    "Container.Update(plugin://plugin.audio.spotify/"
+                    f"?action=browse_artistalbums&artistid={track['artistid']})",
+                ),
+                (
+                    self.addon.getLocalizedString(REFRESH_LISTING_STR_ID),
+                    "RunPlugin(plugin://plugin.audio.spotify/" "?action=refresh_listing)",
+                ),
+            ]
+
+            if track["id"] in saved_albums:
                 contextitems.append(
                     (
                         self.addon.getLocalizedString(REMOVE_TRACKS_FROM_MY_MUSIC_STR_ID),
                         "RunPlugin(plugin://plugin.audio.spotify/"
-                        f"?action=remove_album&albumid={item['id']})",
+                        f"?action=remove_album&albumid={track['id']})",
                     )
                 )
             else:
@@ -1006,37 +1030,12 @@ class PluginContent:
                     (
                         self.addon.getLocalizedString(SAVE_TRACKS_TO_MY_MUSIC_STR_ID),
                         "RunPlugin(plugin://plugin.audio.spotify/"
-                        f"?action=save_album&albumid={item['id']})",
+                        f"?action=save_album&albumid={track['id']})",
                     )
                 )
-            contextitems.append(
-                (
-                    self.addon.getLocalizedString(ARTIST_TOP_TRACKS_STR_ID),
-                    "Container.Update(plugin://plugin.audio.spotify/"
-                    f"?action=artist_toptracks&artistid={item['artistid']})",
-                )
-            )
-            contextitems.append(
-                (
-                    self.addon.getLocalizedString(RELATED_ARTISTS_STR_ID),
-                    "Container.Update(plugin://plugin.audio.spotify/"
-                    f"?action=related_artists&artistid={item['artistid']})",
-                )
-            )
-            contextitems.append(
-                (
-                    self.addon.getLocalizedString(ALL_ALBUMS_FOR_ARTIST_STR_ID),
-                    "Container.Update(plugin://plugin.audio.spotify/"
-                    f"?action=browse_artistalbums&artistid={item['artistid']})",
-                )
-            )
-            contextitems.append(
-                (
-                    self.addon.getLocalizedString(REFRESH_LISTING_STR_ID),
-                    "RunPlugin(plugin://plugin.audio.spotify/" "?action=refresh_listing)",
-                )
-            )
-            item["contextitems"] = contextitems
+
+            track["contextitems"] = contextitems
+
         return albums
 
     def add_album_listitems(self, albums, append_artist_to_label=False):
@@ -1081,32 +1080,28 @@ class PluginContent:
             item["url"] = self.build_url({"action": "browse_artistalbums", "artistid": item["id"]})
 
             item["genre"] = " / ".join(item["genres"])
-            item["rating"] = str(get_track_rating(item["popularity"]))
+            item["rating"] = str(self.get_track_rating(item["popularity"]))
             item["followerslabel"] = f"{item['followers']['total']} followers"
-            contextitems = []
-            # play
-            contextitems.append(
+
+            contextitems = [
+                (xbmc.getLocalizedString(132), f"Container.Update({item['url']})"),
                 (
                     xbmc.getLocalizedString(208),
                     "RunPlugin(plugin://plugin.audio.spotify/"
                     f"?action=connect_playback&artistid={item['id']})",
-                )
-            )
-            contextitems.append((xbmc.getLocalizedString(132), f"Container.Update({item['url']})"))
-            contextitems.append(
+                ),
                 (
                     self.addon.getLocalizedString(ARTIST_TOP_TRACKS_STR_ID),
                     "Container.Update(plugin://plugin.audio.spotify/"
                     f"?action=artist_toptracks&artistid={item['id']})",
-                )
-            )
-            contextitems.append(
+                ),
                 (
                     self.addon.getLocalizedString(RELATED_ARTISTS_STR_ID),
                     "Container.Update(plugin://plugin.audio.spotify/"
                     f"?action=related_artists&artistid={item['id']})",
-                )
-            )
+                ),
+            ]
+
             if is_followed or item["id"] in followed_artists:
                 contextitems.append(
                     (
@@ -1123,7 +1118,9 @@ class PluginContent:
                         f"?action=follow_artist&artistid={item['id']})",
                     )
                 )
+
             item["contextitems"] = contextitems
+
         return artists
 
     def add_artist_listitems(self, artists):
@@ -1152,9 +1149,11 @@ class PluginContent:
     def prepare_playlist_listitems(self, playlists):
         playlists2 = []
         followed_playlists = self.get_curuser_playlistids()
+
         for item in playlists:
             if not item:
                 continue
+
             if item.get("images"):
                 item["thumb"] = item["images"][0]["url"]
             else:
@@ -1168,15 +1167,18 @@ class PluginContent:
                 }
             )
 
-            contextitems = []
-            # play
-            contextitems.append(
+            contextitems = [
                 (
                     xbmc.getLocalizedString(208),
                     "RunPlugin(plugin://plugin.audio.spotify/"
                     f"?action=play_playlist&playlistid={item['id']}&ownerid={item['owner']['id']})",
-                )
-            )
+                ),
+                (
+                    self.addon.getLocalizedString(REFRESH_LISTING_STR_ID),
+                    "RunPlugin(plugin://plugin.audio.spotify/?action=refresh_listing)",
+                ),
+            ]
+
             if item["owner"]["id"] != self.userid and item["id"] in followed_playlists:
                 contextitems.append(
                     (
@@ -1196,14 +1198,9 @@ class PluginContent:
                     )
                 )
 
-            contextitems.append(
-                (
-                    self.addon.getLocalizedString(REFRESH_LISTING_STR_ID),
-                    "RunPlugin(plugin://plugin.audio.spotify/?action=refresh_listing)",
-                )
-            )
             item["contextitems"] = contextitems
             playlists2.append(item)
+
         return playlists2
 
     def add_playlist_listitems(self, playlists):
