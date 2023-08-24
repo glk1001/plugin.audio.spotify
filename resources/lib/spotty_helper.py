@@ -57,7 +57,7 @@ class SpottyHelper:
                 # the correct binary path.
                 paths = [
                     os.path.join(
-                        os.path.dirname(__file__), "deps/spotty", "arm-linux", "spotty-hf"
+                        os.path.dirname(__file__), "deps/spotty", "arm-linux", "spotty-muslhf"
                     ),
                     os.path.join(os.path.dirname(__file__), "deps/spotty", "x86-linux", "spotty"),
                 ]
@@ -81,7 +81,7 @@ class SpottyHelper:
         return spotty_path
 
     @classmethod
-    def __test_spotty(cls, binary_path) -> bool:
+    def __test_spotty(cls, binary_path: str) -> bool:
         """self-test spotty binary"""
         try:
             st = os.stat(binary_path)
