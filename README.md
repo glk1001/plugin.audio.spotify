@@ -1,7 +1,7 @@
 # plugin.audio.spotify
 Unofficial spotify plugin for Kodi, (for now) not yet available in the official Kodi repo.
 
-Uses 'cherrypy' and 'librespot - spotty' for playback, and 'spotipy' for the playlist, albums, etc. menus.
+Uses 'bottle' and 'librespot - spotty' for playback, and 'spotipy' for the playlist, albums, etc. menus.
 
 Thanks to mherger for creating the special ['spotty'](https://github.com/michaelherger/librespot) branch forked off librespot.
 
