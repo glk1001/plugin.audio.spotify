@@ -124,20 +124,14 @@ msgctxt "#11034"
 msgid "Default view for song list"
 msgstr ""
 
-msgctxt "#11037"
-msgid "Local playback on this device"
-msgstr ""
-
-msgctxt "#11039"
-msgid "Playback device"
-msgstr ""
-
 msgctxt "#11047"
 msgid "Current user"
 msgstr ""
 
 msgctxt "#11050"
-msgid "No credentials have been set or the login failed.\nPlease enter your credentials in the addon settings."
+msgid ""
+"Spotify login failed. Either no credentials have been set or the Spotify username or password is incorrect.\n"
+"Please check your username and password in the addon settings."
 msgstr ""
 
 msgctxt "#11054"

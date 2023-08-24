@@ -32,8 +32,6 @@ MOST_PLAYED_TRACKS_STR_ID = 11024
 FOLLOW_ARTIST_STR_ID = 11025
 UNFOLLOW_ARTIST_STR_ID = 11026
 REFRESH_LISTING_STR_ID = 11027
-LOCAL_PLAYBACK_STR_ID = 11037
-PLAYBACK_DEVICE_STR_ID = 11039
 CURRENT_USER_STR_ID = 11047
 NO_CREDENTIALS_MSG_STR_ID = 11050
 
@@ -84,7 +82,6 @@ class PluginContent:
             self.spotipy: spotipy.Spotify = spotipy.Spotify(auth=auth_token)
             self.userid: str = self.spotipy.me()["id"]
             self.user_country = self.spotipy.me()["country"]
-            self.playername: str = self.active_playback_device()
             if self.action:
                 log_msg(f"Evaluating action '{self.action}'.")
                 action = "self." + self.action
@@ -102,14 +99,11 @@ class PluginContent:
         """get authentication key"""
         auth_token = utils.get_cached_auth_token()
 
-        # TODO - Raise exception?
         if not auth_token:
-            if self.win.getProperty("spotify.supportsplayback"):
-                msg = self.addon.getLocalizedString(NO_CREDENTIALS_MSG_STR_ID)
-                dialog = xbmcgui.Dialog()
-                header = self.addon.getAddonInfo("name")
-                dialog.ok(header, msg)
-                del dialog
+            msg = self.addon.getLocalizedString(NO_CREDENTIALS_MSG_STR_ID)
+            dialog = xbmcgui.Dialog()
+            header = self.addon.getAddonInfo("name")
+            dialog.ok(header, msg)
 
         return auth_token
 
@@ -266,12 +260,6 @@ class PluginContent:
                 "DefaultMusicSearch.png",
                 True,
             ),
-            (
-                f"{self.addon.getLocalizedString(PLAYBACK_DEVICE_STR_ID)}: {self.playername}",
-                "plugin://plugin.audio.spotify/?action=browse_playback_devices",
-                "DefaultMusicPlugins.png",
-                True,
-            ),
         ]
         cur_user_label = self.spotipy.me()["display_name"]
         if not cur_user_label:
@@ -295,12 +283,6 @@ class PluginContent:
 
         xbmcplugin.addSortMethod(self.addon_handle, xbmcplugin.SORT_METHOD_UNSORTED)
         xbmcplugin.endOfDirectory(handle=self.addon_handle)
-
-    # TODO - What's the point of this?
-    def active_playback_device(self) -> str:
-        device_name = self.addon.getLocalizedString(LOCAL_PLAYBACK_STR_ID)
-
-        return device_name
 
     def browse_main_library(self) -> None:
         # Library nodes.
@@ -369,7 +351,9 @@ class PluginContent:
         if not items:
             count = len(result["items"])
             while result["total"] > count:
-                result["items"] += self.spotipy.current_user_top_artists(limit=20, offset=count)["items"]
+                result["items"] += self.spotipy.current_user_top_artists(limit=20, offset=count)[
+                    "items"
+                ]
                 count += 50
             items = self.prepare_artist_listitems(result["items"])
             self.cache.set(cache_str, items, checksum=checksum)
@@ -542,9 +526,9 @@ class PluginContent:
         if self.default_view_artists:
             xbmc.executebuiltin(f"Container.SetViewMode({self.default_view_artists})")
 
-    def get_playlist_details(self, playlistid: str) -> PlayList:
+    def get_playlist_details(self, playlist_id: str) -> PlayList:
         playlist = self.spotipy.playlist(
-            playlistid, fields="tracks(total),name,owner(id),id", market=self.user_country
+            playlist_id, fields="tracks(total),name,owner(id),id", market=self.user_country
         )
         # Get from cache first.
         cache_str = f"spotify.playlistdetails.{playlist['id']}"
@@ -568,6 +552,7 @@ class PluginContent:
             playlist_details["tracks"]["items"] = self.prepare_track_listitems(
                 tracks=playlist_details["tracks"]["items"], playlist_details=playlist
             )
+            # log_msg(f"playlist_details = {playlist_details}")
             self.cache.set(cache_str, playlist_details, checksum=checksum)
 
         return playlist_details
@@ -604,7 +589,9 @@ class PluginContent:
             add_to_playlist(track)
 
     def get_category(self, categoryid: str) -> PlayList:
-        category = self.spotipy.category(categoryid, country=self.user_country, locale=self.user_country)
+        category = self.spotipy.category(
+            categoryid, country=self.user_country, locale=self.user_country
+        )
         playlists = self.spotipy.category_playlists(
             categoryid, country=self.user_country, limit=50, offset=0
         )

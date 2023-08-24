@@ -94,6 +94,7 @@ class MainService:
         log_msg("Retrieving auth token....", LOGDEBUG)
         auth_token = self.__spotty_auth.get_token()
         if not auth_token:
+            utils.cache_auth_token("")
             raise Exception("Could not get Spotify auth token.")
 
         self.__auth_token = auth_token

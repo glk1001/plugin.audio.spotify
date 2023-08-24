@@ -7,7 +7,7 @@
 
     <category label="11054">
         <setting id="my_recently_played_playlist_name" type="text" label="11069"
-                 help="Disable with empty string" default="My Recently Played"/>
+                 help="Disable by setting string to NONE" default="My Recently Played"/>
     </category>
 
     <category label="11055">
