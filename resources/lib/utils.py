@@ -1,5 +1,6 @@
 import inspect
 import os
+import platform
 import signal
 import unicodedata
 from traceback import format_exception
@@ -41,7 +42,8 @@ def get_formatted_caller_name(filename: str, function_name: str) -> str:
 
 def kill_process_by_pid(pid: int) -> None:
     try:
-        os.kill(pid, signal.SIGKILL)
+        if platform.system() != "Windows":
+            os.kill(pid, signal.SIGKILL)
     except OSError:
         pass
 
