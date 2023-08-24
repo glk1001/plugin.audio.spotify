@@ -8,6 +8,8 @@
     <category label="11054">
         <setting id="my_recently_played_playlist_name" type="text" label="11069"
                  help="Disable by setting string to NONE" default="My Recently Played"/>
+        <setting id="gap_between_playlist_tracks" type="number" label="11070"
+                 help="Gap between tracks when playing a playlist (secs)" default="0"/>
     </category>
 
     <category label="11055">

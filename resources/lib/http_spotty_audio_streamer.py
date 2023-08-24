@@ -1,3 +1,4 @@
+import time
 from typing import Callable
 
 import bottle
@@ -7,10 +8,11 @@ from utils import log_msg, LOGDEBUG
 
 
 class HTTPSpottyAudioStreamer:
-    def __init__(self, spotty: Spotty):
-        self.__spotty = spotty
+    def __init__(self, spotty: Spotty, gap_between_tracks: int = 0):
+        self.__spotty: Spotty = spotty
+        self.__gap_between_tracks: int = gap_between_tracks
 
-        self.__spotty_streamer = SpottyAudioStreamer(self.__spotty)
+        self.__spotty_streamer: SpottyAudioStreamer = SpottyAudioStreamer(self.__spotty)
         self.__spotty_audio_stream_generator = None
 
     def set_notify_track_finished(self, func: Callable[[str], None]) -> None:
@@ -37,6 +39,15 @@ class HTTPSpottyAudioStreamer:
 
     def spotty_stream_audio_track(self, track_id: str, duration: str) -> bottle.Response:
         log_msg(f"GET request: {bottle.request}", LOGDEBUG)
+
+        if self.__gap_between_tracks:
+            # TODO - Can we improve on this? Sometimes, when playing a playlist
+            #        with no gap between tracks, Kodi does not shutdown the visualizer
+            #        before starting the next track and visualizer. So one visualizer
+            #        instance is stopping at the same time as another is starting.
+            # Give some time for visualizations to finish.
+            time.sleep(self.__gap_between_tracks)
+
         log_msg(f"Start streaming spotify track '{track_id}'.")
 
         self.__close_spotty_stream_generator()

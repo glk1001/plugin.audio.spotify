@@ -145,3 +145,7 @@ msgstr ""
 msgctxt "#11069"
 msgid "My recently played playlist"
 msgstr "My recently played playlist"
+
+msgctxt "#11070"
+msgid "Gap between tracks when playing a playlist (secs)"
+msgstr "Gap between tracks when playing a playlist (secs)"

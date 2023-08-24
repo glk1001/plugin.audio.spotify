@@ -45,7 +45,11 @@ class MainService:
         self.__spotty_auth: SpottyAuth = SpottyAuth(spotty)
         self.__auth_token: Dict[str, str] = dict()
 
-        self.__http_spotty_streamer: HTTPSpottyAudioStreamer = HTTPSpottyAudioStreamer(spotty)
+        addon = xbmcaddon.Addon(id=ADDON_ID)
+        gap_between_tracks = int(addon.getSetting("gap_between_playlist_tracks"))
+        self.__http_spotty_streamer: HTTPSpottyAudioStreamer = HTTPSpottyAudioStreamer(
+            spotty, gap_between_tracks
+        )
         self.__save_recently_played: SaveRecentlyPlayed = SaveRecentlyPlayed()
         self.__http_spotty_streamer.set_notify_track_finished(self.__save_track_to_recently_played)
 
