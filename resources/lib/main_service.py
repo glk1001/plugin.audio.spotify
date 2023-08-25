@@ -10,22 +10,39 @@ from typing import Dict
 
 import xbmc
 import xbmcaddon
+import xbmcgui
 from xbmc import LOGDEBUG
 
 import bottle_manager
 import utils
 from http_spotty_audio_streamer import HTTPSpottyAudioStreamer
+from http_video_player_setter import HttpVideoPlayerSetter
 from save_recently_played import SaveRecentlyPlayed
 from spotty import Spotty
 from spotty_auth import SpottyAuth
 from spotty_helper import SpottyHelper
+from string_ids import HTTP_VIDEO_RULE_ADDED_STR_ID
 from utils import PROXY_PORT, log_msg, ADDON_ID
 
 SAVE_TO_RECENTLY_PLAYED_FILE = True
 
+SPOTIFY_ADDON = xbmcaddon.Addon(id=ADDON_ID)
+
 
 def abort_app(timeout_in_secs: int) -> bool:
     return xbmc.Monitor().waitForAbort(timeout_in_secs)
+
+
+def add_http_video_rule() -> None:
+    video_player_setter = HttpVideoPlayerSetter()
+
+    if not video_player_setter.set_http_rule():
+        return
+
+    msg = SPOTIFY_ADDON.getLocalizedString(HTTP_VIDEO_RULE_ADDED_STR_ID)
+    dialog = xbmcgui.Dialog()
+    header = SPOTIFY_ADDON.getAddonInfo("name")
+    dialog.ok(header, msg)
 
 
 class MainService:
@@ -45,8 +62,11 @@ class MainService:
         self.__spotty_auth: SpottyAuth = SpottyAuth(spotty)
         self.__auth_token: Dict[str, str] = dict()
 
-        addon = xbmcaddon.Addon(id=ADDON_ID)
-        gap_between_tracks = int(addon.getSetting("gap_between_playlist_tracks"))
+        # Workaround to make Kodi use it's VideoPlayer to play http audio streams.
+        # If we don't do this, then Kodi uses PAPlayer which does not stream.
+        add_http_video_rule()
+
+        gap_between_tracks = int(SPOTIFY_ADDON.getSetting("gap_between_playlist_tracks"))
         self.__http_spotty_streamer: HTTPSpottyAudioStreamer = HTTPSpottyAudioStreamer(
             spotty, gap_between_tracks
         )

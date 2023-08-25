@@ -10,30 +10,10 @@ import xbmcgui
 import xbmcplugin
 from simplecache import SimpleCache
 
+from string_ids import *
 import utils
 from deps import spotipy
 from utils import ADDON_ID, PROXY_PORT, log_exception, log_msg, get_chunks
-
-NEW_RELEASES_STR_ID = 11005
-SAVE_TRACKS_TO_MY_MUSIC_STR_ID = 11007
-REMOVE_TRACKS_FROM_MY_MUSIC_STR_ID = 11008
-FOLLOW_PLAYLIST_STR_ID = 11009
-UNFOLLOW_PLAYLIST_STR_ID = 11010
-ARTIST_TOP_TRACKS_STR_ID = 11011
-RELATED_ARTISTS_STR_ID = 11012
-MY_MUSIC_FOLDER_STR_ID = 11013
-EXPLORE_STR_ID = 11014
-FEATURED_PLAYLISTS_STR_ID = 11015
-BROWSE_NEW_RELEASES_STR_ID = 11016
-REMOVE_FROM_PLAYLIST_STR_ID = 11017
-ALL_ALBUMS_FOR_ARTIST_STR_ID = 11018
-MOST_PLAYED_ARTISTS_STR_ID = 11023
-MOST_PLAYED_TRACKS_STR_ID = 11024
-FOLLOW_ARTIST_STR_ID = 11025
-UNFOLLOW_ARTIST_STR_ID = 11026
-REFRESH_LISTING_STR_ID = 11027
-CURRENT_USER_STR_ID = 11047
-NO_CREDENTIALS_MSG_STR_ID = 11050
 
 PlayList = Dict[str, Union[str, Dict[str, List[Any]]]]
 
@@ -231,9 +211,6 @@ class PluginContent:
         li.addContextMenuItems(track["contextitems"], True)
         li.setProperty("do_not_analyze", "true")
         li.setMimeType("audio/wave")
-        # IMPORTANT - Set 'video' here, so we use Kodi's VideoPlayer and
-        #             not PAPlayer. VideoPlayer streams, PAPlayer doesn't.
-        li.setInfo("video", {})
 
         return url, li
 
