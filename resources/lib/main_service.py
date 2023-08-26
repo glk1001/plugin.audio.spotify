@@ -76,9 +76,13 @@ class MainService:
 
             # Monitor authorization.
             if (int(self.__auth_token["expires_at"]) - 60) <= (int(time.time())):
-                expire_time = self.__auth_token["expires_at"]
+                expire_time = int(self.__auth_token["expires_at"])
                 time_now = int(time.time())
-                log_msg(f"Spotify token expired. Expire time: {expire_time}; time now: {time_now}.")
+                log_msg(
+                    f"Spotify token expired."
+                    f" Expire time: {self.__get_time_str(expire_time)} ({expire_time});"
+                    f" time now: {self.__get_time_str(time_now)} ({time_now})."
+                )
                 log_msg("Refreshing auth token now.")
                 self.__renew_token()
 
@@ -96,16 +100,32 @@ class MainService:
 
     def __renew_token(self) -> None:
         log_msg("Retrieving auth token....", LOGDEBUG)
-        auth_token = self.__spotty_auth.get_token()
-        if not auth_token:
+
+        self.__auth_token = self.__get_retry_auth_token()
+        if not self.__auth_token:
             utils.cache_auth_token("")
             raise Exception("Could not get Spotify auth token.")
 
-        self.__auth_token = auth_token
-        expire_time = time.strftime(
-            "%Y-%m-%d %H:%M:%S", time.localtime(float(self.__auth_token["expires_at"]))
+        log_msg(
+            f"Retrieved Spotify auth token."
+            f" Expires at {self.__get_time_str(int(self.__auth_token['expires_at']))}."
         )
-        log_msg(f"Retrieved Spotify auth token. Expires at {expire_time}.")
 
         # Cache auth token for easy access by the plugin.
         utils.cache_auth_token(self.__auth_token["access_token"])
+
+    def __get_retry_auth_token(self) -> Dict[str, str]:
+        auth_token = None
+        count = 5
+        while count > 0:
+            auth_token = self.__spotty_auth.get_token()
+            if auth_token:
+                break
+            time.sleep(1)
+            count -= 1
+
+        return auth_token
+
+    @staticmethod
+    def __get_time_str(raw_time: int) -> str:
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(raw_time)))
