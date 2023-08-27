@@ -21,13 +21,8 @@ class HTTPSpottyAudioStreamer:
     def stop(self) -> None:
         self.__close_spotty_stream_generator()
 
-    def __generate_spotty_audio_stream(self, track_id: str, flt_duration: float) -> str:
-        range_l = 0
-        # range_r = file_size
-
-        self.__spotty_streamer.set_track(track_id, flt_duration)
-
-        return self.__spotty_streamer.send_audio_stream(range_l)
+    def __generate_spotty_audio_stream(self) -> str:
+        return self.__spotty_streamer.send_audio_stream(0)
 
     def __close_spotty_stream_generator(self) -> None:
         if self.__spotty_audio_stream_generator:
@@ -48,16 +43,25 @@ class HTTPSpottyAudioStreamer:
             # Give some time for visualizations to finish.
             time.sleep(self.__gap_between_tracks)
 
-        log_msg(f"Start streaming spotify track '{track_id}'.")
+        self.__spotty_streamer.set_track(track_id, float(duration))
+
+        log_msg(
+            f"Start streaming spotify track '{track_id}',"
+            f" track length {self.__spotty_streamer.get_track_length()}."
+        )
 
         self.__close_spotty_stream_generator()
 
         def generate() -> str:
-            self.__spotty_audio_stream_generator = self.__generate_spotty_audio_stream(
-                track_id, float(duration)
-            )
+            self.__spotty_audio_stream_generator = self.__generate_spotty_audio_stream()
             return self.__spotty_audio_stream_generator
 
-        return bottle.Response(generate(), mimetype="audio/x-wav")
+        bottle.response.content_type = "audio/x-wav"
+        bottle.response.content_length = self.__spotty_streamer.get_track_length()
+
+        if bottle.request.method.upper() == "GET":
+            return bottle.Response(generate(), status=200)
+
+        return bottle.Response(status=200)
 
     spotty_stream_audio_track.route = SPOTTY_AUDIO_TRACK_ROUTE
