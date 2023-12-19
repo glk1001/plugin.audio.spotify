@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<addon id="plugin.audio.spotify" version="1.3.8" name="Spotify" provider-name="glk1001">
+<addon id="plugin.audio.spotify" version="1.3.9" name="Spotify" provider-name="glk1001">
     <requires>
         <import addon="xbmc.python" version="3.0.0" />
         <import addon="xbmc.addon" version="18.9.701" />
@@ -21,8 +21,9 @@
         <disclaimer lang="en_GB">This product uses the SPOTIFY WEB API but is not endorsed, certified or otherwise approved in any way by Spotify. Spotify is the registered trademark of Spotify AB.</disclaimer>
         <source>https://github.com/glk1001/plugin.audio.spotify</source>
         <website>https://github.com/glk1001/glk1001.github.io</website>
-        <news>v1.3.8 (2023-11-06)
-Added setting to turn off Spotify normalization. Should make tracks play louder.
+        <news>v1.3.9 (2023-12-19)
+Added Spanish translations. (Thanks trihy.)
+1.3.8: Added setting to turn off Spotify normalization. Should make tracks play louder.
         </news>
         <assets>
             <icon>resources/icon.png</icon>

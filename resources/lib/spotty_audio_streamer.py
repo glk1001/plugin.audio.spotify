@@ -85,12 +85,10 @@ class SpottyAudioStreamer:
             self.__log_start_reading_audio(track_id_uri)
 
             # Execute the spotty process, then collect stdout.
-            args = SPOTTY_STREAMING_DEFAULT_ARGS + [
-                "--single-track",
-                track_id_uri,
-            ]
+            args = SPOTTY_STREAMING_DEFAULT_ARGS
             if self.use_normalization:
                 args += SPOTTY_STREAMING_NORMALIZATION_ARGS
+            args += ["--single-track", track_id_uri]
             spotty_process = self.__spotty.run_spotty(args, use_creds=True)
             self.__log_spotty_return_code(spotty_process)
             self.__last_spotty_pid = spotty_process.pid
