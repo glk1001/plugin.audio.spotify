@@ -62,6 +62,7 @@ class HTTPSpottyAudioStreamer:
             #        before starting the next track and visualizer. So one visualizer
             #        instance is stopping at the same time as another is starting.
             # Give some time for visualizations to finish.
+            log_msg(f"Delay {self.__gap_between_tracks}s before starting track.")
             time.sleep(self.__gap_between_tracks)
 
         self.__spotty_streamer.set_track(track_id, float(duration))
@@ -82,23 +83,12 @@ class HTTPSpottyAudioStreamer:
         request_range = bottle.request.headers.get("Range", "")
         log_msg(f"Request header range: '{request_range}'.", LOGDEBUG)
 
-        if not request_range or request_range == "bytes=0-":
-            status = 200
-            content_range = ""
-            log_msg(f"Full request, content length = {range_end- range_begin}.", LOGDEBUG)
-        else:
-            status = "206 Partial Content"
-            stream_range = bottle.request.headers["Range"].split("bytes=")[1].split("-")
-            range_begin = int(stream_range[0])
-            range_end = int(stream_range[1]) if stream_range[1].isdigit() else file_size
-            content_range = f"bytes {range_begin}-{range_end}/{file_size}"
-            log_msg(
-                f"Partial request, range = {content_range}," f" length = {range_end - range_begin}",
-                LOGDEBUG,
-            )
+        status = 200
+        content_range = ""
+        log_msg(f"Full request, content length = {range_end - range_begin}.", LOGDEBUG)
 
         bottle.response.status = status
-        bottle.response.headers["Accept-Ranges"] = "bytes"
+        bottle.response.headers["Accept-Ranges"] = "none"
         bottle.response.content_type = "audio/x-wav"
         bottle.response.content_length = range_end - range_begin
         if content_range:
