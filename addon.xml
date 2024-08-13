@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<addon id="plugin.audio.spotify" version="1.3.9" name="Spotify" provider-name="glk1001">
+<addon id="plugin.audio.spotify" version="1.3.10" name="Spotify" provider-name="glk1001">
     <requires>
         <import addon="xbmc.python" version="3.0.0" />
         <import addon="xbmc.addon" version="18.9.701" />
@@ -17,13 +17,12 @@
     <extension point="xbmc.addon.metadata">
         <platform>all</platform>
         <summary lang="en_GB">Unofficial Spotify music plugin for Kodi</summary>
-        <description lang="en_GB">Allows you to use your Spotify premium account to connect and play Spotify through Kodi. After installing, use 'Configure' to enter your Spotify username and password.</description>
+        <description lang="en_GB">Allows you to use your Spotify premium account to connect and play Spotify through Kodi.</description>
         <disclaimer lang="en_GB">This product uses the SPOTIFY WEB API but is not endorsed, certified or otherwise approved in any way by Spotify. Spotify is the registered trademark of Spotify AB.</disclaimer>
         <source>https://github.com/glk1001/plugin.audio.spotify</source>
         <website>https://github.com/glk1001/glk1001.github.io</website>
-        <news>v1.3.9 (2023-12-19)
-Added Spanish translations. (Thanks trihy.)
-1.3.8: Added setting to turn off Spotify normalization. Should make tracks play louder.
+        <news>v1.3.10 (2024-08-16)
+Replaced 'user/password' authentication with zeroconf authentication.
         </news>
         <assets>
             <icon>resources/icon.png</icon>

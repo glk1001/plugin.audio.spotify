@@ -6,37 +6,24 @@ import subprocess
 from typing import Union
 
 import xbmc
-import xbmcaddon
 from xbmc import LOGERROR
 
-import spotty
-from utils import log_msg, log_exception, ADDON_ID, ADDON_DATA_PATH
+from utils import log_msg, log_exception
 
+# IMPORTANT: To allow 'spotty' to run on Android, we need to run it from the
+#            kodi package's internal writeable directory. Same with temp files
+#            - they need to be written to the same directory.
+KODI_ANDROID_INTERNAL_WRITABLE_DIR = "/data/data/org.xbmc.kodi"
 SPOTTY_SUBDIR = "deps/spotty"
 
 
 class SpottyHelper:
     def __init__(self):
         self.spotty_binary_path = self.__get_spotty_path()
-        self.spotty_cache_path = f"{ADDON_DATA_PATH}/spotty-cache"
 
         self.spotty_rust_env = os.environ.copy()
         if xbmc.getCondVisibility("System.Platform.Android"):
-            self.spotty_rust_env["TMPDIR"] = spotty.KODI_ANDROID_INTERNAL_WRITABLE_DIR
-
-    def get_username(self) -> str:
-        addon = xbmcaddon.Addon(id=ADDON_ID)
-        spotify_username = addon.getSetting("username")
-        if not spotify_username:
-            raise Exception("Could not get spotify username.")
-        return spotify_username
-
-    def get_password(self) -> str:
-        addon = xbmcaddon.Addon(id=ADDON_ID)
-        spotify_password = addon.getSetting("password")
-        if not spotify_password:
-            raise Exception("Could not get spotify password.")
-        return spotify_password
+            self.spotty_rust_env["TMPDIR"] = KODI_ANDROID_INTERNAL_WRITABLE_DIR
 
     def kill_all_spotties(self) -> None:
         if platform.system() == "Windows":
@@ -89,7 +76,7 @@ class SpottyHelper:
         ]
         for path in candidate_paths:
             binary = os.path.join(os.path.dirname(__file__), SPOTTY_SUBDIR, path[0], path[1])
-            test_binary = os.path.join(spotty.KODI_ANDROID_INTERNAL_WRITABLE_DIR, "spotty")
+            test_binary = os.path.join(KODI_ANDROID_INTERNAL_WRITABLE_DIR, "spotty")
             shutil.copyfile(binary, test_binary)
             os.chmod(test_binary, stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO)
             if SpottyHelper.__test_spotty(test_binary):

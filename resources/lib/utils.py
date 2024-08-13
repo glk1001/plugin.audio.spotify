@@ -2,11 +2,14 @@ import inspect
 import os
 import platform
 import signal
+import sys
+import time
 import unicodedata
 from traceback import format_exception
 from typing import Any, Dict, List, Tuple, Union
 
 import xbmc
+import xbmcaddon
 import xbmcgui
 import xbmcvfs
 from xbmc import LOGDEBUG, LOGINFO, LOGERROR
@@ -18,7 +21,8 @@ ADDON_ID = "plugin.audio.spotify"
 ADDON_DATA_PATH = xbmcvfs.translatePath(f"special://profile/addon_data/{ADDON_ID}")
 ADDON_WINDOW_ID = 10000
 
-KODI_PROPERTY_SPOTIFY_TOKEN = "spotify-token"
+KODI_PROPERTY_SPOTIFY_AUTH_TOKEN = "spotify-auth-token"
+KODI_PROPERTY_AUTH_TOKEN_EXPIRES_AT = "spotify-auth-token-expires-at"
 
 
 def log_msg(msg: str, loglevel: int = LOGDEBUG, caller_name: str = "") -> None:
@@ -38,6 +42,22 @@ def log_exception(exc: Exception, exception_details: str) -> None:
 
 def get_formatted_caller_name(filename: str, function_name: str) -> str:
     return f"{os.path.splitext(os.path.basename(filename))[0]}:{function_name}"
+
+
+def get_time_str(raw_time: int) -> str:
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(raw_time)))
+
+
+def get_username() -> str:
+    addon = xbmcaddon.Addon(id=ADDON_ID)
+    spotify_username = addon.getSetting("username")
+    if not spotify_username:
+        raise Exception("Could not get spotify username.")
+    return spotify_username
+
+
+def kill_this_plugin() -> None:
+    sys.exit(1)
 
 
 def kill_process_by_pid(pid: int) -> None:
@@ -90,11 +110,19 @@ def normalize_string(text):
 
 
 def cache_auth_token(auth_token: str) -> None:
-    cache_value_in_kodi(KODI_PROPERTY_SPOTIFY_TOKEN, auth_token)
+    cache_value_in_kodi(KODI_PROPERTY_SPOTIFY_AUTH_TOKEN, auth_token)
 
 
 def get_cached_auth_token() -> str:
-    return get_cached_value_from_kodi(KODI_PROPERTY_SPOTIFY_TOKEN)
+    return get_cached_value_from_kodi(KODI_PROPERTY_SPOTIFY_AUTH_TOKEN)
+
+
+def cache_auth_token_expires_at(auth_token: str) -> None:
+    cache_value_in_kodi(KODI_PROPERTY_AUTH_TOKEN_EXPIRES_AT, auth_token)
+
+
+def get_cached_auth_token_expires_at() -> str:
+    return get_cached_value_from_kodi(KODI_PROPERTY_AUTH_TOKEN_EXPIRES_AT)
 
 
 def cache_value_in_kodi(kodi_property_id: str, value: Any):

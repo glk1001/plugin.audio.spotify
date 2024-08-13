@@ -16,6 +16,8 @@ SPOTIFY_BITRATE = "320"
 SPOTTY_INITIAL_VOLUME = "50"
 SPOTTY_GAIN_TYPE = "track"
 SPOTTY_STREAMING_DEFAULT_ARGS = [
+    "--disable-audio-cache",
+    "--disable-discovery",
     "--bitrate",
     SPOTIFY_BITRATE,
     "--initial-volume",
@@ -89,7 +91,7 @@ class SpottyAudioStreamer:
             if self.use_normalization:
                 args += SPOTTY_STREAMING_NORMALIZATION_ARGS
             args += ["--single-track", track_id_uri]
-            spotty_process = self.__spotty.run_spotty(args, use_creds=True)
+            spotty_process = self.__spotty.run_spotty(args)
             self.__log_spotty_return_code(spotty_process)
             self.__last_spotty_pid = spotty_process.pid
 

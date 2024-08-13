@@ -11,9 +11,13 @@ import xbmcgui
 import xbmcplugin
 import xbmcvfs
 
+import main_service
 import simplecache
 import spotipy
+import spotty
 import utils
+from spotty_auth import SpottyAuth
+from spotty_helper import SpottyHelper
 from string_ids import *
 from utils import ADDON_ID, PROXY_PORT, log_exception, log_msg, get_chunks
 
@@ -36,8 +40,10 @@ class PluginContent:
     __win: xbmcgui.Window = xbmcgui.Window(utils.ADDON_WINDOW_ID)
     __addon_icon_path = os.path.join(__addon.getAddonInfo("path"), "resources")
     __action = ""
-    __spotipy = None
+    __spotty: spotty.Spotty = None
+    __spotipy: spotipy.Spotify = None
     __userid = ""
+    __username = ""
     __user_country = ""
     __offset = 0
     __playlist_id = ""
@@ -68,14 +74,9 @@ class PluginContent:
             self.default_view_albums: str = self.__addon.getSetting("albumDefaultView")
             self.default_view_category: str = self.__addon.getSetting("categoryDefaultView")
 
-            auth_token: str = self.__get_authkey()
-            if not auth_token:
-                xbmcplugin.endOfDirectory(handle=self.__addon_handle)
-                return
+            self.__spotty: spotty.Spotty = spotty.get_spotty(SpottyHelper())
 
-            self.__spotipy: spotipy.Spotify = spotipy.Spotify(auth=auth_token)
-            self.__userid: str = self.__spotipy.me()["id"]
-            self.__user_country = self.__spotipy.me()["country"]
+            self.check_auth_and_refresh_spotipy()
 
             self.parse_params()
 
@@ -91,6 +92,87 @@ class PluginContent:
         except Exception as exc:
             log_exception(exc, "PluginContent init error")
             xbmcplugin.endOfDirectory(handle=self.__addon_handle)
+
+    def check_auth_and_refresh_spotipy(self):
+        auth_token: str = utils.get_cached_auth_token()
+        if auth_token:
+            self.init_spotipy(auth_token)
+            return
+
+        self.authenticate_plugin_after_login_failure()
+
+    def refresh_spotipy(self):
+        auth_token: str = utils.get_cached_auth_token()
+        if not auth_token:
+            xbmcplugin.endOfDirectory(handle=self.__addon_handle)
+            return
+
+        log_msg(f"Got auth_token '{auth_token}'.")
+
+        self.init_spotipy(auth_token)
+
+    def init_spotipy(self, auth_token: str) -> None:
+        self.__spotipy: spotipy.Spotify = spotipy.Spotify(auth=auth_token)
+        self.__userid: str = self.__spotipy.me()["id"]
+        self.__username: str = self.__spotipy.me()["email"]
+        self.__user_country = self.__spotipy.me()["country"]
+
+    def authenticate_plugin_after_login_failure(self) -> None:
+        self.authenticate_plugin(
+            self.__addon.getLocalizedString(AUTHENTICATE_INSTRUCTIONS_AFTER_LOGIN_FAIL_STR_ID)
+        )
+
+    def authenticate_plugin_request(self) -> None:
+        self.authenticate_plugin(self.__addon.getLocalizedString(AUTHENTICATE_INSTRUCTIONS_STR_ID))
+
+    def authenticate_plugin(self, instructions: str) -> None:
+        dialog = xbmcgui.Dialog()
+        dialog_title = self.__addon.getAddonInfo("name")
+
+        spotty_auth = SpottyAuth(self.__spotty)
+
+        zeroconf_auth = spotty_auth.start_zeroconf_authenticate()
+        if zeroconf_auth is None:
+            dialog.ok(dialog_title, self.get_zeroconf_program_failed_msg(spotty_auth))
+            main_service.abort_main_service = True
+            utils.kill_this_plugin()
+            return
+
+        dialog.ok(dialog_title, instructions)
+
+        zeroconf_auth.terminate()
+
+        if not spotty_auth.zeroconf_authenticated_ok():
+            dialog.ok(dialog_title, self.get_zeroconf_authentication_failed_msg(spotty_auth))
+            main_service.abort_main_service = True
+            utils.kill_this_plugin()
+            return
+
+        spotty_auth.renew_token()
+        self.refresh_spotipy()
+
+        dialog.ok(dialog_title, self.get_authenticated_success_msg())
+
+    def get_authenticated_success_msg(self) -> str:
+        msg = self.__addon.getLocalizedString(AUTHENTICATE_SUCCESS_STR_ID)
+
+        max_str_len = len(max(msg.split("\n"), key=len))
+        blanks = " " * (int(max_str_len / 2) - 1)
+        msg += f"\n\n{blanks}'{self.__username}'."
+
+        return msg
+
+    def get_zeroconf_program_failed_msg(self, spotty_auth: SpottyAuth) -> str:
+        return (
+            f"{spotty_auth.get_zeroconf_program_failed_msg()}\n\n"
+            f"{self.__addon.getLocalizedString(TERMINATING_SPOTIFY_PLUGIN_STR_ID)}"
+        )
+
+    def get_zeroconf_authentication_failed_msg(self, spotty_auth: SpottyAuth) -> str:
+        return (
+            f"{spotty_auth.get_zeroconf_authentication_failed_msg()}\n\n"
+            f"{self.__addon.getLocalizedString(TERMINATING_SPOTIFY_PLUGIN_STR_ID)}"
+        )
 
     def parse_params(self):
         """parse parameters from the plugin entry path"""
@@ -126,18 +208,6 @@ class PluginContent:
         filt = self.__params.get("applyfilter", None)
         if filt:
             self.__filter = filt[0]
-
-    def __get_authkey(self) -> str:
-        """get authentication key"""
-        auth_token = utils.get_cached_auth_token()
-
-        if not auth_token:
-            msg = self.__addon.getLocalizedString(NO_CREDENTIALS_MSG_STR_ID)
-            dialog = xbmcgui.Dialog()
-            header = self.__addon.getAddonInfo("name")
-            dialog.ok(header, msg)
-
-        return auth_token
 
     def __cache_checksum(self, opt_value: Any = None) -> str:
         """simple cache checksum based on a few most important values"""
@@ -273,6 +343,12 @@ class PluginContent:
                 True,
             ),
             (
+                self.__addon.getLocalizedString(AUTHENTICATE_PLUGIN_STR_ID),
+                f"plugin://{ADDON_ID}/?action={self.authenticate_plugin_request.__name__}",
+                CLEAR_CACHE_ICON,
+                False,
+            ),
+            (
                 self.__addon.getLocalizedString(CLEAR_CACHE_STR_ID),
                 f"plugin://{ADDON_ID}/?action={self.delete_cache_db.__name__}",
                 CLEAR_CACHE_ICON,
@@ -291,6 +367,8 @@ class PluginContent:
 
         xbmcplugin.addSortMethod(self.__addon_handle, xbmcplugin.SORT_METHOD_UNSORTED)
         xbmcplugin.endOfDirectory(handle=self.__addon_handle)
+
+        log_msg("Finished setting up main menu.")
 
     def browse_main_library(self) -> None:
         # Library nodes.
@@ -934,7 +1012,8 @@ class PluginContent:
                     (
                         self.__addon.getLocalizedString(ALL_ALBUMS_FOR_ARTIST_STR_ID),
                         f"Container.Update(plugin://{ADDON_ID}/"
-                        f"?action={self.browse_artist_albums.__name__}&artistid={track['artistid']})",
+                        f"?action={self.browse_artist_albums.__name__}"
+                        f"&artistid={track['artistid']})",
                     )
                 )
 
@@ -944,7 +1023,8 @@ class PluginContent:
                         (
                             self.__addon.getLocalizedString(UNFOLLOW_ARTIST_STR_ID),
                             f"RunPlugin(plugin://{ADDON_ID}/"
-                            f"?action={self.unfollow_artist.__name__}&artistid={track['artistid']})",
+                            f"?action={self.unfollow_artist.__name__}"
+                            f"&artistid={track['artistid']})",
                         )
                     )
                 else:
