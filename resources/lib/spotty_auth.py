@@ -14,7 +14,7 @@ from utils import log_msg, log_exception, ADDON_ID
 
 ZEROCONF_PORT = 10001
 
-CLIENT_ID = "2be692f5408247a28f925ca9424268fa"
+CLIENT_ID = "2eb96f9b37494be1824999d58028a305"
 SPOTTY_SCOPE = [
     "user-read-playback-state",
     "user-read-currently-playing",
