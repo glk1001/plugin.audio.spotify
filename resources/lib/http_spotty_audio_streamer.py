@@ -83,12 +83,23 @@ class HTTPSpottyAudioStreamer:
         request_range = bottle.request.headers.get("Range", "")
         log_msg(f"Request header range: '{request_range}'.", LOGDEBUG)
 
-        status = 200
-        content_range = ""
-        log_msg(f"Full request, content length = {range_end - range_begin}.", LOGDEBUG)
+        if not request_range or (request_range == "bytes=0-"):
+            status = 200
+            content_range = ""
+            log_msg(f"Full request, content length = {range_end- range_begin}.", LOGDEBUG)
+        else:
+            status = "206 Partial Content"
+            stream_range = bottle.request.headers["Range"].split("bytes=")[1].split("-")
+            range_begin = int(stream_range[0])
+            range_end = int(stream_range[1]) if stream_range[1].isdigit() else file_size
+            content_range = f"bytes {range_begin}-{range_end}/{file_size}"
+            log_msg(
+                f"Partial request, range = {content_range}," f" length = {range_end - range_begin}",
+                LOGDEBUG,
+            )
 
         bottle.response.status = status
-        bottle.response.headers["Accept-Ranges"] = "none"
+        bottle.response.headers["Accept-Ranges"] = "bytes"
         bottle.response.content_type = "audio/x-wav"
         bottle.response.content_length = range_end - range_begin
         if content_range:
