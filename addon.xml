@@ -7,7 +7,6 @@
         <import addon="script.module.chardet" version="5.1.0" />
         <import addon="script.module.idna" version="3.4.0" />
         <import addon="script.module.requests" version="2.31.0" />
-        <import addon="script.module.six" version="1.15.0" />
         <import addon="script.module.urllib3" version="1.26.16" />
     </requires>
     <extension point="xbmc.python.pluginsource" library="plugin.py">
