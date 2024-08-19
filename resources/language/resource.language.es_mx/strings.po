@@ -16,18 +16,6 @@ msgstr ""
 "Language: es_mx\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-msgctxt "#11001"
-msgid "Username"
-msgstr "Nombre de Usuario"
-
-msgctxt "#11002"
-msgid "Password"
-msgstr "Contraseña"
-
-msgctxt "#11005"
-msgid "New releases"
-msgstr "Nuevos Lanzamientos"
-
 msgctxt "#11007"
 msgid "Save to My Music"
 msgstr "Guardar en Mi Música"
@@ -65,7 +53,7 @@ msgid "Featured playlists"
 msgstr "Playlists Destacadas"
 
 msgctxt "#11016"
-msgid "New releases"
+msgid "All new releases"
 msgstr "Nuevos Lanzamientos"
 
 msgctxt "#11017"
@@ -75,6 +63,10 @@ msgstr "Remover del Playlist"
 msgctxt "#11018"
 msgid "All albums for artist"
 msgstr "Todos los Albumes del Artista"
+
+msgctxt "#11019"
+msgid "All singles for artist"
+msgstr "All singles for artist"
 
 msgctxt "#11020"
 msgid "Default view for categories"
@@ -219,3 +211,15 @@ msgid ""
 "Terminating the Spotify plugin."
 msgstr ""
 "Terminating the Spotify plugin."
+
+msgctxt "#11083"
+msgid "All tracks for artist"
+msgstr "All tracks for artist"
+
+msgctxt "#11084"
+msgid "All albums and singles for artist"
+msgstr "All albums and singles for artist"
+
+msgctxt "#11085"
+msgid "All 'appears on' albums for artist"
+msgstr "All 'appears on' albums for artist"

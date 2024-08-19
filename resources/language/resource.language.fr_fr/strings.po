@@ -16,18 +16,6 @@ msgstr ""
 "Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 
-msgctxt "#11001"
-msgid "Username"
-msgstr "Nom d'utilisateur"
-
-msgctxt "#11002"
-msgid "Password"
-msgstr "Mot de passe"
-
-msgctxt "#11005"
-msgid "New releases"
-msgstr "Nouveautés"
-
 msgctxt "#11007"
 msgid "Save to My Music"
 msgstr "Ajouter a Ma Musique"
@@ -65,7 +53,7 @@ msgid "Featured playlists"
 msgstr "Listes de lectures mises en avant"
 
 msgctxt "#11016"
-msgid "New releases"
+msgid "All new releases"
 msgstr "Nouveautés"
 
 msgctxt "#11017"
@@ -75,6 +63,10 @@ msgstr "Enlever de la liste de lecture"
 msgctxt "#11018"
 msgid "All albums for artist"
 msgstr "Tous les albums de cet artiste"
+
+msgctxt "#11019"
+msgid "All singles for artist"
+msgstr "All singles for artist"
 
 msgctxt "#11020"
 msgid "Default view for categories"
@@ -211,9 +203,25 @@ msgstr ""
 "Failed to authenticate. Could not find the credentials file:"
 
 msgctxt "#11081"
-msgid "Authentication program failed to run."
-msgstr "Authentication program failed to run."
+msgid ""
+"Authentication program failed to run."
+msgstr ""
+"Authentication program failed to run."
 
 msgctxt "#11082"
-msgid "Terminating the Spotify plugin."
-msgstr "Terminating the Spotify plugin."
+msgid ""
+"Terminating the Spotify plugin."
+msgstr ""
+"Terminating the Spotify plugin."
+
+msgctxt "#11083"
+msgid "All tracks for artist"
+msgstr "All tracks for artist"
+
+msgctxt "#11084"
+msgid "All albums and singles for artist"
+msgstr "All albums and singles for artist"
+
+msgctxt "#11085"
+msgid "All 'appears on' albums for artist"
+msgstr "All 'appears on' albums for artist"

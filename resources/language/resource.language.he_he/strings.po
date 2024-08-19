@@ -17,18 +17,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 2.0.4\n"
 
-msgctxt "#11001"
-msgid "Username"
-msgstr "שם משתמש"
-
-msgctxt "#11002"
-msgid "Password"
-msgstr "ססמה"
-
-msgctxt "#11005"
-msgid "New releases"
-msgstr "שיחרורים חדשים"
-
 msgctxt "#11007"
 msgid "Save to My Music"
 msgstr "לשמור אל המוזיקה שלי"
@@ -66,7 +54,7 @@ msgid "Featured playlists"
 msgstr "רשימות ניגון מומלצות"
 
 msgctxt "#11016"
-msgid "New releases"
+msgid "All new releases"
 msgstr "שיחרורים חדשים"
 
 msgctxt "#11017"
@@ -76,6 +64,10 @@ msgstr "הסר מרשימת ניגון"
 msgctxt "#11018"
 msgid "All albums for artist"
 msgstr "כל האלבומים עבור אמן"
+
+msgctxt "#11019"
+msgid "All singles for artist"
+msgstr "All singles for artist"
 
 msgctxt "#11020"
 msgid "Default view for categories"
@@ -212,9 +204,25 @@ msgstr ""
 "Failed to authenticate. Could not find the credentials file:"
 
 msgctxt "#11081"
-msgid "Authentication program failed to run."
-msgstr "Authentication program failed to run."
+msgid ""
+"Authentication program failed to run."
+msgstr ""
+"Authentication program failed to run."
 
 msgctxt "#11082"
-msgid "Terminating the Spotify plugin."
-msgstr "Terminating the Spotify plugin."
+msgid ""
+"Terminating the Spotify plugin."
+msgstr ""
+"Terminating the Spotify plugin."
+
+msgctxt "#11083"
+msgid "All tracks for artist"
+msgstr "All tracks for artist"
+
+msgctxt "#11084"
+msgid "All albums and singles for artist"
+msgstr "All albums and singles for artist"
+
+msgctxt "#11085"
+msgid "All 'appears on' albums for artist"
+msgstr "All 'appears on' albums for artist"

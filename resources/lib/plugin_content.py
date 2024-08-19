@@ -63,6 +63,8 @@ class PluginContent:
 
     def __init__(self):
         try:
+            # logging.basicConfig(level=logging.DEBUG)
+
             self.cache: simplecache.SimpleCache = simplecache.SimpleCache(ADDON_ID)
 
             self.append_artist_to_title: bool = (
@@ -518,7 +520,7 @@ class PluginContent:
                 MUSIC_PLAYLISTS_ICON,
             ),
             (
-                self.__addon.getLocalizedString(BROWSE_NEW_RELEASES_STR_ID),
+                self.__addon.getLocalizedString(ALL_NEW_RELEASES_STR_ID),
                 f"plugin://{ADDON_ID}/?action={self.browse_new_releases.__name__}",
                 MUSIC_ALBUMS_ICON,
             ),
@@ -879,7 +881,9 @@ class PluginContent:
     def browse_new_releases(self) -> None:
         xbmcplugin.setContent(self.__addon_handle, "albums")
         xbmcplugin.setProperty(
-            self.__addon_handle, "FolderName", self.__addon.getLocalizedString(NEW_RELEASES_STR_ID)
+            self.__addon_handle,
+            "FolderName",
+            self.__addon.getLocalizedString(ALL_NEW_RELEASES_STR_ID),
         )
         albums = self.__get_new_releases()
         self.__add_album_listitems(albums)
@@ -922,17 +926,18 @@ class PluginContent:
                 thumb = "DefaultMusicSongs.png"
             track["thumb"] = thumb
 
-            # skip local tracks in playlists
+            # Skip local tracks in playlists.
             if not track.get("id"):
                 continue
 
-            artists = []
-            for artist in track["artists"]:
-                if artist["name"]:
-                    artists.append(artist["name"])
-            if artists:
-                track["artist"] = " / ".join(artists)
-                track["artistid"] = track["artists"][0]["id"]
+            if "artists" in track:
+                artists = []
+                for artist in track["artists"]:
+                    if artist["name"]:
+                        artists.append(artist["name"])
+                if artists:
+                    track["artist"] = " / ".join(artists)
+                    track["artistid"] = track["artists"][0]["id"]
 
             track["genre"] = " / ".join(track["album"].get("genres", []))
 
@@ -945,108 +950,140 @@ class PluginContent:
             )
 
             track["rating"] = str(self.__get_track_rating(track["popularity"]))
+
             if playlist_details:
                 track["playlistid"] = playlist_details["id"]
 
-            # Use original track id for actions when the track was relinked.
-            if track.get("linked_from"):
-                real_track_id = track["linked_from"]["id"]
-                real_track_uri = track["linked_from"]["uri"]
-            else:
-                real_track_id = track["id"]
-                real_track_uri = track["uri"]
-
-            contextitems = []
-            if track["id"] in saved_track_ids:
-                contextitems.append(
-                    (
-                        self.__addon.getLocalizedString(REMOVE_TRACKS_FROM_MY_MUSIC_STR_ID),
-                        f"RunPlugin(plugin://{ADDON_ID}/"
-                        f"?action={self.remove_track.__name__}&trackid={real_track_id})",
-                    )
-                )
-            else:
-                contextitems.append(
-                    (
-                        self.__addon.getLocalizedString(SAVE_TRACKS_TO_MY_MUSIC_STR_ID),
-                        f"RunPlugin(plugin://{ADDON_ID}/"
-                        f"?action={self.save_track.__name__}&trackid={real_track_id})",
-                    )
-                )
-
-            if playlist_details and playlist_details["owner"]["id"] == self.__userid:
-                contextitems.append(
-                    (
-                        f"{self.__addon.getLocalizedString(REMOVE_FROM_PLAYLIST_STR_ID)}"
-                        f" {playlist_details['name']}",
-                        f"RunPlugin(plugin://{ADDON_ID}/"
-                        f"?action={self.remove_track_from_playlist.__name__}&trackid="
-                        f"{real_track_uri}&playlistid={playlist_details['id']})",
-                    )
-                )
-
-            contextitems.append(
-                (
-                    xbmc.getLocalizedString(KODI_ADD_TO_PLAYLIST_STR_ID),
-                    f"RunPlugin(plugin://{ADDON_ID}/"
-                    f"?action={self.add_track_to_playlist.__name__}&trackid={real_track_uri})",
-                )
+            track["contextitems"] = self.__get_playlist_track_context_menu_items(
+                track, saved_track_ids, playlist_details, followed_artists
             )
 
-            if "artistid" in track:
-                contextitems.append(
-                    (
-                        self.__addon.getLocalizedString(ARTIST_TOP_TRACKS_STR_ID),
-                        f"Container.Update(plugin://{ADDON_ID}/"
-                        f"?action={self.artist_top_tracks.__name__}&artistid={track['artistid']})",
-                    )
-                )
-                contextitems.append(
-                    (
-                        self.__addon.getLocalizedString(RELATED_ARTISTS_STR_ID),
-                        f"Container.Update(plugin://{ADDON_ID}/"
-                        f"?action={self.related_artists.__name__}&artistid={track['artistid']})",
-                    )
-                )
-                contextitems.append(
-                    (
-                        self.__addon.getLocalizedString(ALL_ALBUMS_FOR_ARTIST_STR_ID),
-                        f"Container.Update(plugin://{ADDON_ID}/"
-                        f"?action={self.browse_artist_albums.__name__}"
-                        f"&artistid={track['artistid']})",
-                    )
-                )
-
-                if track["artistid"] in followed_artists:
-                    # unfollow artist
-                    contextitems.append(
-                        (
-                            self.__addon.getLocalizedString(UNFOLLOW_ARTIST_STR_ID),
-                            f"RunPlugin(plugin://{ADDON_ID}/"
-                            f"?action={self.unfollow_artist.__name__}"
-                            f"&artistid={track['artistid']})",
-                        )
-                    )
-                else:
-                    # follow artist
-                    contextitems.append(
-                        (
-                            self.__addon.getLocalizedString(FOLLOW_ARTIST_STR_ID),
-                            f"RunPlugin(plugin://{ADDON_ID}/"
-                            f"?action={self.follow_artist.__name__}&artistid={track['artistid']})",
-                        )
-                    )
-
-            contextitems.append(
-                (
-                    self.__addon.getLocalizedString(REFRESH_LISTING_STR_ID),
-                    f"RunPlugin(plugin://{ADDON_ID}/" f"?action={self.refresh_listing.__name__})",
-                )
-            )
-            track["contextitems"] = contextitems
             new_tracks.append(track)
 
         return new_tracks
+
+    def __get_playlist_track_context_menu_items(
+        self, track, saved_track_ids, playlist_details, followed_artists: List[str]
+    ) -> List[Tuple[str, str]]:
+        # Use original track id for actions when the track was relinked.
+        if track.get("linked_from"):
+            real_track_id = track["linked_from"]["id"]
+            real_track_uri = track["linked_from"]["uri"]
+        else:
+            real_track_id = track["id"]
+            real_track_uri = track["uri"]
+
+        context_items = [
+            (
+                self.__addon.getLocalizedString(REFRESH_LISTING_STR_ID),
+                f"RunPlugin(plugin://{ADDON_ID}/" f"?action={self.refresh_listing.__name__})",
+            )
+        ]
+
+        if track["id"] in saved_track_ids:
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(REMOVE_TRACKS_FROM_MY_MUSIC_STR_ID),
+                    f"RunPlugin(plugin://{ADDON_ID}/"
+                    f"?action={self.remove_track.__name__}&trackid={real_track_id})",
+                )
+            )
+        else:
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(SAVE_TRACKS_TO_MY_MUSIC_STR_ID),
+                    f"RunPlugin(plugin://{ADDON_ID}/"
+                    f"?action={self.save_track.__name__}&trackid={real_track_id})",
+                )
+            )
+
+        if playlist_details and playlist_details["owner"]["id"] == self.__userid:
+            context_items.append(
+                (
+                    f"{self.__addon.getLocalizedString(REMOVE_FROM_PLAYLIST_STR_ID)}"
+                    f" {playlist_details['name']}",
+                    f"RunPlugin(plugin://{ADDON_ID}/"
+                    f"?action={self.remove_track_from_playlist.__name__}&trackid="
+                    f"{real_track_uri}&playlistid={playlist_details['id']})",
+                )
+            )
+
+        context_items.append(
+            (
+                xbmc.getLocalizedString(KODI_ADD_TO_PLAYLIST_STR_ID),
+                f"RunPlugin(plugin://{ADDON_ID}/"
+                f"?action={self.add_track_to_playlist.__name__}&trackid={real_track_uri})",
+            )
+        )
+
+        if "artistid" in track:
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(ARTIST_TOP_TRACKS_STR_ID),
+                    f"Container.Update(plugin://{ADDON_ID}/"
+                    f"?action={self.artist_top_tracks.__name__}&artistid={track['artistid']})",
+                )
+            )
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(ALL_ALBUMS_FOR_ARTIST_STR_ID),
+                    f"Container.Update(plugin://{ADDON_ID}/"
+                    f"?action={self.browse_artist_just_albums.__name__}"
+                    f"&artistid={track['artistid']})",
+                )
+            )
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(ALL_SINGLES_FOR_ARTIST_STR_ID),
+                    f"Container.Update(plugin://{ADDON_ID}/"
+                    f"?action={self.browse_artist_just_singles.__name__}"
+                    f"&artistid={track['artistid']})",
+                )
+            )
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(ALL_APPEARS_ON_FOR_ARTIST_STR_ID),
+                    f"Container.Update(plugin://{ADDON_ID}/"
+                    f"?action={self.browse_artist_just_appears_on.__name__}"
+                    f"&artistid={track['artistid']})",
+                )
+            )
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(EVERYTHING_FOR_ARTIST_STR_ID),
+                    f"Container.Update(plugin://{ADDON_ID}/"
+                    f"?action={self.browse_artist_everything.__name__}"
+                    f"&artistid={track['artistid']})",
+                )
+            )
+
+            if track["artistid"] in followed_artists:
+                context_items.append(
+                    (
+                        self.__addon.getLocalizedString(UNFOLLOW_ARTIST_STR_ID),
+                        f"RunPlugin(plugin://{ADDON_ID}/"
+                        f"?action={self.unfollow_artist.__name__}"
+                        f"&artistid={track['artistid']})",
+                    )
+                )
+            else:
+                context_items.append(
+                    (
+                        self.__addon.getLocalizedString(FOLLOW_ARTIST_STR_ID),
+                        f"RunPlugin(plugin://{ADDON_ID}/"
+                        f"?action={self.follow_artist.__name__}&artistid={track['artistid']})",
+                    )
+                )
+
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(RELATED_ARTISTS_STR_ID),
+                    f"Container.Update(plugin://{ADDON_ID}/"
+                    f"?action={self.related_artists.__name__}&artistid={track['artistid']})",
+                )
+            )
+
+        return context_items
 
     def __prepare_album_listitems(
         self, album_ids: List[str] = None, albums: List[Dict[str, Any]] = None
@@ -1082,49 +1119,58 @@ class PluginContent:
             track["rating"] = str(self.__get_track_rating(track["popularity"]))
             track["artistid"] = track["artists"][0]["id"]
 
-            contextitems = [
-                (xbmc.getLocalizedString(KODI_BROWSE_STR_ID), f"RunPlugin({track['url']})"),
-                (
-                    self.__addon.getLocalizedString(ARTIST_TOP_TRACKS_STR_ID),
-                    f"Container.Update(plugin://{ADDON_ID}/"
-                    f"?action={self.artist_top_tracks.__name__}&artistid={track['artistid']})",
-                ),
-                (
-                    self.__addon.getLocalizedString(RELATED_ARTISTS_STR_ID),
-                    f"Container.Update(plugin://{ADDON_ID}/"
-                    f"?action={self.related_artists.__name__}&artistid={track['artistid']})",
-                ),
-                (
-                    self.__addon.getLocalizedString(ALL_ALBUMS_FOR_ARTIST_STR_ID),
-                    f"Container.Update(plugin://{ADDON_ID}/"
-                    f"?action={self.browse_artist_albums.__name__}&artistid={track['artistid']})",
-                ),
-                (
-                    self.__addon.getLocalizedString(REFRESH_LISTING_STR_ID),
-                    f"RunPlugin(plugin://{ADDON_ID}/" f"?action={self.refresh_listing.__name__})",
-                ),
-            ]
-
-            if track["id"] in saved_albums:
-                contextitems.append(
-                    (
-                        self.__addon.getLocalizedString(REMOVE_TRACKS_FROM_MY_MUSIC_STR_ID),
-                        f"RunPlugin(plugin://{ADDON_ID}/"
-                        f"?action={self.remove_album.__name__}&albumid={track['id']})",
-                    )
-                )
-            else:
-                contextitems.append(
-                    (
-                        self.__addon.getLocalizedString(SAVE_TRACKS_TO_MY_MUSIC_STR_ID),
-                        f"RunPlugin(plugin://{ADDON_ID}/"
-                        f"?action={self.save_album.__name__}&albumid={track['id']})",
-                    )
-                )
-
-            track["contextitems"] = contextitems
+            track["contextitems"] = self.__get_album_track_context_menu_items(track, saved_albums)
 
         return albums
+
+    def __get_album_track_context_menu_items(
+        self, track, saved_albums: List[str]
+    ) -> List[Tuple[str, str]]:
+        context_items = [
+            (
+                self.__addon.getLocalizedString(REFRESH_LISTING_STR_ID),
+                f"RunPlugin(plugin://{ADDON_ID}/" f"?action={self.refresh_listing.__name__})",
+            ),
+            (
+                xbmc.getLocalizedString(KODI_BROWSE_STR_ID),
+                f"Container.Update(plugin://{ADDON_ID}/"
+                f"?action={self.browse_album.__name__}&albumid={track['id']})",
+            ),
+            (
+                self.__addon.getLocalizedString(ARTIST_TOP_TRACKS_STR_ID),
+                f"Container.Update(plugin://{ADDON_ID}/"
+                f"?action={self.artist_top_tracks.__name__}&artistid={track['artistid']})",
+            ),
+            (
+                self.__addon.getLocalizedString(EVERYTHING_FOR_ARTIST_STR_ID),
+                f"Container.Update(plugin://{ADDON_ID}/"
+                f"?action={self.browse_artist_everything.__name__}&artistid={track['artistid']})",
+            ),
+            (
+                self.__addon.getLocalizedString(RELATED_ARTISTS_STR_ID),
+                f"Container.Update(plugin://{ADDON_ID}/"
+                f"?action={self.related_artists.__name__}&artistid={track['artistid']})",
+            ),
+        ]
+
+        if track["id"] in saved_albums:
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(REMOVE_TRACKS_FROM_MY_MUSIC_STR_ID),
+                    f"RunPlugin(plugin://{ADDON_ID}/"
+                    f"?action={self.remove_album.__name__}&albumid={track['id']})",
+                )
+            )
+        else:
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(SAVE_TRACKS_TO_MY_MUSIC_STR_ID),
+                    f"RunPlugin(plugin://{ADDON_ID}/"
+                    f"?action={self.save_album.__name__}&albumid={track['id']})",
+                )
+            )
+
+        return context_items
 
     def __add_album_listitems(
         self, albums: List[Dict[str, Any]], append_artist_to_label: bool = False
@@ -1159,58 +1205,86 @@ class PluginContent:
             for artist in self.__get_followed_artists():
                 followed_artists.append(artist["id"])
 
-        for item in artists:
-            if not item:
+        for artist in artists:
+            if not artist:
                 return []
-            if item.get("artist"):
-                item = item["artist"]
-            if item.get("images"):
-                item["thumb"] = item["images"][0]["url"]
+            if artist.get("artist"):
+                artist = artist["artist"]
+            if artist.get("images"):
+                artist["thumb"] = artist["images"][0]["url"]
             else:
-                item["thumb"] = "DefaultMusicArtists.png"
+                artist["thumb"] = "DefaultMusicArtists.png"
 
-            item["url"] = self.__build_url(
-                {"action": self.browse_artist_albums.__name__, "artistid": item["id"]}
+            artist["url"] = self.__build_url(
+                {"action": self.browse_artist_everything.__name__, "artistid": artist["id"]}
             )
 
-            item["genre"] = " / ".join(item["genres"])
-            item["rating"] = str(self.__get_track_rating(item["popularity"]))
-            item["followerslabel"] = f"{item['followers']['total']} followers"
+            artist["genre"] = " / ".join(artist["genres"])
+            artist["rating"] = str(self.__get_track_rating(artist["popularity"]))
+            artist["followerslabel"] = f"{artist['followers']['total']} followers"
 
-            contextitems = [
-                (xbmc.getLocalizedString(KODI_ALBUMS_STR_ID), f"Container.Update({item['url']})"),
-                (
-                    self.__addon.getLocalizedString(ARTIST_TOP_TRACKS_STR_ID),
-                    f"Container.Update(plugin://{ADDON_ID}/"
-                    f"?action={self.artist_top_tracks.__name__}&artistid={item['id']})",
-                ),
-                (
-                    self.__addon.getLocalizedString(RELATED_ARTISTS_STR_ID),
-                    f"Container.Update(plugin://{ADDON_ID}/"
-                    f"?action={self.related_artists.__name__}&artistid={item['id']})",
-                ),
-            ]
-
-            if is_followed or item["id"] in followed_artists:
-                contextitems.append(
-                    (
-                        self.__addon.getLocalizedString(UNFOLLOW_ARTIST_STR_ID),
-                        f"RunPlugin(plugin://{ADDON_ID}/"
-                        f"?action={self.unfollow_artist.__name__}&artistid={item['id']})",
-                    )
-                )
-            else:
-                contextitems.append(
-                    (
-                        self.__addon.getLocalizedString(FOLLOW_ARTIST_STR_ID),
-                        f"RunPlugin(plugin://{ADDON_ID}/"
-                        f"?action={self.follow_artist.__name__}&artistid={item['id']})",
-                    )
-                )
-
-            item["contextitems"] = contextitems
+            artist["contextitems"] = self.__get_artist_context_menu_items(
+                artist, is_followed, followed_artists
+            )
 
         return artists
+
+    def __get_artist_context_menu_items(
+        self, artist, is_followed: bool, followed_artists: List[str]
+    ) -> List[Tuple[str, str]]:
+        context_items = [
+            (
+                xbmc.getLocalizedString(EVERYTHING_FOR_ARTIST_STR_ID),
+                f"Container.Update({artist['url']})",
+            ),
+            (
+                self.__addon.getLocalizedString(ALL_ALBUMS_FOR_ARTIST_STR_ID),
+                f"Container.Update(plugin://{ADDON_ID}/"
+                f"?action={self.browse_artist_just_albums.__name__}&artistid={artist['id']})",
+            ),
+            (
+                self.__addon.getLocalizedString(ALL_SINGLES_FOR_ARTIST_STR_ID),
+                f"Container.Update(plugin://{ADDON_ID}/"
+                f"?action={self.browse_artist_just_singles.__name__}&artistid={artist['id']})",
+            ),
+            (
+                self.__addon.getLocalizedString(ALL_APPEARS_ON_FOR_ARTIST_STR_ID),
+                f"Container.Update(plugin://{ADDON_ID}/"
+                f"?action={self.browse_artist_just_appears_on.__name__}&artistid={artist['id']})",
+            ),
+            (
+                self.__addon.getLocalizedString(ARTIST_TOP_TRACKS_STR_ID),
+                f"Container.Update(plugin://{ADDON_ID}/"
+                f"?action={self.artist_top_tracks.__name__}&artistid={artist['id']})",
+            ),
+        ]
+
+        if is_followed or artist["id"] in followed_artists:
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(UNFOLLOW_ARTIST_STR_ID),
+                    f"RunPlugin(plugin://{ADDON_ID}/"
+                    f"?action={self.unfollow_artist.__name__}&artistid={artist['id']})",
+                )
+            )
+        else:
+            context_items.append(
+                (
+                    self.__addon.getLocalizedString(FOLLOW_ARTIST_STR_ID),
+                    f"RunPlugin(plugin://{ADDON_ID}/"
+                    f"?action={self.follow_artist.__name__}&artistid={artist['id']})",
+                )
+            )
+
+        context_items.append(
+            (
+                self.__addon.getLocalizedString(RELATED_ARTISTS_STR_ID),
+                f"Container.Update(plugin://{ADDON_ID}/"
+                f"?action={self.related_artists.__name__}&artistid={artist['id']})",
+            )
+        )
+
+        return context_items
 
     def __add_artist_listitems(self, artists: List[Dict[str, Any]]) -> None:
         for item in artists:
@@ -1239,59 +1313,67 @@ class PluginContent:
         playlists2 = []
         followed_playlists = self.__get_curuser_playlistids()
 
-        for item in playlists:
-            if not item:
+        for playlist in playlists:
+            if not playlist:
                 continue
 
-            if item.get("images"):
-                item["thumb"] = item["images"][0]["url"]
+            if playlist.get("images"):
+                playlist["thumb"] = playlist["images"][0]["url"]
             else:
-                item["thumb"] = "DefaultMusicAlbums.png"
+                playlist["thumb"] = "DefaultMusicAlbums.png"
 
-            item["url"] = self.__build_url(
+            playlist["url"] = self.__build_url(
                 {
                     "action": self.browse_playlist.__name__,
-                    "playlistid": item["id"],
-                    "ownerid": item["owner"]["id"],
+                    "playlistid": playlist["id"],
+                    "ownerid": playlist["owner"]["id"],
                 }
             )
 
-            contextitems = [
-                (
-                    xbmc.getLocalizedString(KODI_PLAY_STR_ID),
-                    f"RunPlugin(plugin://{ADDON_ID}/"
-                    f"?action={self.play_playlist.__name__}&playlistid={item['id']}"
-                    f"&ownerid={item['owner']['id']})",
-                ),
-                (
-                    self.__addon.getLocalizedString(REFRESH_LISTING_STR_ID),
-                    f"RunPlugin(plugin://{ADDON_ID}/" f"?action={self.refresh_listing.__name__})",
-                ),
-            ]
+            playlist["contextitems"] = self.__get_playlist_context_menu_items(
+                playlist, followed_playlists
+            )
 
-            if item["owner"]["id"] != self.__userid and item["id"] in followed_playlists:
-                contextitems.append(
-                    (
-                        self.__addon.getLocalizedString(UNFOLLOW_PLAYLIST_STR_ID),
-                        f"RunPlugin(plugin://{ADDON_ID}/"
-                        f"?action={self.unfollow_playlist.__name__}&playlistid={item['id']}"
-                        f"&ownerid={item['owner']['id']})",
-                    )
-                )
-            elif item["owner"]["id"] != self.__userid:
-                contextitems.append(
-                    (
-                        self.__addon.getLocalizedString(FOLLOW_PLAYLIST_STR_ID),
-                        f"RunPlugin(plugin://{ADDON_ID}/"
-                        f"?action={self.follow_playlist.__name__}&playlistid={item['id']}"
-                        f"&ownerid={item['owner']['id']})",
-                    )
-                )
-
-            item["contextitems"] = contextitems
-            playlists2.append(item)
+            playlists2.append(playlist)
 
         return playlists2
+
+    def __get_playlist_context_menu_items(
+        self, playlist, followed_playlists: List[str]
+    ) -> List[Tuple[str, str]]:
+        contextitems = [
+            (
+                xbmc.getLocalizedString(KODI_PLAY_STR_ID),
+                f"RunPlugin(plugin://{ADDON_ID}/"
+                f"?action={self.play_playlist.__name__}&playlistid={playlist['id']}"
+                f"&ownerid={playlist['owner']['id']})",
+            ),
+            (
+                self.__addon.getLocalizedString(REFRESH_LISTING_STR_ID),
+                f"RunPlugin(plugin://{ADDON_ID}/" f"?action={self.refresh_listing.__name__})",
+            ),
+        ]
+
+        if playlist["owner"]["id"] != self.__userid and playlist["id"] in followed_playlists:
+            contextitems.append(
+                (
+                    self.__addon.getLocalizedString(UNFOLLOW_PLAYLIST_STR_ID),
+                    f"RunPlugin(plugin://{ADDON_ID}/"
+                    f"?action={self.unfollow_playlist.__name__}&playlistid={playlist['id']}"
+                    f"&ownerid={playlist['owner']['id']})",
+                )
+            )
+        elif playlist["owner"]["id"] != self.__userid:
+            contextitems.append(
+                (
+                    self.__addon.getLocalizedString(FOLLOW_PLAYLIST_STR_ID),
+                    f"RunPlugin(plugin://{ADDON_ID}/"
+                    f"?action={self.follow_playlist.__name__}&playlistid={playlist['id']}"
+                    f"&ownerid={playlist['owner']['id']})",
+                )
+            )
+
+        return contextitems
 
     def __add_playlist_listitems(self, playlists: List[Dict[str, Any]]) -> None:
         for item in playlists:
@@ -1310,14 +1392,32 @@ class PluginContent:
                 handle=self.__addon_handle, url=item["url"], listitem=li, isFolder=True
             )
 
-    def browse_artist_albums(self) -> None:
+    def browse_artist_everything(self) -> None:
+        self.browse_artist_albums(album_type="album,single,appears_on,compilation")
+
+    def browse_artist_just_albums(self) -> None:
+        self.browse_artist_albums(album_type="album,compilation")
+
+    def browse_artist_just_singles(self) -> None:
+        self.browse_artist_albums(album_type="single")
+
+    def browse_artist_just_albums_and_singles(self) -> None:
+        self.browse_artist_albums(album_type="album,single")
+
+    def browse_artist_just_compilations(self) -> None:
+        self.browse_artist_albums(album_type="compilation")
+
+    def browse_artist_just_appears_on(self) -> None:
+        self.browse_artist_albums(album_type="appears_on")
+
+    def browse_artist_albums(self, album_type: str) -> None:
         xbmcplugin.setContent(self.__addon_handle, "albums")
         xbmcplugin.setProperty(
             self.__addon_handle, "FolderName", xbmc.getLocalizedString(KODI_ALBUMS_STR_ID)
         )
         artist_albums = self.__spotipy.artist_albums(
             self.__artist_id,
-            album_type="album,single,compilation",
+            album_type=album_type,
             country=self.__user_country,
             limit=50,
             offset=0,
@@ -1327,7 +1427,7 @@ class PluginContent:
         while artist_albums["total"] > count:
             artist_albums["items"] += self.__spotipy.artist_albums(
                 self.__artist_id,
-                album_type="album,single,compilation",
+                album_type=album_type,
                 country=self.__user_country,
                 limit=50,
                 offset=count,
