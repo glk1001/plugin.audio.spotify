@@ -634,8 +634,7 @@ class PluginContent:
             playlist_details = playlist
             playlist_details["tracks"]["items"] = []
             while playlist["tracks"]["total"] > count:
-                playlist_details["tracks"]["items"] += self.__spotipy.user_playlist_tracks(
-                    playlist["owner"]["id"],
+                playlist_details["tracks"]["items"] += self.__spotipy.playlist_items(
                     playlist["id"],
                     market=self.__user_country,
                     fields="",
