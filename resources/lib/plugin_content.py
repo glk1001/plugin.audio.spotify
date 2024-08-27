@@ -938,15 +938,19 @@ class PluginContent:
                     track["artist"] = " / ".join(artists)
                     track["artistid"] = track["artists"][0]["id"]
 
-            track["genre"] = " / ".join(track["album"].get("genres", []))
+            if "album" not in track:
+                track["genre"] = []
+                track["year"] = 1900
+            else:    
+                track["genre"] = " / ".join(track["album"].get("genres", []))
 
-            # Allow for 'release_date' being empty.
-            release_date = "0" if "album" not in track else track["album"].get("release_date", "0")
-            track["year"] = (
-                1900
-                if not release_date
-                else int(track["album"].get("release_date", "0").split("-")[0])
-            )
+                # Allow for 'release_date' being empty.
+                release_date = "0" if "album" not in track else track["album"].get("release_date", "0")
+                track["year"] = (
+                    1900
+                    if not release_date
+                    else int(track["album"].get("release_date", "0").split("-")[0])
+                )
 
             track["rating"] = str(self.__get_track_rating(track["popularity"]))
 
