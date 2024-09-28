@@ -207,3 +207,7 @@ msgstr ""
 msgctxt "#11085"
 msgid "All 'appears on' albums for artist"
 msgstr ""
+
+msgctxt "#11086"
+msgid "Set to 'True', if there is a problem with early stream termination"
+msgstr ""

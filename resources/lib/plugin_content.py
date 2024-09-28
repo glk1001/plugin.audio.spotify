@@ -941,7 +941,7 @@ class PluginContent:
             if "album" not in track:
                 track["genre"] = []
                 track["year"] = 1900
-            else:    
+            else:
                 track["genre"] = " / ".join(track["album"].get("genres", []))
 
                 # Allow for 'release_date' being empty.

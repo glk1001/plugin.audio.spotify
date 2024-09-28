@@ -8,6 +8,9 @@
         <setting id="use_spotify_normalization" type="bool" default="true" label="11075">
           <control type="toggle"/>
         </setting>
+        <setting id="problem_with_terminate_streaming" type="bool" default="false" label="11086">
+          <control type="toggle"/>
+        </setting>
     </category>
 
     <category label="11055">

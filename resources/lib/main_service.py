@@ -60,8 +60,14 @@ class MainService:
         use_spotify_normalization = (
             SPOTIFY_ADDON.getSetting("use_spotify_normalization").lower() == "true"
         )
+        problem_with_terminate_streaming = (
+            SPOTIFY_ADDON.getSetting("problem_with_terminate_streaming").lower() == "true"
+        )
         self.__http_spotty_streamer: HTTPSpottyAudioStreamer = HTTPSpottyAudioStreamer(
-            self.__spotty, gap_between_tracks, use_spotify_normalization
+            self.__spotty,
+            gap_between_tracks,
+            use_spotify_normalization,
+            problem_with_terminate_streaming,
         )
         self.__save_recently_played: SaveRecentlyPlayed = SaveRecentlyPlayed()
         self.__http_spotty_streamer.set_notify_track_finished(self.__save_track_to_recently_played)

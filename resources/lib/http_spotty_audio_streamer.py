@@ -9,9 +9,16 @@ from utils import log_msg, LOGDEBUG
 
 
 class HTTPSpottyAudioStreamer:
-    def __init__(self, spotty: Spotty, gap_between_tracks: int = 0, use_normalization: bool = True):
+    def __init__(
+        self,
+        spotty: Spotty,
+        gap_between_tracks: int = 0,
+        use_normalization: bool = True,
+        problem_with_terminate_streaming=False,
+    ):
         self.__spotty: Spotty = spotty
         self.__gap_between_tracks: int = gap_between_tracks
+        self.__problem_with_terminate_streaming = problem_with_terminate_streaming
 
         self.__spotty_streamer: SpottyAudioStreamer = SpottyAudioStreamer(self.__spotty)
         self.__spotty_streamer.use_normalization = use_normalization
@@ -50,9 +57,13 @@ class HTTPSpottyAudioStreamer:
         log_msg(f"GET request: {bottle.request}", LOGDEBUG)
 
         if self.__is_streaming:
-            with self.__stream_lock:
-                log_msg("Already streaming. Terminating current streamer.")
-                self.__terminate_streaming()
+            if self.__problem_with_terminate_streaming:
+                log_msg("Already streaming. But flag 'problem_with_terminate_streaming' = True,"
+                        " so NOT terminating current streamer.")
+            else:
+                with self.__stream_lock:
+                    log_msg("Already streaming. Terminating current streamer.")
+                    self.__terminate_streaming()
 
         self.__is_streaming = True
 
