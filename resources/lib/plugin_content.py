@@ -1001,12 +1001,41 @@ class PluginContent:
         xbmcplugin.addSortMethod(self.__addon_handle, xbmcplugin.SORT_METHOD_ARTIST)
         xbmcplugin.endOfDirectory(handle=self.__addon_handle)
 
-    def __get_playlist_details(self, playlist_id: str) -> Playlist:
-        playlist = self.__spotipy.playlist(
+    def __get_playlist_summary(self, playlist_id: str) -> Playlist:
+        return self.__spotipy.playlist(
             playlist_id,
             fields="tracks(total),name,owner(id),id,snapshot_id",
             market=self.__user_country,
         )
+
+    def __get_playlist_items_page(
+        self, playlist_id: str, offset: int = 0, limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        result = self.__spotipy.playlist_items(
+            playlist_id,
+            market=self.__user_country,
+            fields="",
+            limit=limit,
+            offset=offset,
+        )
+        return result.get("items") or []
+
+    def __prepare_playlist_items_page(
+        self,
+        playlist: Playlist,
+        raw_items: List[Dict[str, Any]],
+        include_context_items: bool = True,
+        include_artist_fanart: bool = True,
+    ) -> List[Dict[str, Any]]:
+        return self.__prepare_track_listitems(
+            tracks=raw_items,
+            playlist_details=playlist,
+            include_context_items=include_context_items,
+            include_artist_fanart=include_artist_fanart,
+        )
+
+    def __get_playlist_details(self, playlist_id: str) -> Playlist:
+        playlist = self.__get_playlist_summary(playlist_id)
         cache_str = f"spotify.playlistdetails.{playlist['id']}"
         # Spotify-curated playlists (Daylist, Daily Mixes, Discover Weekly, etc.) are
         # owned by "spotify" and their snapshot_id does not reliably update in the API
@@ -1035,18 +1064,15 @@ class PluginContent:
             # Get listing from api.
             count = 0
             playlist_details = playlist
-            playlist_details["tracks"]["items"] = []
+            raw_playlist_items = []
             while playlist["tracks"]["total"] > count:
-                playlist_details["tracks"]["items"] += self.__spotipy.playlist_items(
-                    playlist["id"],
-                    market=self.__user_country,
-                    fields="",
-                    limit=50,
-                    offset=count,
-                )["items"]
-                count += 50
-            playlist_details["tracks"]["items"] = self.__prepare_track_listitems(
-                tracks=playlist_details["tracks"]["items"], playlist_details=playlist
+                raw_items = self.__get_playlist_items_page(playlist["id"], offset=count)
+                if not raw_items:
+                    break
+                raw_playlist_items += raw_items
+                count += len(raw_items)
+            playlist_details["tracks"]["items"] = self.__prepare_playlist_items_page(
+                playlist, raw_playlist_items
             )
             if not is_spotify_curated:
                 self.cache.set(cache_str, playlist_details, checksum=checksum)
@@ -1072,9 +1098,19 @@ class PluginContent:
         xbmcplugin.endOfDirectory(handle=self.__addon_handle)
 
     def play_playlist(self) -> None:
-        """Play entire playlist: start first track immediately, queue rest in background."""
-        playlist_details = self.__get_playlist_details(self.__playlist_id)
-        items = playlist_details["tracks"]["items"]
+        """Play entire playlist: start first page immediately, queue rest in background."""
+        playlist_details = self.__get_playlist_summary(self.__playlist_id)
+        total = playlist_details.get("tracks", {}).get("total") or 0
+        page_limit = 50
+        raw_items = self.__get_playlist_items_page(
+            playlist_details["id"], offset=0, limit=page_limit
+        )
+        items = self.__prepare_playlist_items_page(
+            playlist_details,
+            raw_items,
+            include_context_items=False,
+            include_artist_fanart=False,
+        )
         if not items:
             return
         log_msg(f"Start playing playlist '{playlist_details['name']}'.")
@@ -1082,33 +1118,46 @@ class PluginContent:
         kodi_playlist = xbmc.PlayList(0)
         kodi_playlist.clear()
 
-        # Batch add the first few tracks directly to start quickly
-        batch_size = min(5, len(items))
-        for track in items[:batch_size]:
+        for track in items:
             item = self.__get_track_item(track, True)
             if item is not None:
                 url, li = item
                 kodi_playlist.add(url, li)
 
-        # Start playback immediately after first tracks are queued
         xbmc.Player().play(kodi_playlist)
 
-        # Process the rest in background
-        if len(items) > batch_size:
+        next_offset = len(raw_items)
+        if total > next_offset:
 
             def add_remaining():
-                for track in items[batch_size:]:
-                    if xbmc.Monitor().abortRequested():
+                monitor = xbmc.Monitor()
+                offset = next_offset
+                while total > offset:
+                    if monitor.abortRequested():
                         return
-                    try:
-                        item = self.__get_track_item(track, True)
-                        if item is not None:
-                            u, listitem = item
-                            kodi_playlist.add(u, listitem)
-                    except Exception:
-                        pass
-                    # Reduced sleep slightly to populate playlist faster, but yield to main thread
-                    xbmc.sleep(2)
+                    raw_page = self.__get_playlist_items_page(
+                        playlist_details["id"], offset=offset, limit=page_limit
+                    )
+                    if not raw_page:
+                        return
+                    tracks = self.__prepare_playlist_items_page(
+                        playlist_details,
+                        raw_page,
+                        include_context_items=False,
+                        include_artist_fanart=False,
+                    )
+                    for track in tracks:
+                        if monitor.abortRequested():
+                            return
+                        try:
+                            item = self.__get_track_item(track, True)
+                            if item is not None:
+                                u, listitem = item
+                                kodi_playlist.add(u, listitem)
+                        except Exception:
+                            pass
+                        xbmc.sleep(2)
+                    offset += len(raw_page)
 
             t = threading.Thread(target=add_remaining, daemon=True)
             t.start()
@@ -1341,7 +1390,13 @@ class PluginContent:
         xbmcplugin.endOfDirectory(handle=self.__addon_handle)
 
     def __prepare_track_listitems(
-        self, track_ids=None, tracks=None, playlist_details=None, album_details=None
+        self,
+        track_ids=None,
+        tracks=None,
+        playlist_details=None,
+        album_details=None,
+        include_context_items: bool = True,
+        include_artist_fanart: bool = True,
     ) -> List[Dict[str, Any]]:
         if tracks is None:
             tracks = []
@@ -1350,26 +1405,22 @@ class PluginContent:
 
         new_tracks: List[Dict[str, Any]] = []
 
-        # Fetch saved_track_ids and followed_artists in parallel (with track fetch when needed)
         saved_result = [None]
         followed_result = [None]
+        t_saved = None
+        t_followed = None
 
-        # Only fetch these if they are really needed (optimization)
-        need_saved = True
-        need_followed = True
+        if include_context_items:
+            # Fetch saved_track_ids and followed_artists in parallel with track fetch.
+            def _get_saved():
+                saved_result[0] = self.__get_saved_track_ids()
 
-        def _get_saved():
-            saved_result[0] = self.__get_saved_track_ids()
+            def _get_followed():
+                followed_result[0] = self.__get_followed_artists()
 
-        def _get_followed():
-            followed_result[0] = self.__get_followed_artists()
-
-        t_saved = threading.Thread(target=_get_saved, daemon=True)
-        t_followed = threading.Thread(target=_get_followed, daemon=True)
-
-        if need_saved:
+            t_saved = threading.Thread(target=_get_saved, daemon=True)
+            t_followed = threading.Thread(target=_get_followed, daemon=True)
             t_saved.start()
-        if need_followed:
             t_followed.start()
 
         # For tracks, we always get the full details unless full tracks already supplied.
@@ -1380,9 +1431,9 @@ class PluginContent:
                     "tracks"
                 ]
 
-        if need_saved:
+        if t_saved:
             t_saved.join()
-        if need_followed:
+        if t_followed:
             t_followed.join()
 
         saved_track_ids = set(saved_result[0] or [])
@@ -1435,11 +1486,19 @@ class PluginContent:
                 track["playlistid"] = playlist_details["id"]
 
 
-            track["contextitems"] = self.__get_playlist_track_context_menu_items(
-                track, saved_track_ids, playlist_details, followed_artists
-            )
+            if include_context_items:
+                track["contextitems"] = self.__get_playlist_track_context_menu_items(
+                    track, saved_track_ids, playlist_details, followed_artists
+                )
+            else:
+                track["contextitems"] = []
 
             new_tracks.append(track)
+
+        if not include_artist_fanart:
+            for t in new_tracks:
+                t["artist_fanart"] = ""
+            return new_tracks
 
         # Fetch artist images (GET /artists/) for Artist slideshow / Music OSD background
         artist_ids = list({t.get("artistid") for t in new_tracks if t.get("artistid")})
