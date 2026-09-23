@@ -138,11 +138,13 @@ class PluginContent:
 
         self.init_spotipy(auth_token)
 
+
     def init_spotipy(self, auth_token: str) -> None:
         self.__spotipy: spotipy.Spotify = spotipy.Spotify(auth=auth_token)
-        self.__userid: str = self.__spotipy.me()["id"]
-        self.__username: str = self.__spotipy.me()["email"]
-        self.__user_country = self.__spotipy.me()["country"]
+        me = self.__spotipy.me()
+        self.__userid: str = me["id"]
+        self.__username: str = me["email"]
+        self.__user_country = me["country"]
 
     def authenticate_plugin_after_login_failure(self) -> None:
         self.authenticate_plugin(
