@@ -112,7 +112,7 @@ class PluginContent:
     def check_auth_and_refresh_spotipy(self):
         auth_token: str = utils.get_cached_auth_token()
         if auth_token:
-            log_msg(f"Got cached auth_token '{auth_token}'.")
+            log_msg(f"Got cached auth_token.")
             try_authenticate = False
             try:
                 self.init_spotipy(auth_token)
@@ -134,7 +134,7 @@ class PluginContent:
             xbmcplugin.endOfDirectory(handle=self.__addon_handle)
             return
 
-        log_msg(f"Got auth_token '{auth_token}'.")
+        log_msg(f"Got auth_token.")
 
         self.init_spotipy(auth_token)
 
