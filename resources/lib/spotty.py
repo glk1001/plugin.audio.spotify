@@ -53,7 +53,11 @@ class Spotty:
     def get_spotty_credentials_backup_file(self) -> str:
         return os.path.join(self.__spotty_cache, SPOTTY_CREDENTIALS_BACKUP_FILENAME)
 
-    def run_spotty(self, extra_args: List[str] = None) -> subprocess.Popen:
+    def run_spotty(
+        self, extra_args: List[str] = None, stderr: int = subprocess.STDOUT
+    ) -> subprocess.Popen:
+        """Run spotty. NOTE: When stdout carries audio data, use 'stderr=subprocess.PIPE',
+        otherwise spotty's log output gets mixed into the audio stream."""
         log_msg("Running spotty...", LOGDEBUG)
 
         try:
@@ -80,7 +84,7 @@ class Spotty:
                 args,
                 startupinfo=startupinfo,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
+                stderr=stderr,
                 env=self.__spotty_rust_env,
             )
         except Exception as ex:

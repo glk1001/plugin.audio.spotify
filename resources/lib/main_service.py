@@ -21,6 +21,7 @@ from spotty_auth import SpottyAuth
 from spotty_helper import SpottyHelper
 from string_ids import HTTP_VIDEO_RULE_ADDED_STR_ID
 from utils import ADDON_ID, PROXY_PORT, log_msg, log_exception
+from video_player_guard import VideoPlayerGuard
 
 SAVE_TO_RECENTLY_PLAYED_FILE = True
 SPOTIFY_ADDON = xbmcaddon.Addon(id=ADDON_ID)
@@ -74,6 +75,9 @@ class MainService:
         self.__http_spotty_streamer.set_notify_track_finished(self.__save_track_to_recently_played)
 
         bottle_manager.route_all(self.__http_spotty_streamer)
+
+        # The VideoPlayer would also play a track in a running video player.
+        self.__video_player_guard = VideoPlayerGuard(self.__http_spotty_streamer.stop)
 
     def __save_track_to_recently_played(self, track_id: str) -> None:
         if SAVE_TO_RECENTLY_PLAYED_FILE:
