@@ -13,6 +13,7 @@
         <provides>audio</provides>
     </extension>
     <extension library="service.py" point="xbmc.service" />
+    <extension point="xbmc.python.script" library="script.py" />
     <extension point="xbmc.addon.metadata">
         <platform>all</platform>
         <summary lang="en_GB">Unofficial Spotify music plugin for Kodi</summary>

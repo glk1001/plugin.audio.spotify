@@ -44,6 +44,26 @@ def get_formatted_caller_name(filename: str, function_name: str) -> str:
     return f"{os.path.splitext(os.path.basename(filename))[0]}:{function_name}"
 
 
+def stop_video_playback(timeout: float = 5.0) -> None:
+    """
+    Stop a playing video before a track is started. Tracks are played by the
+    VideoPlayer (see http_video_player_setter.py), and Kodi would play them in
+    the running video player, which keeps behaving as if a video was playing
+    (fullscreen video window, video OSD, refresh rate of the video).
+    """
+    if not xbmc.getCondVisibility("Player.HasVideo"):
+        return
+    log_msg("Stopping the playing video before playing a track.", LOGINFO)
+    xbmc.Player().stop()
+    monitor = xbmc.Monitor()
+    end_time = time.time() + timeout
+    while xbmc.getCondVisibility("Player.HasMedia") and time.time() < end_time:
+        if monitor.waitForAbort(0.1):
+            return
+    # Kodi drops a play request while the stopped player is still closing
+    monitor.waitForAbort(0.5)
+
+
 def get_time_str(raw_time: int) -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(raw_time)))
 
