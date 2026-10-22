@@ -38,6 +38,53 @@ Playlist = Dict[str, Union[str, Dict[str, List[Any]]]]
 DO_CACHE_LOGGING = False
 
 
+
+# Only these methods may be called via the plugin URL 'action' parameter.
+ALLOWED_ACTIONS = frozenset(
+    {
+        "add_track_to_playlist",
+        "artist_top_tracks",
+        "authenticate_plugin_request",
+        "browse_album",
+        "browse_artist_everything",
+        "browse_artist_just_albums",
+        "browse_artist_just_albums_and_singles",
+        "browse_artist_just_appears_on",
+        "browse_artist_just_compilations",
+        "browse_artist_just_singles",
+        "browse_category",
+        "browse_followed_artists",
+        "browse_main_explore",
+        "browse_main_library",
+        "browse_new_releases",
+        "browse_playlist",
+        "browse_playlists",
+        "browse_saved_albums",
+        "browse_saved_artists",
+        "browse_saved_tracks",
+        "browse_top_artists",
+        "browse_top_tracks",
+        "delete_cache_db",
+        "follow_artist",
+        "follow_playlist",
+        "play_playlist",
+        "refresh_listing",
+        "related_artists",
+        "remove_album",
+        "remove_track",
+        "remove_track_from_playlist",
+        "save_album",
+        "save_track",
+        "search",
+        "search_albums",
+        "search_artists",
+        "search_playlists",
+        "search_tracks",
+        "unfollow_artist",
+        "unfollow_playlist",
+    }
+)
+
 def cache_log(msg) -> None:
     if DO_CACHE_LOGGING:
         log_msg(msg)
@@ -97,9 +144,12 @@ class PluginContent:
             self.parse_params()
 
             if self.__action:
-                log_msg(f"Evaluating action '{self.__action}'.")
-                action = f"self.{self.__action}"
-                eval(action)()
+                if self.__action not in ALLOWED_ACTIONS:
+                    log_msg(f"Ignoring unknown action '{self.__action}'.", xbmc.LOGWARNING)
+                    xbmcplugin.endOfDirectory(handle=self.__addon_handle, succeeded=False)
+                    return
+                log_msg(f"Running action '{self.__action}'.")
+                getattr(self, self.__action)()
             else:
                 log_msg("Browsing main and setting up precache library.")
                 self.__browse_main()
